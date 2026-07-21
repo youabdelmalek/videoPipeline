@@ -1,0 +1,74 @@
+/* Full-screen detail panel and the judge verdict header. */
+
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(25, 23, 19, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.detail-panel {
+  width: min(980px, calc(100vw - 56px));
+  height: min(760px, calc(100vh - 56px));
+  border: 1px solid rgba(74, 60, 42, 0.24);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 24px 70px rgba(25, 23, 19, 0.32);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #fff7e9;
+}
+
+.detail-header h2 {
+  margin-top: 4px;
+  font-size: 24px;
+}
+
+.detail-body {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 20px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #332d25;
+  background: #fffcf6;
+  line-height: 1.5;
+  font-family: Bahnschrift, Candara, "Aptos", sans-serif;
+  font-size: 16px;
+}
+
+.judge-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.judge-head svg {
+  color: var(--muted);
+}
+
+.judge-head .pass {
+  color: var(--teal);
+}
+
+.judge-head .retry {
+  color: var(--rose);
+}
+

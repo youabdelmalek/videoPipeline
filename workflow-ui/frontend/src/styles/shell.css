@@ -1,0 +1,137 @@
+/* App shell: floating control card, top bar, run picker. */
+
+.app-shell {
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.floating-control-card {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 30;
+  width: min(320px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 7px;
+  border: 1px solid rgba(74, 60, 42, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.9);
+  box-shadow: 0 10px 26px rgba(25, 23, 19, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.topbar {
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.eyebrow,
+.node-kicker,
+.scene-number {
+  color: var(--teal);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.status-pill {
+  min-width: 0;
+  max-width: none;
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #2d2922;
+  color: #fff8eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.folder-button,
+.reset-button,
+.delete-runs-button {
+  min-height: 26px;
+  background: #efe5d5;
+  color: var(--teal-dark);
+  border: 1px solid var(--line);
+}
+
+.folder-button:hover:not(:disabled),
+.reset-button:hover:not(:disabled),
+.delete-runs-button:hover:not(:disabled) {
+  background: #e3d4be;
+}
+
+.delete-runs-button {
+  color: var(--rose);
+}
+
+.reset-button,
+.delete-runs-button {
+  font-size: 9px;
+}
+
+.run-manager {
+  min-height: 26px;
+  display: grid;
+  grid-template-columns: auto minmax(105px, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.run-manager label {
+  color: var(--teal-dark);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.run-manager select {
+  min-width: 0;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffcf6;
+  color: var(--ink);
+  padding: 0 6px;
+  font-size: 10px;
+}
+

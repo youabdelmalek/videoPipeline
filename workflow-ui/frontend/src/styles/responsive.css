@@ -1,0 +1,59 @@
+/* Minimap tweaks and the small-screen layout. */
+
+.react-flow__minimap {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(74, 60, 42, 0.25);
+  background: #fffaf1;
+  box-shadow: 0 10px 24px rgba(40, 32, 21, 0.14);
+}
+
+.react-flow__minimap-node {
+  fill-opacity: 0.95;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .status-pill {
+    width: 100%;
+    max-width: none;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .run-manager {
+    grid-template-columns: 1fr;
+  }
+
+  .run-state-panel {
+    grid-template-columns: 1fr;
+    margin: 10px 0 0;
+  }
+
+  .run-state-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .run-state-summary > div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(74, 60, 42, 0.12);
+  }
+
+  .processing-head {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .canvas-wrap {
+    margin: 0;
+  }
+}

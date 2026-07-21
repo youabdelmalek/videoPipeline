@@ -1,0 +1,15 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+workflow-ui/frontend/dist/
+
+# Secrets - never commit. Use .env.example as the template.
+.env
+.env.*
+!.env.example
+runs
+.claude
+.agents

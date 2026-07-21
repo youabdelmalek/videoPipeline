@@ -1,0 +1,16 @@
+/*
+ * Stylesheet index.
+ *
+ * Import order defines the cascade - later files intentionally override
+ * earlier ones, so keep this order stable when adding a new file.
+ */
+
+@import './styles/base.css';
+@import './styles/shell.css';
+@import './styles/panels.css';
+@import './styles/canvas.css';
+@import './styles/node-chrome.css';
+@import './styles/node-variants.css';
+@import './styles/artifact-list.css';
+@import './styles/detail.css';
+@import './styles/responsive.css';

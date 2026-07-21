@@ -1,0 +1,63 @@
+/* Design tokens, resets, and default form-control styling. */
+
+:root {
+  --paper: #f5efe3;
+  --ink: #191713;
+  --muted: #6f685d;
+  --line: #d8cbbb;
+  --panel: #fffaf1;
+  --teal: #116466;
+  --teal-dark: #0d4547;
+  --amber: #cc8a1f;
+  --rose: #a83b45;
+  --shadow: 0 18px 40px rgba(55, 42, 25, 0.14);
+  font-family: Bahnschrift, Candara, "Aptos", sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(17, 100, 102, 0.12), transparent 30%),
+    linear-gradient(135deg, #f8f0df 0%, #efe4d0 52%, #f3eadc 100%);
+}
+
+button,
+textarea,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  background: var(--teal);
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 26px;
+  padding: 0 8px;
+  transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--teal-dark);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+

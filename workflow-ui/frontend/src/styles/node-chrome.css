@@ -1,0 +1,85 @@
+/* Shared node chrome: frame, header, collapse and open buttons. */
+
+.node {
+  width: 340px;
+  min-height: 160px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 12px 24px rgba(40, 32, 21, 0.12);
+  padding: 16px;
+}
+
+.react-flow__node.selected .node,
+.react-flow__node.is-selected-by-app .node {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(17, 100, 102, 0.2), 0 12px 24px rgba(40, 32, 21, 0.12);
+}
+
+.node.is-collapsed {
+  min-height: 78px;
+  height: auto;
+  padding: 12px;
+  resize: none;
+  overflow: hidden;
+}
+
+.node-header,
+.node-header-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.node-drag-handle {
+  cursor: grab;
+}
+
+.node-drag-handle:active {
+  cursor: grabbing;
+}
+
+.node-header-actions {
+  align-items: center;
+}
+
+.open-button,
+.collapse-button,
+.delete-button,
+.close-button {
+  width: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #efe5d5;
+  color: var(--teal-dark);
+}
+
+.open-button:hover:not(:disabled),
+.collapse-button:hover:not(:disabled),
+.delete-button:hover:not(:disabled),
+.close-button:hover:not(:disabled) {
+  background: #e3d4be;
+}
+
+.delete-button {
+  color: var(--rose);
+}
+
+.close-button {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.collapsed-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

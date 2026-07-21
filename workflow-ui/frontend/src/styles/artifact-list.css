@@ -1,0 +1,65 @@
+/* Scrollbars for scrollable node bodies, plus the artifact link list. */
+
+
+.node-scene p,
+.node-aggregate pre,
+.node-judge pre,
+.agent-io pre,
+.asset-groups,
+.artifact-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 100, 102, 0.55) #fffcf6;
+}
+
+.node-scene p::-webkit-scrollbar,
+.node-aggregate pre::-webkit-scrollbar,
+.node-judge pre::-webkit-scrollbar,
+.agent-io pre::-webkit-scrollbar,
+.asset-groups::-webkit-scrollbar,
+.artifact-list::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.node-scene p::-webkit-scrollbar-thumb,
+.node-aggregate pre::-webkit-scrollbar-thumb,
+.node-judge pre::-webkit-scrollbar-thumb,
+.agent-io pre::-webkit-scrollbar-thumb,
+.asset-groups::-webkit-scrollbar-thumb,
+.artifact-list::-webkit-scrollbar-thumb {
+  border: 2px solid #fffcf6;
+  border-radius: 8px;
+  background: rgba(17, 100, 102, 0.55);
+}
+
+.artifact-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffcf6;
+}
+
+.artifact-list a {
+  color: var(--teal-dark);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(17, 100, 102, 0.2);
+  padding: 4px 2px;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.artifact-list a:hover {
+  color: var(--rose);
+}
+
+.artifact-list p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.4;
+}
