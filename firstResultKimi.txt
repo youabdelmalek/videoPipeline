@@ -1,150 +1,256 @@
-VIDEO 01 - The Vanishing Salmon
-- Hook: The manifest says forty salmon crates. The locked dock cage holds thirty-nine.
-- Sable brokered this shipment; her commission and her neck are both on the block.
-- Seals intact, cameras clean, two sober guards who agree on absolutely nothing.
-- The cage was never opened all night. Everyone assumes a miracle heist anyway.
-- Twist 1: The upstate loading ticket also says thirty-nine. The cage was honest; the invoice lied.
-- The fish was skimmed at the source; the "locked-room miracle" is a padded invoice.
-- The receiving clerk who signed for forty has taken sudden paid leave, and he is terrified.
-- Sable corners him. He whispers only: "You don't say no to the Drop."
-- Continuity clue: A silver thimble sits dead center of the empty cage, like a calling card.
-- Somewhere in the wall, a rhythmic tapping. Sable blames the plumbing.
-- Twist 2 / Payoff: Crate thirteen resurfaces at the Cartel's own restaurant, batch tags intact, priced triple.
-- The "thief" sold the Cartel its own fish back. The heist was a price hike.
-- Standalone payoff: Sable gets it — nothing was stolen tonight; the whole city just paid a tax.
-- Final detail: On her desk, an unsigned reorder form for forty crates, exact change enclosed.
+## VIDEO 01 — The Vanishing Salmon
 
-VIDEO 02 - The Wolf's Paranoia
-- Hook: Knuckles wins the street fight, claims the block — then abandons it before dawn.
-- The Pack's hidden cache on that block was already empty. He won a worthless corner.
-- He wants someone to hit. There is no one. He schedules drills against a sound.
-- His crew mocks him — until his prized bone vanishes from a locked den.
-- It comes back the next night: polished, displayed on the top shelf.
-- He rigs tripwires and bells. Morning: nothing triggered, but every wire is re-knotted — neater.
-- Twist 1: The only thing missing is his territorial map. The intruder isn't robbing him; it's studying him.
-- A Vulpine defector shows him the same: polished locks, improved traps, missing map.
-- Then the shortage hits. The Pack owns more streets than ever and eats less.
-- Twist 2 / Payoff: His map comes back — corrected, every lost block redrawn along supply lines, not streets.
-- Standalone payoff: Knuckles finally sees it: he isn't losing a fight, he's losing a delivery schedule.
-- You can't punch a supply chain.
-- Continuity clue: His den's deadbolt was locked from the inside; the only key never left his pocket.
-- Final detail: Tapping behind the drywall. Knuckles posts a guard to listen and take notes.
+* **Hook:** The manifest lists forty salmon crates. The locked dock cage holds thirty-nine.
+* Sable brokered the shipment, so both her commission and reputation are at risk.
+* The seals are intact, the cameras show nothing unusual, and the two guards contradict each other about everything except the locked cage.
+* Everyone assumes an impossible overnight theft.
+* Sable compares the documents from both ends of the shipment.
+* **TWIST 1:** The original loading ticket also lists only thirty-nine crates.
+* Nothing vanished from the cage. Someone created a fake fortieth crate on the invoice.
+* The receiving clerk who approved forty crates has suddenly taken paid leave.
+* Sable corners him in a cheap restaurant.
+* He admits that an unknown organization called **the Drop** paid him to approve the false quantity.
+* A small silver cup had been left in the cage as proof that the arrangement was complete.
+* **TWIST 2:** The missing crate resurfaces at a Vulpine Cartel restaurant, where the Cartel unknowingly buys its own salmon back at triple price.
+* The scheme is not ordinary theft. It is a private tax imposed through controlled scarcity.
+* **STANDALONE PAYOFF:** Sable exposes the restaurant manager and recovers her commission.
+* **SERIES CLUE:** An unsigned reorder form appears on her desk with exact payment and one sentence:
+  **“Your accounting has improved.”**
 
-VIDEO 03 - The Syndicate's Code
-- Hook: Bastet opens her third intercepted Drop: no contraband, just a wax-sealed square of numbers.
-- The Syndicate is bleeding the fish market; she needs the Old Ways to bite again.
-- Her codebreakers — two toms in reading glasses — fail all week. She cracks it in an hour.
-- It isn't a cipher. It's a delivery schedule.
-- Twist 1: The schedule is the Syndicate's own — listing shipments her office never approved.
-- Her captains obey it anyway: the phantom routes are faster, cheaper, always on time.
-- She issues a contradicting order as a test. The gang follows "the memo" instead.
-- Her lieutenant apologizes — to the memo.
-- Her spies lift matching parchments from Vulpine and Lupine dens.
-- Twist 2 / Payoff: The three schedules interlock like gears, arranged so no two gangs ever share a dock.
-- Standalone payoff: This isn't espionage; it's crowd control. The Syndicate doesn't have a rival — it has a manager.
-- Continuity clue: Every Drop canister is a wax-sealed silver thimble; Bastet blames some jeweler's guild.
-- Final detail: One last square slides from a vent grate — blank, except for her name.
+---
 
-VIDEO 04 - The Detective's Dead End
-- Hook: Eleven food markets collapse in one week, and Silas's evidence wall is bare.
-- No break-ins, no transfers, no suspects. His whiteboard is just receipts.
-- He digs: every vanished shipment was legally purchased, fair price, cash on delivery.
-- Twist 1: There is no crime wave, because there is no crime — just perfect ledgers and empty shelves.
-- The buyers are forty shell names spending one brick of cash; the serial numbers run in sequence.
-- One wallet bought this city's entire food supply, politely.
-- He tails a pickup: prepaid catering van, sealed instructions, destination the Depot.
-- Three market guards swore they saw nothing. Under oath: nothing, again.
-- Twist 2 / Payoff: The guards weren't lying. The food left in daylight, as scheduled pickups, receipts in hand.
-- Standalone payoff: Silas isn't hunting a thief; he's hunting an accountant with unlimited change.
-- Continuity clue: An evidence clerk tags a silver thimble from the market floor as "costume jewelry."
-- Final detail: A rustle follows him down the records hall. He writes it off as pigeons.
+## VIDEO 02 — The Wolf’s Paranoia
 
-VIDEO 05 - The Unholy Alliance
-- Hook: Knuckles and Bastet, sworn enemies, share a rooftop and one ambush plan.
-- Target: the midnight shipment that has never once run late.
-- They stop the truck: driver asleep, unhurt, cargo present — restacked, labeled, better organized.
-- The route sheet is improved too. Knuckles is offended on the truck's behalf.
-- Twist 1: The manifest lists their ambush as a pre-printed twenty-minute stop: "INSPECTION."
-- They were expected. Their free will has a time slot.
-- The driver recalls one detail: coffee waiting at the weigh station, his name on it.
-- They hunt the mole: three fake plans fed to three lieutenants. None get used.
-- Twist 2 / Payoff: Bastet finds the channel — batch stamps on their own ration tins, positions mailed by themselves.
-- Standalone payoff: Not watched — cc'd. Bastet, quietly: "We're not prey. We're inventory."
-- The loading bay seals at midnight — posted hours, nothing personal.
-- Continuity clue: Tapping inside the walls runs in shifts, like a change of guard.
-- Final detail: Doors open at six sharp; the vent drops an unsigned note: "DELAY LOGGED. APOLOGIES."
+* **Hook:** Knuckles wins a brutal street fight, claims a new block and abandons it before sunrise.
+* The Lupine Pack’s hidden food cache beneath that block has already been emptied.
+* Knuckles wants an enemy he can attack, but no rival gang claims responsibility.
+* His crew mocks him for ordering patrols against noises inside the walls.
+* Then his prized bone disappears from his locked den.
+* It returns the following night, polished and placed neatly on the highest shelf.
+* Knuckles installs bells, wires and pressure traps.
+* By morning, nothing has triggered, but every trap has been rebuilt more efficiently.
+* **TWIST 1:** The only object actually missing is his territorial map.
+* The intruder was not robbing him. It was studying how the Pack moves.
+* A Vulpine defector reveals that the same thing happened in several fox-controlled districts.
+* Soon afterward, the Pack’s meat deliveries stop.
+* Knuckles controls more territory than ever but has less food.
+* His map returns with every district redrawn according to warehouses, docks and delivery routes rather than gang borders.
+* **TWIST 2:** Knuckles understands that his street victories are meaningless because someone else controls the supply network beneath them.
+* **STANDALONE PAYOFF:** He abandons a planned gang war and redirects his soldiers to protect the remaining food routes.
+* “You can’t punch a supply chain,” one lieutenant tells him.
+* Knuckles punches the wall anyway.
+* **SERIES CLUE:** Three polite taps answer from behind it.
 
-VIDEO 06 - The Great Hunger
-- Hook: Citywide bulletin: total protein shortage. By sunset, gangs are mugging hot dog carts.
-- Sable's brokerage is collapsing; nobody pays a middleman for nothing.
-- She pitches a Vulpine–Feline truce; both sides demand snacks at the table first.
-- Meat prices triple, then vanish. Even the black market's shelves echo.
-- Twist 1: The pigeons are fat. The strays are glossy. Food is moving — just not to gangs.
-- She tails a plump stray through back lanes to a grate her snout won't fit.
-- The long way around leads to the Depot, its yard stacked with everyone's missing dinners.
-- At night she watches silent figures turn looters away, never showing their faces.
-- Twist 2 / Payoff: The "guards" are butchers, clerks, ex-gang muscle — paid in meal vouchers.
-- Standalone payoff: No army needed; hunger does the hiring. The city is being starved into an appointment.
-- That night, every gang boss receives the same dinner invitation. No host is named.
-- Continuity clue: A silver thimble snags the Depot's fence mesh, polished by daily handling.
-- Final detail: At the peace table, every seat fills except the head chair. Everyone waits for it.
+---
 
-VIDEO 07 - The Impossible Geometry
-- Hook: Bastet is stuck in a maintenance tunnel — upside down, dignified, declining assistance.
-- She chased a courier's route; the route fit, she didn't.
-- Extraction takes an hour. She bills the Syndicate for "equipment failure."
-- She maps every Drop site: none reachable without kneeling, squeezing, or dislocating something.
-- Twist 1: The mortar is fresh, the welds new. The city wasn't built cramped — it was edited.
-- Planning records show no permits, no work orders — yet the renovations are flawless.
-- She files a complaint with City Planning just to watch them find nothing. They find nothing.
-- Overlaying the edits: every narrowed passage guards a food choke point — docks, markets, cold storage.
-- Twist 2 / Payoff: The renovations connect into one network; the whole city has become somebody's floor plan.
-- Standalone payoff: Bastet sees it — the Syndicate isn't a power in this city. It's a tenant.
-- Continuity clue: A silver thimble hangs by every edited junction, like a foreman's punch-clock token.
-- Final detail: From inside the pipe behind her, three polite taps — like a door held open.
+## VIDEO 03 — The Syndicate’s Code
 
-VIDEO 08 - The Ghost in the Machine
-- Hook: In a cracked records-hall baseboard, Silas finds microfilm: a map of the city's vents.
-- It's annotated with times and dates, and every date matches one of his dead-end cases.
-- He charts the pattern: every impossible transfer happened inside a patrol gap.
-- Twist 1: No leak needed — the patrol rotation was published for budget transparency. The ghost reads newspapers.
-- The map marks one more convergence: Thursday, a South Docks warehouse.
-- He stakes it out; figures move in eerie unison — a shift change doing stretches.
-- Thursday, he raids: roadblocks, warrants, full press. Inside: legal goods, clean paperwork.
-- Twist 2 / Payoff: His roadblocks funneled every truck onto one street — the shipment's street. The raid was the getaway.
-- Standalone payoff: The ghost doesn't dodge the system; it books appointments with it.
-- He reports none of this. He starts carrying exact change.
-- Continuity clue: The map's corner bears a wax seal pressed from a silver thimble.
-- Final detail: His locked desk drawer scratches. Inside, a note: "THANK YOU FOR YOUR COOPERATION."
+* **Hook:** Bastet opens an intercepted Drop expecting contraband and finds only a wax-sealed square covered in numbers.
+* The Feline Syndicate is losing control of the luxury fish market.
+* Her codebreakers spend a week trying to decipher the numbers.
+* Bastet solves them in less than an hour.
+* They are not a secret message. They are delivery times.
+* **TWIST 1:** The schedule belongs to the Syndicate, but Bastet never approved it.
+* Her captains have been secretly following the anonymous schedule because its routes are faster, safer and cheaper.
+* Bastet issues a deliberately inefficient order to expose whoever is disobeying her.
+* Every captain follows the anonymous instructions instead.
+* One lieutenant apologizes—not to Bastet, but to the document.
+* Her spies steal similar schedules from the Vulpine Cartel and Lupine Pack.
+* Each gang has received different routes.
+* **TWIST 2:** The three schedules fit together perfectly, preventing rival gangs from reaching the same dock at the same time.
+* Someone has quietly reduced gang violence by managing their movements.
+* **STANDALONE PAYOFF:** Bastet uses the schedule to prevent an ambush and save an entire shipment.
+* She realizes the Syndicate does not have a rival.
+* It has an unauthorized manager.
+* **SERIES CLUE:** A final schedule slides through a vent, blank except for Bastet’s name and tomorrow’s date.
 
-VIDEO 09 - The Siege of the Depot
-- Hook: Dawn. Three gangs, one truce, one battering ram. The Depot falls today.
-- The ram swings; the gate is already open. Knuckles falls through, dignity intact-ish.
-- No guards, no mercenaries — corridors spotless, silent, organized.
-- They find the hoard: the city's missing food, floor to ceiling.
-- Twist 1: Every crate bears its original owner's tag. Nothing here was kept — it was filed.
-- Each crate carries an itemized storage invoice, payable on collection.
-- The truce lasts four minutes; a crate of herring ends it.
-- Bastet studies the layout: aisles funnel inward; none lead back to the gate.
-- Twist 2 / Payoff: Not a vault — a muster point. The food was bait, and the bait worked.
-- Standalone payoff: They didn't storm anything. They answered a summons.
-- Continuity clue: Behind one ordinary wall panel, faint rhythmic tapping. Only Knuckles hears it.
-- Final detail: The gates seal; a calm recorded voice thanks them for coming. "The meeting begins shortly."
+---
 
-VIDEO 10 - The Architect Revealed
-- Hook: Trapped in the Depot's dark heart, Knuckles and Bastet hunt the owner of that voice.
-- No throne room, no army, no human — just one ordinary wall panel, still tapping.
-- Knuckles tears it off: light, a room the size of a lunchbox, a city inside the wall.
-- Miniature boulevards of wire, screens like postage stamps, ledgers stacked like confetti.
-- Every screen shows a gang's territory; every ledger holds their whole "war," itemized, initialed.
-- Twist 1: The Architect is not human, not a beast. The throne is a silver thimble — and occupied.
-- The camera sinks past the crates: one small mouse, seated, patient as a judge.
-- Knuckles roars for it to come out and fight. It is out. It was never anywhere else.
-- Bastet whispers the evidence backward: the Drops, the seals, the tapping — orders, tapped nightly.
-- The mouse sets one paw on a lever.
-- Twist 2 / Payoff: Every steel door in the Depot slams shut; the giants are locked in their victory.
-- Beside the lever waits a surrender contract — and a full-size pen, rolled to Knuckles' feet.
-- Standalone payoff: The city's boss never threw a punch. He signed things. Now they will too.
-- Continuity clue: The thimbles at every scene — his seal, his cup, his throne.
-- Above the door, a faded sign: MUNICIPAL GRANARY NO. 7.
-- Final detail: The mouse stares into the camera and squeaks once. It sounds like a laugh.
+## VIDEO 04 — The Detective’s Dead End
+
+* **Hook:** Eleven food markets collapse in one week, and Inspector Silas has no crime to investigate.
+* There are no break-ins, threats, forged signatures or suspicious transfers.
+* Every missing shipment was legally purchased at a fair price.
+* **TWIST 1:** The markets were not robbed. Someone simply bought everything before ordinary customers could.
+* Forty different companies made the purchases.
+* Silas discovers that the companies share the same registration handwriting, the same accountant and sequential cash serial numbers.
+* One source of money is operating behind dozens of legal identities.
+* Silas follows a prepaid catering van carrying one of the purchases.
+* Its paperwork is perfect.
+* The driver has a signed collection order and no idea who owns the goods.
+* Three guards claim they watched the food leave in daylight.
+* **TWIST 2:** The guards are telling the truth. Every transfer happened openly, legally and on schedule.
+* Silas has been searching for a thief when he should have been searching for a buyer.
+* The shipments all converge on an abandoned municipal facility known as **Depot Seven**.
+* **STANDALONE PAYOFF:** Silas freezes several shell accounts and temporarily restores food to two markets.
+* **SERIES CLUE:** The seized accounting records contain hundreds of tiny payments to butchers, drivers, clerks and former gang members.
+
+---
+
+## VIDEO 05 — The Unholy Alliance
+
+* **Hook:** Knuckles and Bastet, sworn enemies, wait together on a rooftop to ambush a midnight delivery truck.
+* They believe the vehicle is supplying the organization manipulating both gangs.
+* The truck arrives exactly on time.
+* They stop it and find the driver asleep but unharmed.
+* Nothing has been stolen.
+* Instead, the cargo has been reorganized, damaged crates repaired and the route sheet improved.
+* Knuckles considers this personally insulting.
+* **TWIST 1:** The truck’s manifest already includes their ambush as a scheduled twenty-minute delay marked **“Inspection.”**
+* Their supposedly secret plan was expected.
+* The driver remembers finding coffee at the previous checkpoint with his name written on the cup.
+* Knuckles and Bastet test for a traitor by giving three different plans to three lieutenants.
+* None of the fake plans reaches the enemy.
+* Bastet examines the gang’s ration tins and finds tiny variations in the batch stamps.
+* **TWIST 2:** Their own supply requests contain encoded information about troop positions, schedules and planned attacks.
+* They have been reporting their movements every time they order food.
+* **STANDALONE PAYOFF:** Bastet changes the code and uses it to cancel an imminent ambush against both gangs.
+* “We aren’t being watched,” she says. “We’re being processed.”
+* **SERIES CLUE:** An unsigned note arrives:
+  **“THE ARCHITECT REQUESTS YOUR COOPERATION.”**
+
+---
+
+## VIDEO 06 — The Great Hunger
+
+* **Hook:** Gang-controlled broadcasters announce a citywide protein shortage.
+* Within hours, meat prices triple and gang members begin fighting over scraps.
+* Sable notices something strange: independent kitchens, orphanages, street animals and civilian neighborhoods still have food.
+* Only markets controlled by the three major gangs are empty.
+* The shortage is not citywide.
+* It is targeted.
+* Sable follows a well-fed stray through back alleys to a grate too small for her to enter.
+* The route eventually leads to Depot Seven.
+* The yard contains the gangs’ missing food, carefully sorted by district.
+* Silent workers prevent looters from entering.
+* **TWIST 1:** The guards are not mercenaries.
+* They are butchers, clerks, drivers and former gang members who joined the Architect’s network in exchange for steady meals and protection.
+* The operation has hundreds of participants.
+* No single creature is moving all the food alone.
+* Sable learns that the gangs have been taxing deliveries, stealing civilian rations and starting wars over distribution rights.
+* **TWIST 2:** The Architect redirected food away from gang markets to prove that the gangs’ power disappears when workers stop cooperating.
+* **STANDALONE PAYOFF:** Sable negotiates the release of emergency food for civilians caught between the gangs.
+* That night, every gang leader receives the same invitation:
+* **“Transfer control of food distribution. Attend dinner at Depot Seven.”**
+* The gangs reject the demand and publicly promise to seize the Depot instead.
+* **SERIES CLUE:** Sable keeps her invitation rather than burning it.
+
+---
+
+## VIDEO 07 — The Impossible Geometry
+
+* **Hook:** Bastet becomes trapped upside down inside a maintenance tunnel while following one of the Architect’s couriers.
+* She insists that the rescue team record the incident as “structural failure.”
+* Bastet maps every known Drop route.
+* Almost all require large animals to kneel, crawl or squeeze through narrow passages.
+* At first, she assumes the old city was simply designed badly.
+* **TWIST 1:** The narrow sections are new.
+* Fresh mortar, recent welds and hidden panels show that someone has modified the city without permits.
+* The altered routes surround docks, markets, cold-storage buildings and police records rooms.
+* Bastet overlays the passages on a city map.
+* They form a second transportation network inside the walls.
+* Workers can move messages, keys and small packages without entering gang-controlled streets.
+* Bastet discovers a miniature switching station that controls doors and conveyor belts across several blocks.
+* It is empty when she arrives.
+* **TWIST 2:** The gangs do not truly own the city above ground.
+* They are tenants inside a larger logistical system constructed beneath them.
+* **STANDALONE PAYOFF:** Bastet uses the hidden controls to reopen a civilian food route that her own Syndicate had previously blocked.
+* **SERIES CLUE:** Every junction contains a small silver token stamped with a time and worker number.
+
+---
+
+## VIDEO 08 — The Ghost in the Machine
+
+* **Hook:** Silas finds microfilm hidden inside a cracked records-hall baseboard.
+* It contains a map of the city’s vents, maintenance corridors and delivery schedules.
+* Every marked date corresponds to one of his unsolved food cases.
+* Silas assumes someone inside the police department leaked patrol information.
+* **TWIST 1:** No leak was necessary.
+* Police patrol schedules were publicly released as part of a transparency program.
+* The Architect merely studied the information better than the police did.
+* The map marks an upcoming transfer through a South Docks warehouse.
+* Silas organizes a raid with roadblocks, warrants and press coverage.
+* The warehouse contains only legal goods and perfect paperwork.
+* While Silas searches it, hundreds of delivery trucks are redirected around his roadblocks.
+* All of them are forced onto the same unguarded street.
+* **TWIST 2:** The Architect planted the map so Silas would create the safest possible route for the real shipment.
+* The police raid was not avoided.
+* It was used.
+* **STANDALONE PAYOFF:** Silas identifies the Depot’s worker network through the redirected vehicle registrations.
+* He also discovers that many workers joined voluntarily after gangs stole their wages or threatened their families.
+* Silas does not issue arrests.
+* Instead, he takes his evidence directly to Depot Seven.
+* **SERIES CLUE:** A note appears inside his locked desk:
+* **“BRING YOUR WARRANT. THE BOSSES ARE COMING.”**
+
+---
+
+## VIDEO 09 — The Siege of Depot Seven
+
+* **Hook:** At dawn, the Vulpine Cartel, Lupine Pack and Feline Syndicate march on Depot Seven under a temporary truce.
+* They rejected the Architect’s dinner invitation and now intend to seize the food by force.
+* Knuckles brings a battering ram.
+* The main gate is already open, causing him to fall through it.
+* Bastet pretends not to notice.
+* Sable joins the raid to protect the civilian shipments she negotiated.
+* Silas enters with a warrant, determined to arrest whoever caused the illegal shortages.
+* Inside, there are no guards or defensive troops.
+* The corridors are spotless, silent and carefully labeled.
+* They discover the city’s missing food stacked from floor to ceiling.
+* **TWIST 1:** Every crate still carries its original owner’s label and a detailed record of where it will eventually be delivered.
+* The food was not collected for the Architect’s personal use.
+* It was separated from gang-controlled markets and prepared for neutral distribution.
+* Each gang sees crates once stolen from the others.
+* Their truce begins collapsing.
+* Sable notices that the aisles are guiding everyone toward the same central chamber.
+* Silas finds no alternate exit.
+* **TWIST 2:** The Depot is not a fortress being invaded.
+* It is a meeting hall, and the food was bait that guaranteed every leader would attend.
+* **STANDALONE PAYOFF:** The four investigators finally understand that their separate cases were parts of one planned confrontation.
+* The doors close behind the gang armies.
+* A calm voice announces:
+* **“The rejected dinner meeting will now proceed without dinner.”**
+* **SERIES CLUE:** Tapping begins behind an ordinary wall panel.
+
+---
+
+## VIDEO 10 — The Architect Revealed
+
+* **Hook:** Knuckles, Bastet, Sable and Silas are trapped inside Depot Seven with the leaders of all three gangs.
+* They search for the giant criminal mastermind controlling the city.
+* There is no throne room, private army or enormous beast.
+* The tapping continues behind a plain wall panel.
+* Knuckles tears it away.
+* Behind it is a miniature command center built inside the walls.
+* Tiny screens display every dock, market, warehouse and gang-controlled route.
+* Hundreds of worker names appear beside scheduled shifts.
+* The system is not operated by one creature.
+* It is maintained by clerks, drivers, butchers, engineers, former gang members and small animals who can move through the hidden network.
+* **TWIST 1:** At the center of the room sits the Architect: a small mouse at a desk made from a silver thimble.
+* The silver containers, seals and tokens found throughout the investigation were ordinary thimbles repurposed by his workers.
+* Knuckles demands that the mouse come out and fight.
+* “I am out,” the mouse replies through a voice amplifier.
+* The mouse explains his motive:
+* The gangs turned food into territory, protection payments and war.
+* Years earlier, they seized the municipal granaries and forced small workers to carry goods through dangerous streets.
+* The mouse built a neutral network inside the walls so food could move without gang permission.
+* He then bought supplies legally, recruited exploited workers and created a targeted shortage to demonstrate that the gangs controlled nothing without those workers.
+* Sable accuses him of endangering civilians.
+* The mouse admits that his system became too controlling and that innocent districts suffered during the experiment.
+* Silas produces his warrant.
+* The mouse produces complete ledgers documenting every gang theft, murder, bribe and illegal food tax.
+* Every file is ready to be broadcast publicly.
+* **TWIST 2:** The surrender contract does not transfer the food supply to the mouse.
+* It transfers all docks, granaries and delivery routes to an independent municipal distribution board controlled by workers and monitored by Silas.
+* The gangs must surrender their food monopolies, repay stolen wages and stop taxing civilian shipments.
+* If they refuse, the workers will permanently strike, the evidence will be released, and the gangs will leave the Depot with no food, money or public support.
+* Knuckles cannot punch the worker network.
+* Bastet cannot outmaneuver evidence that implicates her entire Syndicate.
+* Sable cannot broker around a system that no longer needs gang permission.
+* One by one, the leaders sign.
+* **STANDALONE PAYOFF:** The Architect defeats the city’s strongest gangs without personally throwing a punch, but he is also forced to surrender sole control of his system.
+* Silas appoints Sable as civilian negotiator, Bastet as logistics adviser and Knuckles as security—under strict supervision.
+* The mouse keeps one seat on the worker board.
+* **FINAL SHOT:** Knuckles struggles to use the mouse-sized pen.
+* The mouse rolls him a full-sized one and says:
+* **“I planned for that.”**
