@@ -72,6 +72,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'prompt-enhancer',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode('Prompt Enhancer', 'Enhanced Prompt', ctx.run?.enhanced_prompt_text, inputFor(ctx.run, 'prompt_enhancer')),
   },
@@ -89,6 +90,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'story-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'Story Judge',
@@ -102,6 +104,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'separator-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'Separator Judge',
@@ -115,6 +118,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'shots-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'Shots Judge',
@@ -127,6 +131,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'asset-extraction-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'Asset Judge',
@@ -140,6 +145,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'json-assets-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'JsonAssets Judge',
@@ -163,6 +169,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'frame-delta-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'Frame Delta Judge',
@@ -176,6 +183,7 @@ export const WORKFLOW_NODES: WorkflowNodeSpec[] = [
   {
     id: 'json-frames-judge',
     type: 'aggregate',
+    advanced: true,
     data: (ctx) =>
       textNode(
         'JsonFrames Judge',

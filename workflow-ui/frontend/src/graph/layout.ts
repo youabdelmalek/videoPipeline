@@ -6,7 +6,6 @@
  */
 
 import type { XYPosition } from '@xyflow/react';
-import type { RunState } from '../api';
 
 const COLLAPSED_SIZE = { initialWidth: 240, initialHeight: 92 };
 const PANEL_SIZE = { initialWidth: 430, initialHeight: 460 };
@@ -41,9 +40,10 @@ const VIDEO_LIST_SIZE = { initialWidth: 460, initialHeight: 600 };
 const SHOTS_LIST_SIZE = { initialWidth: 520, initialHeight: 640 };
 const ASSET_CATALOG_SIZE = { initialWidth: 560, initialHeight: 640 };
 
-const SCENE_COLUMN_WIDTH = 380;
-const SCENE_ROW_HEIGHT = 250;
-const SCENES_PER_COLUMN = 5;
+/** Clears the second row, whose tallest cards (640px) start at y=760. */
+const THIRD_ROW_Y = 1460;
+/** Clears the third row, whose tallest cards (640px) start at THIRD_ROW_Y. */
+const FOURTH_ROW_Y = 2160;
 
 export type NodeSize = { initialWidth: number; initialHeight: number };
 
@@ -75,17 +75,45 @@ export function nodeDimensions(nodeId: string, collapsedNodeIds: Set<string>): N
   return CARD_SIZE;
 }
 
-/** Grid position for the Nth card in a column-major block of scene cards. */
-function cardGridPosition(index: number, originX: number): XYPosition {
-  const column = index < SCENES_PER_COLUMN ? 0 : 1;
-  const row = index % SCENES_PER_COLUMN;
-  return { x: originX + column * SCENE_COLUMN_WIDTH, y: row * SCENE_ROW_HEIGHT };
+const COMPACT_COL_GAP = 60;
+const COMPACT_ROW_GAP = 120;
+/** Wrap the compact rows at roughly the width of the hand-tuned ones. */
+const COMPACT_MAX_ROW_WIDTH = 3200;
+
+/**
+ * Positions for the primary-only view, flowed left to right and wrapped.
+ *
+ * With the judges hidden the hand-tuned table would leave a hole wherever one
+ * used to sit, so that table is only used once Show Judge puts them back.
+ */
+export function compactPositions(
+  nodeIds: string[],
+  collapsedNodeIds: Set<string>,
+): Record<string, XYPosition> {
+  const positions: Record<string, XYPosition> = {};
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+
+  for (const nodeId of nodeIds) {
+    const { initialWidth, initialHeight } = nodeDimensions(nodeId, collapsedNodeIds);
+    if (x > 0 && x + initialWidth > COMPACT_MAX_ROW_WIDTH) {
+      x = 0;
+      y += rowHeight + COMPACT_ROW_GAP;
+      rowHeight = 0;
+    }
+    positions[nodeId] = { x, y };
+    x += initialWidth + COMPACT_COL_GAP;
+    rowHeight = Math.max(rowHeight, initialHeight);
+  }
+
+  return positions;
 }
 
 /**
  * The primary workflow runs left to right and wraps onto a second row.
  */
-export function defaultNodePosition(nodeId: string, run: RunState | null): XYPosition {
+export function defaultNodePosition(nodeId: string): XYPosition {
   switch (nodeId) {
     case 'prompt':
       return { x: 0, y: 180 };
@@ -107,42 +135,30 @@ export function defaultNodePosition(nodeId: string, run: RunState | null): XYPos
       return { x: 1070, y: 760 };
     case 'asset-extraction-judge':
       return { x: 1690, y: 760 };
+    // Third row: the JSON stages, wrapping back to the left margin.
     case 'json-assets':
-      return { x: 2180, y: 760 };
+      return { x: 0, y: THIRD_ROW_Y };
     case 'json-assets-judge':
-      return { x: 2800, y: 760 };
+      return { x: 620, y: THIRD_ROW_Y };
     case 'frame-deltas':
-      return { x: 3290, y: 760 };
+      return { x: 1110, y: THIRD_ROW_Y };
     case 'frame-delta-judge':
-      return { x: 3780, y: 760 };
+      return { x: 1600, y: THIRD_ROW_Y };
     case 'json-frames':
-      return { x: 4270, y: 760 };
+      return { x: 2090, y: THIRD_ROW_Y };
     case 'json-frames-judge':
-      return { x: 4890, y: 760 };
+      return { x: 2710, y: THIRD_ROW_Y };
 
-    // Advanced row.
-    case 'story-pack':
-    case 'aggregate':
-      return { x: 430, y: 760 };
+    // Fourth row: the manual/legacy branch, below the main flow rather than on
+    // top of the second row, where it used to overlap the shot and asset nodes.
     case 'manual-video-judge':
-      return { x: 920, y: 760 };
+      return { x: 0, y: FOURTH_ROW_Y };
     case 'board-rewriter':
-      return { x: 1410, y: 760 };
+      return { x: 490, y: FOURTH_ROW_Y };
     case 'video-detailer':
-      return { x: 1900, y: 760 };
+      return { x: 980, y: FOURTH_ROW_Y };
     case 'shot-rewriter':
-      return { x: 2390, y: 760 };
-    case 'asset-detailer':
-      return { x: 3370, y: 760 };
-    case 'final-videos':
-      return { x: 2880, y: 760 };
-    case 'artifacts':
-      return { x: run?.scenes.length ? 2880 : 1520, y: 60 };
-  }
-
-  const finalSceneMatch = /^final-scene-(\d+)$/.exec(nodeId);
-  if (finalSceneMatch) {
-    return cardGridPosition(Number(finalSceneMatch[1]) - 1, 3370);
+      return { x: 1470, y: FOURTH_ROW_Y };
   }
 
   return { x: 0, y: 0 };

@@ -2,7 +2,7 @@
 
 import type { Edge, Node, XYPosition } from '@xyflow/react';
 import type { CollapsibleNodeData, NodeDetail } from '../nodes';
-import { defaultNodePosition, nodeDimensions } from './layout';
+import { compactPositions, defaultNodePosition, nodeDimensions } from './layout';
 import { WORKFLOW_EDGES, WORKFLOW_NODES, type NodeSpecContext } from './workflowNodes';
 
 const SELECTED_CLASS = 'is-selected-by-app';
@@ -24,6 +24,34 @@ export type BuildGraphOptions = NodeSpecContext & {
   callbacks: GraphCallbacks;
 };
 
+/**
+ * The drawn nodes a node feeds into, stepping over any that are hidden.
+ *
+ * The workflow is one long chain, so hiding the judges would leave the primary
+ * nodes with no edges at all. Instead an edge into a hidden node is followed
+ * through to the next drawn node, keeping the visible flow connected.
+ */
+function drawnTargets(
+  from: string,
+  drawnIds: Set<string>,
+  outgoing: Map<string, string[]>,
+  visited: Set<string> = new Set(),
+): string[] {
+  const found: string[] = [];
+  for (const next of outgoing.get(from) ?? []) {
+    if (visited.has(next)) {
+      continue;
+    }
+    visited.add(next);
+    if (drawnIds.has(next)) {
+      found.push(next);
+    } else {
+      found.push(...drawnTargets(next, drawnIds, outgoing, visited));
+    }
+  }
+  return found;
+}
+
 export function buildGraph(options: BuildGraphOptions): { nodes: Node[]; edges: Edge[] } {
   const { run, collapsedNodeIds, nodePositions, selectedNodeIds, callbacks } = options;
 
@@ -38,21 +66,36 @@ export function buildGraph(options: BuildGraphOptions): { nodes: Node[]; edges: 
   const drawn = WORKFLOW_NODES.filter((spec) => options.showAdvanced || !spec.advanced);
   const drawnIds = new Set(drawn.map((spec) => spec.id));
 
+  const compact = options.showAdvanced
+    ? null
+    : compactPositions(drawn.map((spec) => spec.id), collapsedNodeIds);
+
   const nodes: Node[] = drawn.map((spec) => ({
     id: spec.id,
     type: spec.type,
-    position: nodePositions[spec.id] ?? defaultNodePosition(spec.id, run),
+    position: nodePositions[spec.id] ?? compact?.[spec.id] ?? defaultNodePosition(spec.id),
     zIndex: isSelected(spec.id) ? Z_NODE_SELECTED : Z_NODE,
     className: isSelected(spec.id) ? SELECTED_CLASS : undefined,
     ...nodeDimensions(spec.id, collapsedNodeIds),
     data: { ...spec.data(options), ...collapsibleData(spec.id) },
   }));
 
-  // An edge to a node that is not drawn - advanced while the toggle is off -
-  // would dangle, so it is dropped with its endpoint.
-  const edges: Edge[] = WORKFLOW_EDGES.filter(
-    (edge) => (edge.when?.(run) ?? true) && drawnIds.has(edge.source) && drawnIds.has(edge.target),
-  ).map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, animated: true }));
+  // `when` is applied first, so a bridged edge can never route through a link
+  // the run state says should not exist.
+  const live = WORKFLOW_EDGES.filter((edge) => edge.when?.(run) ?? true);
+  const outgoing = new Map<string, string[]>();
+  for (const edge of live) {
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge.target]);
+  }
+
+  const edges: Edge[] = drawn.flatMap((spec) =>
+    drawnTargets(spec.id, drawnIds, outgoing).map((target) => ({
+      id: `${spec.id}-${target}`,
+      source: spec.id,
+      target,
+      animated: true,
+    })),
+  );
 
   return { nodes, edges };
 }
