@@ -8,13 +8,7 @@ export function JudgeNode({ data }: NodeProps<Node<JudgeNodeData>>) {
   return (
     <section className={`node node-judge ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="target" position={Position.Left} />
-      <div className="judge-head node-drag-handle" onMouseDown={(event) => {
-        if ((event.target as HTMLElement).closest('button, a, input, textarea')) {
-          return;
-        }
-        event.preventDefault();
-        data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-      }}>
+      <div className="judge-head">
         <div>
           <div className="node-kicker">Video Judge</div>
           <h2>{data.verdict ?? 'Not Run'}</h2>

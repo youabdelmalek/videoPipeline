@@ -4,7 +4,6 @@ import {
   ArtifactNode,
   AssetCatalogNode,
   BoardRewriterNode,
-  FolderNode,
   JsonAssetsNode,
   JsonFramesNode,
   JudgeNode,
@@ -31,7 +30,6 @@ export const nodeTypes = {
   shotRewriter: ShotRewriterNode,
   judge: JudgeNode,
   artifacts: ArtifactNode,
-  folder: FolderNode,
 };
 
 const MINIMAP_COLORS: Record<string, string> = {
@@ -48,7 +46,6 @@ const MINIMAP_COLORS: Record<string, string> = {
   shotRewriter: '#8a4f7d',
   judge: '#a83b45',
   artifacts: '#4b6f9f',
-  folder: '#6c5f3f',
 };
 
 const MINIMAP_FALLBACK = '#6f685d';

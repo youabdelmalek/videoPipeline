@@ -13,13 +13,7 @@ export function PromptNode({ data }: NodeProps<Node<PromptNodeData>>) {
   return (
     <section className={`node node-prompt ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="source" position={Position.Right} />
-      <div className="node-header node-drag-handle" onMouseDown={(event) => {
-        if ((event.target as HTMLElement).closest('button, a, input, textarea')) {
-          return;
-        }
-        event.preventDefault();
-        data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-      }}>
+      <div className="node-header">
         <div>
           <div className="node-kicker">Prompt</div>
           {data.collapsed ? <h2>Story Prompt</h2> : null}

@@ -13,15 +13,6 @@
   box-shadow: none;
 }
 
-.selection-box {
-  position: fixed;
-  z-index: 12;
-  pointer-events: none;
-  border: 1px solid var(--teal);
-  background: rgba(17, 100, 102, 0.12);
-  box-shadow: 0 0 0 1px rgba(255, 250, 241, 0.55) inset;
-}
-
 .canvas-wrap .react-flow {
   width: 100%;
   height: 100%;
@@ -31,11 +22,7 @@
   border-radius: 8px;
 }
 
-.react-flow__node-folder {
-  z-index: 1 !important;
-}
-
-.react-flow__node:not(.react-flow__node-folder) {
+.react-flow__node {
   z-index: 20 !important;
 }
 

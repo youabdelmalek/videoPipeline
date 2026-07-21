@@ -27,7 +27,6 @@ export type CollapsibleNodeData = {
   collapsed: boolean;
   onToggleCollapse: (nodeId: string) => void;
   onOpenDetail: (detail: NodeDetail) => void;
-  onStartNodeDrag: (nodeId: string, clientX: number, clientY: number) => void;
 };
 
 export type PromptNodeData = CollapsibleNodeData & {
@@ -160,19 +159,4 @@ export type ShotRewriterNodeData = VideoSelectionNodeData & {
 export type ArtifactNodeData = CollapsibleNodeData & {
   slug: string | null;
   artifacts: ArtifactEntry[];
-};
-
-export type FolderGroup = {
-  id: string;
-  title: string;
-  childNodeIds: string[];
-};
-
-export type FolderNodeData = {
-  folder: FolderGroup;
-  childLabels: string[];
-  isDropTarget: boolean;
-  onStartNodeDrag: (nodeId: string, clientX: number, clientY: number) => void;
-  onExpandFolder: (folderId: string) => void;
-  onDeleteFolder: (folderId: string) => void;
 };

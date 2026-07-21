@@ -22,6 +22,3 @@ export const STARTER_PROMPT =
 
 /** How often the UI re-checks a running job. */
 export const JOB_POLL_INTERVAL_MS = 1800;
-
-/** Layout changes kept for Ctrl/Cmd+Z. */
-export const MAX_UNDO_SNAPSHOTS = 50;

@@ -7,13 +7,7 @@ export function ArtifactNode({ data }: NodeProps<Node<ArtifactNodeData>>) {
   return (
     <section className={`node node-artifacts ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="target" position={Position.Left} />
-      <div className="node-header node-drag-handle" onMouseDown={(event) => {
-        if ((event.target as HTMLElement).closest('button, a, input, textarea')) {
-          return;
-        }
-        event.preventDefault();
-        data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-      }}>
+      <div className="node-header">
         <div>
           <div className="node-kicker">Ollama Logs</div>
           <h2>Inputs + Outputs</h2>

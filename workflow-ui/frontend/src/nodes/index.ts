@@ -3,7 +3,6 @@ export { ArtifactNode } from './ArtifactNode';
 export { AssetCatalogNode } from './AssetCatalogNode';
 export { BoardRewriterNode } from './BoardRewriterNode';
 export { DetailPanel } from './DetailPanel';
-export { FolderNode } from './FolderNode';
 export { JsonAssetsNode } from './JsonAssetsNode';
 export { JsonFramesNode } from './JsonFramesNode';
 export { JudgeNode } from './JudgeNode';
@@ -21,8 +20,6 @@ export type {
   AssetCatalogNodeData,
   BoardRewriterNodeData,
   CollapsibleNodeData,
-  FolderGroup,
-  FolderNodeData,
   JsonAssetsNodeData,
   JsonFramesNodeData,
   JudgeNodeData,

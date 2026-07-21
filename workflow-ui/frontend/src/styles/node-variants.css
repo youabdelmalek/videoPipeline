@@ -1,4 +1,4 @@
-/* Per-type node styling: prompt, scene, judge, artifacts, folder. */
+/* Per-type node styling: prompt, scene, judge, artifacts. */
 
 .node-prompt {
   width: 370px;
@@ -463,29 +463,6 @@
   height: 420px;
 }
 
-.node-folder {
-  width: 300px;
-  min-height: 220px;
-  background: #fbf0d8;
-  border-color: #c9ad74;
-}
-
-.folder-count {
-  margin: 10px 0 8px;
-  color: var(--teal-dark);
-  font-weight: 700;
-}
-
-.folder-list {
-  margin: 0;
-  padding-left: 18px;
-  color: #4f473b;
-  line-height: 1.35;
-}
-
-.folder-list li + li {
-  margin-top: 5px;
-}
 
 /* Video picker: the checkbox list inside the detailer and shot rewriter. */
 .video-picker {

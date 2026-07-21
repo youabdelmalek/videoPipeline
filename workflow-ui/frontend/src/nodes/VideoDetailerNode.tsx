@@ -17,16 +17,7 @@ export function VideoDetailerNode({ data }: NodeProps<Node<VideoDetailerNodeData
     <section className={`node node-video-detailer ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
-      <div
-        className="node-header node-drag-handle"
-        onMouseDown={(event) => {
-          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) {
-            return;
-          }
-          event.preventDefault();
-          data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-        }}
-      >
+      <div className="node-header">
         <div>
           <div className="node-kicker">Video Detailer</div>
           <h2>Shot Lists ({data.sourceLabel})</h2>

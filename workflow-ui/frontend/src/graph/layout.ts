@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Where each node sits and how big it is.
  *
- * Positions are only defaults: once the user drags a node its position is kept
- * in `nodePositions` and this file is no longer consulted for it.
+ * Nodes are not draggable, so these positions are the layout: `nodePositions`
+ * only ever holds what React Flow itself reports back.
  */
 
 import type { XYPosition } from '@xyflow/react';
@@ -12,7 +12,6 @@ const COLLAPSED_SIZE = { initialWidth: 240, initialHeight: 92 };
 const PANEL_SIZE = { initialWidth: 430, initialHeight: 460 };
 const ARTIFACTS_SIZE = { initialWidth: 430, initialHeight: 420 };
 const PROMPT_SIZE = { initialWidth: 370, initialHeight: 270 };
-const FOLDER_SIZE = { initialWidth: 300, initialHeight: 220 };
 const CARD_SIZE = { initialWidth: 340, initialHeight: 196 };
 
 const PANEL_IDS = new Set([
@@ -72,9 +71,6 @@ export function nodeDimensions(nodeId: string, collapsedNodeIds: Set<string>): N
   }
   if (nodeId === 'artifacts') {
     return ARTIFACTS_SIZE;
-  }
-  if (nodeId.startsWith('folder-')) {
-    return FOLDER_SIZE;
   }
   return CARD_SIZE;
 }
@@ -150,61 +146,4 @@ export function defaultNodePosition(nodeId: string, run: RunState | null): XYPos
   }
 
   return { x: 0, y: 0 };
-}
-
-/** Fallback spot for a folder that has never been positioned. */
-export function folderFallbackPosition(index: number): XYPosition {
-  return { x: 760, y: 160 + index * 240 };
-}
-
-const STATIC_LABELS: Record<string, string> = {
-  prompt: 'Prompt',
-  'prompt-enhancer': 'Prompt Enhancer',
-  'small-story-generator': 'Small Story Generator',
-  'story-judge': 'Story Judge',
-  'video-list': 'Videos',
-  'separator-judge': 'Separator Judge',
-  'shots-list': 'Shots',
-  'shots-judge': 'Shots Judge',
-  'asset-catalog': 'Asset Catalog',
-  'json-assets': 'JsonAssets',
-  'json-assets-judge': 'JsonAssets Judge',
-  'frame-deltas': 'Frame Deltas',
-  'frame-delta-judge': 'Frame Delta Judge',
-  'json-frames': 'JsonFrames',
-  'json-frames-judge': 'JsonFrames Judge',
-  aggregate: 'Raw Video Bullet Board',
-  'story-pack': 'Packed Story',
-  'manual-video-judge': 'Manual Video Judge',
-  'board-rewriter': 'Board Rewriter',
-  'video-detailer': 'Video Detailer',
-  'shot-rewriter': 'Shot Rewriter',
-  'asset-extraction-judge': 'Asset Extraction Judge',
-  'asset-detailer': 'Asset Detailer',
-  'final-videos': 'Final Rewritten Videos',
-  artifacts: 'Ollama Logs',
-};
-
-/** Human-readable name, used for the child list inside folder nodes. */
-export function nodeLabel(nodeId: string, run: RunState | null): string {
-  const staticLabel = STATIC_LABELS[nodeId];
-  if (staticLabel) {
-    return staticLabel;
-  }
-
-  const finalSceneMatch = /^final-scene-(\d+)$/.exec(nodeId);
-  if (finalSceneMatch) {
-    const index = Number(finalSceneMatch[1]);
-    const title = run?.rewritten_scenes?.find((scene) => scene.index === index)?.title;
-    return `Final Video ${String(index).padStart(2, '0')}${title ? ` - ${title}` : ''}`;
-  }
-
-  const sceneMatch = /^scene-(\d+)$/.exec(nodeId);
-  if (sceneMatch) {
-    const index = Number(sceneMatch[1]);
-    const title = run?.scenes.find((scene) => scene.index === index)?.title;
-    return `Video ${String(index).padStart(2, '0')}${title ? ` - ${title}` : ''}`;
-  }
-
-  return nodeId;
 }

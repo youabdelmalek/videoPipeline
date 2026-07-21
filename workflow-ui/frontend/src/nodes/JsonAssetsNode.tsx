@@ -38,16 +38,7 @@ export function JsonAssetsNode({ data }: NodeProps<Node<JsonAssetsNodeData>>) {
     <section className={`node node-json-assets ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
-      <div
-        className="node-header node-drag-handle"
-        onMouseDown={(event) => {
-          if ((event.target as HTMLElement).closest('button, a, input, textarea, select')) {
-            return;
-          }
-          event.preventDefault();
-          data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-        }}
-      >
+      <div className="node-header">
         <div>
           <div className="node-kicker">JsonAssets</div>
           <h2>{title}</h2>

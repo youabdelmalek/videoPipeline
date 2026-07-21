@@ -24,16 +24,7 @@ export function ShotRewriterNode({ data }: NodeProps<Node<ShotRewriterNodeData>>
     <section className={`node node-shot-rewriter ${data.collapsed ? 'is-collapsed' : ''}`}>
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
-      <div
-        className="node-header node-drag-handle"
-        onMouseDown={(event) => {
-          if ((event.target as HTMLElement).closest('button, a, input, textarea, select, label')) {
-            return;
-          }
-          event.preventDefault();
-          data.onStartNodeDrag(data.nodeId, event.clientX, event.clientY);
-        }}
-      >
+      <div className="node-header">
         <div>
           <div className="node-kicker">Shot Rewriter</div>
           <h2>{providerLabel}</h2>

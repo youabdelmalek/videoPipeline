@@ -32,13 +32,6 @@
   gap: 10px;
 }
 
-.node-drag-handle {
-  cursor: grab;
-}
-
-.node-drag-handle:active {
-  cursor: grabbing;
-}
 
 .node-header-actions {
   align-items: center;

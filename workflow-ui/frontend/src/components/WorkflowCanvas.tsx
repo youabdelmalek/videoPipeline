@@ -9,38 +9,24 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import { minimapNodeColor, nodeTypes } from '../graph/nodeTypes';
-import type { SelectionBox } from '../hooks/useMarqueeSelection';
 
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 1.4;
-/** Pan with the middle mouse button only, leaving left-drag for marquee select. */
-const PAN_BUTTONS = [1];
+/** Nodes are fixed, so both the left and middle buttons pan the canvas. */
+const PAN_BUTTONS = [0, 1];
 
 type Props = {
   resetKey: number;
   nodes: Node[];
   edges: Edge[];
-  selectionBox: SelectionBox | null;
   onNodesChange: (changes: NodeChange[]) => void;
-  onNodeDrag: (event: unknown, node: Node) => void;
-  onNodeDragStop: (event: unknown, node: Node) => void;
   onNodeClick: (event: ReactMouseEvent, node: Node) => void;
   onPaneClick: () => void;
-  onMouseDownCapture: (event: ReactMouseEvent<HTMLElement>) => void;
-  onContextMenu: (event: ReactMouseEvent<HTMLElement>) => void;
 };
 
-export function WorkflowCanvas({
-  resetKey,
-  nodes,
-  edges,
-  selectionBox,
-  onMouseDownCapture,
-  onContextMenu,
-  ...flowHandlers
-}: Props) {
+export function WorkflowCanvas({ resetKey, nodes, edges, ...flowHandlers }: Props) {
   return (
-    <section className="canvas-wrap" onMouseDownCapture={onMouseDownCapture} onContextMenu={onContextMenu}>
+    <section className="canvas-wrap">
       <ReactFlow
         key={resetKey}
         nodes={nodes}
@@ -65,17 +51,6 @@ export function WorkflowCanvas({
         />
         <Controls />
       </ReactFlow>
-      {selectionBox ? (
-        <div
-          className="selection-box"
-          style={{
-            left: Math.min(selectionBox.startX, selectionBox.currentX),
-            top: Math.min(selectionBox.startY, selectionBox.currentY),
-            width: Math.abs(selectionBox.currentX - selectionBox.startX),
-            height: Math.abs(selectionBox.currentY - selectionBox.startY),
-          }}
-        />
-      ) : null}
     </section>
   );
 }

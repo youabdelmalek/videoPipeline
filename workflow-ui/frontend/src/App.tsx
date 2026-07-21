@@ -158,15 +158,10 @@ export function App() {
     },
     collapsedNodeIds: canvas.collapsedNodeIds,
     nodePositions: canvas.nodePositions,
-    folders: canvas.folders,
     selectedNodeIds: canvas.selectedNodeIds,
-    dropTargetFolderId: canvas.dropTargetFolderId,
     callbacks: {
       onToggleCollapse: canvas.toggleCollapse,
       onOpenDetail: canvas.setActiveDetail,
-      onStartNodeDrag: canvas.onStartNodeDrag,
-      onExpandFolder: canvas.expandFolder,
-      onDeleteFolder: canvas.deleteFolder,
     },
   });
 
@@ -196,14 +191,9 @@ export function App() {
         resetKey={canvas.flowResetKey}
         nodes={graph.nodes}
         edges={graph.edges}
-        selectionBox={canvas.selectionBox}
         onNodesChange={canvas.applyNodeChanges}
-        onNodeDrag={canvas.onNodeDrag}
-        onNodeDragStop={canvas.onNodeDragStop}
         onNodeClick={canvas.onNodeClick}
         onPaneClick={canvas.onPaneClick}
-        onMouseDownCapture={canvas.onCanvasMouseDown}
-        onContextMenu={canvas.onCanvasContextMenu}
       />
 
       {canvas.activeDetail ? (
