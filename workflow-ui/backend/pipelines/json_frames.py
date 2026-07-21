@@ -9,6 +9,7 @@ from pathlib import Path
 from backend.jobs import update_job
 from backend.models import EARLY_STOP_SCORE, MAX_BEST_OF_ATTEMPTS, FrameDelta
 from backend.runs.assets import load_manifest
+from backend.runs.frame_deltas import load_deltas
 from backend.runs.json_assets import load_specs
 from backend.runs.json_frames import (
     asset_index,
@@ -27,6 +28,14 @@ from backend.utils.parser import extract_score, parse_frame_deltas
 
 
 def load_frame_plan(workflow: Path) -> list[FrameDelta]:
+    """The frame plan, preferring the per-shot JSON the frame writer leaves.
+
+    Falls back to parsing `frame_deltas.md` so a run made before the three-agent
+    frame stage still has a readable plan.
+    """
+    frames = load_deltas(workflow)
+    if frames:
+        return frames
     return parse_frame_deltas(read_optional(workflow / "frame_deltas.md") or "")
 
 

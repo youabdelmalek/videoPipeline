@@ -5,8 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from backend.prompts.full_workflow import (
-    frame_delta_judge_prompt,
-    frame_delta_prompt,
     prompt_enhancer_prompt,
     separator_judge_prompt,
     small_story_generator_prompt,
@@ -100,51 +98,4 @@ def judge_separator(
         prompt=separator_judge_prompt(enhanced_prompt, full_story, board_text),
         attempt=attempt,
         stage="separator_judge",
-    )
-
-
-def write_frame_deltas(
-    ctx: StageContext,
-    all_shots: str,
-    asset_catalog: str,
-    artifact_dir: Path,
-    attempt: int,
-    previous_output: str | None,
-    judge_feedback: str | None,
-    asset_states: str | None = None,
-    label: str = "",
-    required_refs: list[str] | None = None,
-) -> str:
-    ctx.log(f"Frame delta{f' {label}' if label else ''} attempt {attempt}: describing first/last frames")
-    return run_llm_stage(
-        ctx,
-        artifact_dir=artifact_dir,
-        name=f"frame_delta{f'_{label}' if label else ''}_attempt_{attempt:02d}",
-        title=f"Frame Delta{f' - {label}' if label else ''}",
-        prompt=frame_delta_prompt(
-            all_shots, asset_catalog, previous_output, judge_feedback, asset_states, required_refs
-        ),
-        attempt=attempt,
-        stage="frame_delta",
-    )
-
-
-def judge_frame_deltas(
-    ctx: StageContext,
-    all_shots: str,
-    asset_catalog: str,
-    frame_plan: str,
-    artifact_dir: Path,
-    attempt: int,
-    label: str = "",
-) -> str:
-    ctx.log(f"Frame delta judge{f' {label}' if label else ''} attempt {attempt}: scoring frame plan")
-    return run_llm_stage(
-        ctx,
-        artifact_dir=artifact_dir,
-        name=f"frame_delta_judge{f'_{label}' if label else ''}_attempt_{attempt:02d}",
-        title=f"Frame Delta Judge{f' - {label}' if label else ''}",
-        prompt=frame_delta_judge_prompt(all_shots, asset_catalog, frame_plan),
-        attempt=attempt,
-        stage="frame_delta_judge",
     )

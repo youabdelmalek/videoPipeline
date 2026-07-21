@@ -4,6 +4,16 @@ from __future__ import annotations
 
 from backend.models import FrameDelta
 
+
+def _delta_detail(frame: FrameDelta) -> str:
+    """The frame writer's movement breakdown, indented under the delta line.
+
+    Empty for a plan written before the three-agent frame stage, which had only
+    the one-line delta.
+    """
+    lines = frame.detail.lines()
+    return "\n".join(f"  - {line}" for line in lines) if lines else ""
+
 _SCHEMA = """{
   "shot_ref": "V01S03",
   "shot_title": "string",
@@ -93,6 +103,7 @@ SHOT:
 - First frame: {frame.first_frame or 'not written'}
 - Last frame: {frame.last_frame or 'not written'}
 - Delta: {frame.delta or 'not written'}
+{_delta_detail(frame)}
 
 SHOT BODY:
 {shot_body.strip() or 'No shot body available; work from the frame plan above.'}
@@ -142,6 +153,7 @@ SHOT:
 - First frame: {frame.first_frame or 'not written'}
 - Last frame: {frame.last_frame or 'not written'}
 - Delta: {frame.delta or 'not written'}
+{_delta_detail(frame)}
 
 SHOT BODY:
 {shot_body.strip() or 'No shot body available.'}

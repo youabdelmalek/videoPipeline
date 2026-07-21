@@ -2,33 +2,41 @@
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from backend.jobs import update_job
-from backend.models import EARLY_STOP_SCORE, MAX_BEST_OF_ATTEMPTS, DetailedVideo
+from backend.models import EARLY_STOP_SCORE, MAX_BEST_OF_ATTEMPTS, DetailedVideo, FrameDelta
 from backend.pipelines.json_assets import build_json_assets
 from backend.pipelines.json_frames import build_json_frames
 from backend.runs.assets import catalog_markdown, grouped_catalog, load_manifest
+from backend.runs.frame_deltas import deltas_markdown, write_delta
 from backend.runs.json_assets import load_specs, state_vocabulary
 from backend.runs.paths import run_dir
 from backend.runs.shots import load_detailed_videos
 from backend.runs.store import story_idea_path
 from backend.stages.asset_catalog import detail_asset, extract_assets, judge_assets, save_extraction
 from backend.stages.context import StageContext
+from backend.stages.frame_delta import (
+    describe_shot,
+    judge_frame_delta,
+    select_assets,
+    to_frame_delta,
+    write_frame_delta,
+)
 from backend.stages.full_workflow import (
     enhance_prompt,
     generate_small_stories,
-    judge_frame_deltas,
     judge_separator,
     judge_story,
     separate_story,
-    write_frame_deltas,
 )
 from backend.stages.shot_writer import clear_detailed_videos, detail_video
 from backend.utils.file_ops import markdown_artifact, read_optional, write_text
-from backend.utils.parser import extract_score, parse_frame_deltas, parse_scene_cards
+from backend.utils.parser import extract_score, parse_scene_cards
 
 
 @dataclass
@@ -156,106 +164,127 @@ def _video_shots_text(video: DetailedVideo) -> str:
     return "\n".join(chunks).strip()
 
 
-def _missing_refs(frame_plan: str, required: list[str]) -> list[str]:
-    written = {frame.ref for frame in parse_frame_deltas(frame_plan)}
-    return [ref for ref in required if ref not in written]
-
-
-def _best_frame_deltas_for_video(
+def _select_assets_for_shot(
     ctx: StageContext,
-    video: DetailedVideo,
+    shot_ref: str,
+    shot_title: str,
+    described: dict[str, str],
     asset_text: str,
     asset_states: str,
+    known: set[str],
     artifact_dir: Path,
-) -> BestAttempt:
-    """Frame plan for one video, retried until every shot in it is covered.
+) -> dict[str, Any] | None:
+    """Agent 2, retried only when its JSON does not parse or names a stray asset."""
+    for attempt in range(1, MAX_BEST_OF_ATTEMPTS + 1):
+        try:
+            return select_assets(
+                ctx, shot_ref, shot_title, described, asset_text, asset_states,
+                known, artifact_dir, attempt,
+            )
+        except (ValueError, json.JSONDecodeError) as exc:
+            ctx.log(f"Shot assets {shot_ref} attempt {attempt}: {exc}; retrying")
+    return None
 
-    One video at a time: asking for all of a series' shots in a single call
-    made the model truncate and return only the last video's shots.
-    """
-    label = f"video_{video.index:02d}"
-    shots_text = _video_shots_text(video)
-    required = [f"V{video.index:02d}S{shot.index:02d}" for shot in video.shots]
 
-    best = BestAttempt()
-    best_missing = len(required) + 1
+def _best_frame_for_shot(
+    ctx: StageContext,
+    selection: dict[str, Any],
+    artifact_dir: Path,
+) -> tuple[dict[str, Any] | None, str, int]:
+    """Agent 3, judged best-of-N. Returns the winning answer, judge, and score."""
+    shot_ref = str(selection.get("shot_ref", ""))
+    best_frame: dict[str, Any] | None = None
+    best_judge = ""
+    best_score = -1
     previous: str | None = None
     feedback: str | None = None
 
     for attempt in range(1, MAX_BEST_OF_ATTEMPTS + 1):
-        frame_plan = write_frame_deltas(
-            ctx, shots_text, asset_text, artifact_dir, attempt, previous, feedback,
-            asset_states, label, required,
-        )
-        missing = _missing_refs(frame_plan, required)
-        judge = judge_frame_deltas(
-            ctx, shots_text, asset_text, frame_plan, artifact_dir, attempt, label
-        )
+        try:
+            frame, raw = write_frame_delta(
+                ctx, selection, artifact_dir, attempt, previous, feedback
+            )
+        except (ValueError, json.JSONDecodeError) as exc:
+            feedback = f"The previous answer was rejected: {exc}"
+            ctx.log(f"Frame writer {shot_ref} attempt {attempt}: {exc}; retrying")
+            continue
+
+        judge = judge_frame_delta(ctx, selection, raw, artifact_dir, attempt)
         score = extract_score(judge)
+        if score > best_score:
+            best_frame, best_judge, best_score = frame, judge, score
 
-        # Coverage beats quality: a plan missing shots is unusable downstream
-        # no matter how well the shots it did write scored.
-        if (len(missing), -score) < (best_missing, -best.score):
-            best = BestAttempt(output=frame_plan, judge=judge, score=score, attempt=attempt)
-            best_missing = len(missing)
+        previous = raw
+        feedback = judge
+        ctx.log(f"Frame writer {shot_ref} attempt {attempt}: score {score}; best {best_score}")
+        if best_score > EARLY_STOP_SCORE:
+            break
 
-        previous = frame_plan
-        if missing:
-            feedback = (
-                f"{judge}\n\nYou skipped {len(missing)} shots. Write an entry for every one "
-                f"of these, in order: {' '.join(missing)}"
-            )
-            ctx.log(
-                f"Frame delta {label} attempt {attempt}: {len(required) - len(missing)}/{len(required)} "
-                f"shots, score {score}; best so far {len(required) - best_missing}/{len(required)}"
-            )
-        else:
-            feedback = judge
-            ctx.log(f"Frame delta {label} attempt {attempt}: all {len(required)} shots, score {score}")
-            # Coverage is part of the bar here: a high score on a plan that
-            # skipped shots is exactly the case we do not want to stop on.
-            if score > EARLY_STOP_SCORE:
-                break
-
-    if best_missing:
-        # Never fatal: the best of five is what we keep, and the gap is logged
-        # so it is visible in the processing panel.
-        ctx.log(
-            f"Frame delta {label}: best attempt still misses {best_missing} of {len(required)} shots"
-        )
-    return best
+    return best_frame, best_judge, max(best_score, 0)
 
 
-def _best_frame_deltas(
-    ctx: StageContext, asset_text: str, asset_states: str = ""
-) -> BestAttempt:
-    """Run the frame plan one video at a time and join the results."""
+def _frame_deltas(ctx: StageContext, asset_text: str, asset_states: str = "") -> BestAttempt:
+    """Run describer -> asset picker -> frame writer for every shot.
+
+    Per shot rather than per video: each agent then sees only what its own
+    decision needs, instead of one call holding every shot in a video plus the
+    whole asset catalogue.
+    """
     drafts = load_detailed_videos(ctx.workflow)
     polished = {video.index: video for video in load_detailed_videos(ctx.workflow, rewritten=True)}
     videos = [polished.get(draft.index, draft) for draft in drafts]
     if not videos:
         raise RuntimeError("Split the videos into shots before writing frame deltas")
 
+    known = {item.name.strip().lower() for item in load_manifest(ctx.workflow) if item.name.strip()}
     artifact_dir = ctx.workflow / "frame_delta_runs" / f"frames_{int(time.time())}"
-    plans: list[str] = []
+
+    total_shots = sum(len(video.shots) for video in videos)
+    frames: list[FrameDelta] = []
     judges: list[str] = []
     scores: list[int] = []
+    skipped: list[str] = []
+    position = 0
 
-    for position, video in enumerate(videos, start=1):
-        ctx.log(f"Frame delta {position}/{len(videos)}: video {video.index:02d}")
-        best = _best_frame_deltas_for_video(ctx, video, asset_text, asset_states, artifact_dir)
-        plans.append(best.output.strip())
-        judges.append(f"## Video {video.index:02d}\n\n{best.judge.strip()}")
-        scores.append(best.score)
+    for video in videos:
+        shots_text = _video_shots_text(video)
+        for shot in video.shots:
+            position += 1
+            shot_ref = f"V{video.index:02d}S{shot.index:02d}"
+            ctx.log(f"Frames {position}/{total_shots}: {shot_ref}")
+            shot_text = f"{shot_ref} - SHOT {shot.index:02d} - {shot.seconds}s - {shot.title}\n{shot.body}"
 
-    combined = BestAttempt(
-        output="\n\n".join(plans),
+            described = describe_shot(ctx, shots_text, shot_ref, shot_text, artifact_dir)
+            selection = _select_assets_for_shot(
+                ctx, shot_ref, shot.title, described, asset_text, asset_states, known, artifact_dir
+            )
+            if selection is None:
+                ctx.log(f"Frames {shot_ref}: no usable asset selection; skipped")
+                skipped.append(shot_ref)
+                continue
+
+            frame, judge, score = _best_frame_for_shot(ctx, selection, artifact_dir)
+            if frame is None:
+                ctx.log(f"Frames {shot_ref}: no usable frame answer; skipped")
+                skipped.append(shot_ref)
+                continue
+
+            record = to_frame_delta(shot_ref, shot.title, described, selection, frame)
+            write_delta(ctx.workflow, record)
+            frames.append(record)
+            judges.append(f"## {shot_ref}\n\n{judge.strip()}")
+            scores.append(score)
+
+    write_text(ctx.workflow / "frame_deltas.md", deltas_markdown(frames))
+    write_text(ctx.workflow / "frame_delta_judge.md", "\n\n".join(judges))
+    if skipped:
+        ctx.log(f"Frames: {len(skipped)} of {total_shots} shots had no usable output: {' '.join(skipped)}")
+
+    return BestAttempt(
+        output=deltas_markdown(frames),
         judge="\n\n".join(judges),
         score=min(scores) if scores else 0,
     )
-    write_text(ctx.workflow / "frame_deltas.md", combined.output)
-    write_text(ctx.workflow / "frame_delta_judge.md", combined.judge)
-    return combined
 
 
 def run_generate_job(job_id: str, slug: str, model: str) -> None:
@@ -280,7 +309,7 @@ def run_generate_job(job_id: str, slug: str, model: str) -> None:
         asset_text = read_optional(ctx.workflow / "asset_catalog.md") or ""
         build_json_assets(ctx)
         asset_states = state_vocabulary(load_specs(ctx.workflow, load_manifest(ctx.workflow)))
-        frames = _best_frame_deltas(ctx, asset_text, asset_states)
+        frames = _frame_deltas(ctx, asset_text, asset_states)
         build_json_frames(ctx)
 
         update_job(

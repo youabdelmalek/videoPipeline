@@ -182,6 +182,32 @@ class AssetCatalogGroup(BaseModel):
     items: list[AssetCatalogItem]
 
 
+class FrameDeltaDetail(BaseModel):
+    """What actually moves between the two frames, split by what is moving.
+
+    The frame writer fills these four separately so a later video stage is told
+    the performance, the staging, and the camera as distinct instructions rather
+    than one sentence that mixes them.
+    """
+
+    emotion: str = ""
+    character_movement: str = ""
+    background_movement: str = ""
+    camera_movement: str = ""
+
+    def lines(self) -> list[str]:
+        return [
+            f"{label}: {value}"
+            for label, value in (
+                ("Emotion", self.emotion),
+                ("Character movement", self.character_movement),
+                ("Background movement", self.background_movement),
+                ("Camera movement", self.camera_movement),
+            )
+            if value.strip()
+        ]
+
+
 class FrameDelta(BaseModel):
     """One shot's entry in the frame plan: where it starts, ends, and how."""
 
@@ -189,7 +215,13 @@ class FrameDelta(BaseModel):
     title: str
     first_frame: str = ""
     last_frame: str = ""
+    #: One-line summary of the change; `detail` carries the breakdown.
     delta: str = ""
+    detail: FrameDeltaDetail = Field(default_factory=FrameDeltaDetail)
+    #: What the describer and asset picker decided, kept for the UI and results.
+    description: str = ""
+    emotion: str = ""
+    assets: dict[str, Any] = Field(default_factory=dict)
 
 
 class JsonFrameSpec(BaseModel):
