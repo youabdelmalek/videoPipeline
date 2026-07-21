@@ -43,7 +43,7 @@ def detail_video(
         output = run_llm_stage(
             ctx,
             artifact_dir=artifact_dir,
-            name=f"shot_writer_video_{video.index:02d}",
+            name=f"shot_writer_video_{video.index:02d}_attempt_{attempt:02d}",
             title=f"Shot Writer - Video {video.index:02d}",
             prompt=prompt,
             attempt=attempt,
@@ -56,7 +56,7 @@ def detail_video(
         judge_output = run_llm_stage(
             ctx,
             artifact_dir=artifact_dir,
-            name=f"shot_judge_video_{video.index:02d}",
+            name=f"shot_judge_video_{video.index:02d}_attempt_{attempt:02d}",
             title=f"Shot Judge - Video {video.index:02d}",
             prompt=judge_prompt,
             attempt=attempt,

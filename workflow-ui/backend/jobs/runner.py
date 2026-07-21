@@ -58,8 +58,38 @@ def run_has_active_job(slug: str) -> bool:
         return any(job.run_slug == slug and job.status in _ACTIVE_STATUSES for job in _jobs.values())
 
 
+def _refresh_results(slug: str) -> None:
+    """Rebuild `runs/<slug>/results/` from whatever the job left on disk.
+
+    Imported here rather than at module scope: the pipelines import this module,
+    so a top-level import of `backend.runs` would close an import cycle.
+    """
+    try:
+        from backend.runs.paths import run_dir
+        from backend.runs.results import write_results
+
+        write_results(run_dir(slug))
+    except Exception:  # noqa: BLE001 - results are a convenience, never a job failure.
+        pass
+
+
 def submit(work: Callable[..., None], *args: object) -> None:
-    _executor.submit(work, *args)
+    """Queue a job, then refresh that run's result files once it settles.
+
+    Every stage button lands here, so this is the one place that keeps
+    `results/` current no matter which job ran - including a failed one, whose
+    partial output is still worth writing out.
+    """
+
+    def work_then_refresh() -> None:
+        try:
+            work(*args)
+        finally:
+            slug = args[1] if len(args) > 1 else None
+            if isinstance(slug, str):
+                _refresh_results(slug)
+
+    _executor.submit(work_then_refresh)
 
 
 def job_response(job: Job) -> JobResponse:
