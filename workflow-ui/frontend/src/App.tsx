@@ -84,7 +84,7 @@ type SavedWorkflow = {
 
 type WorkflowLibrary = Record<string, SavedWorkflow>;
 type LinkSource = { nodeId: string; handleId: string };
-type VisualLine = { id: string; x1: number; y1: number; x2: number; y2: number };
+type LinkMenu = { edgeId: string; x: number; y: number };
 
 const STORAGE_KEY = 'flexible-workflow-v1';
 const LIBRARY_STORAGE_KEY = 'flexible-workflow-library-v1';
@@ -268,7 +268,7 @@ function storageRead(): { nodes: WorkflowNodeState[]; edges: Edge[] } {
       return { nodes: STARTER_NODES, edges: [] };
     }
     const parsed = JSON.parse(raw) as { nodes?: WorkflowNodeState[]; edges?: Edge[] };
-    return { nodes: parsed.nodes?.length ? parsed.nodes : STARTER_NODES, edges: parsed.edges ?? [] };
+    return { nodes: parsed.nodes?.length ? parsed.nodes : STARTER_NODES, edges: normalizeEdges(parsed.edges ?? []) };
   } catch {
     return { nodes: STARTER_NODES, edges: [] };
   }
@@ -306,133 +306,18 @@ function edgeOutputHandle(edge: Edge): string {
   return typeof handle === 'string' ? handle : edge.sourceHandle ?? 'output';
 }
 
-function selectorValue(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-}
-
-function VisualLinks({
-  edges,
-  nodes,
-  onDelete,
-}: {
-  edges: Edge[];
-  nodes: WorkflowNodeState[];
-  onDelete: (edgeId: string) => void;
-}) {
-  const [lines, setLines] = useState<VisualLine[]>([]);
-  const [menu, setMenu] = useState<{ edgeId: string; x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    function updateLines() {
-      setLines(edges.flatMap((edge) => {
-        const sourceHandle = edgeOutputHandle(edge);
-        const targetHandle = edgeInputHandle(edge);
-        if (!targetHandle) {
-          return [];
-        }
-        const source = document.querySelector(
-          `[data-id="${selectorValue(edge.source)}"] [data-handleid="${selectorValue(sourceHandle)}"]`,
-        );
-        const target = document.querySelector(
-          `[data-id="${selectorValue(edge.target)}"] [data-handleid="${selectorValue(targetHandle)}"]`,
-        );
-        if (!source || !target) {
-          return [];
-        }
-        const sourceRect = source.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        return [{
-          id: edge.id,
-          x1: sourceRect.left + sourceRect.width / 2,
-          y1: sourceRect.top + sourceRect.height / 2,
-          x2: targetRect.left + targetRect.width / 2,
-          y2: targetRect.top + targetRect.height / 2,
-        }];
-      }));
-    }
-
-    updateLines();
-    const interval = window.setInterval(updateLines, 250);
-    window.addEventListener('resize', updateLines);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('resize', updateLines);
-    };
-  }, [edges, nodes]);
-
-  // A link the menu is open for may vanish (deleted, node removed); drop the menu.
-  useEffect(() => {
-    if (menu && !edges.some((edge) => edge.id === menu.edgeId)) {
-      setMenu(null);
-    }
-  }, [edges, menu]);
-
-  // Any click off the menu, or Escape, dismisses it.
-  useEffect(() => {
-    if (!menu) {
-      return;
-    }
-    const close = () => setMenu(null);
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMenu(null);
-      }
-    };
-    window.addEventListener('click', close);
-    window.addEventListener('contextmenu', close);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('click', close);
-      window.removeEventListener('contextmenu', close);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [menu]);
-
-  function openMenu(event: ReactMouseEvent, edgeId: string) {
-    event.preventDefault();
-    event.stopPropagation();
-    setMenu({ edgeId, x: event.clientX, y: event.clientY });
-  }
-
-  return (
-    <>
-      <svg className="visual-link-layer">
-        {lines.map((line) => {
-          const bend = Math.max(80, Math.abs(line.x2 - line.x1) * 0.45);
-          const path = `M ${line.x1} ${line.y1} C ${line.x1 + bend} ${line.y1}, ${line.x2 - bend} ${line.y2}, ${line.x2} ${line.y2}`;
-          return (
-            <g key={line.id}>
-              {/* A fat transparent stroke gives the thin curve a comfortable click target. */}
-              <path
-                className="visual-link-hit"
-                d={path}
-                onContextMenu={(event) => openMenu(event, line.id)}
-              />
-              <path className={`visual-link-path ${menu?.edgeId === line.id ? 'is-active' : ''}`} d={path} />
-            </g>
-          );
-        })}
-      </svg>
-      {menu ? (
-        <div
-          className="link-context-menu"
-          style={{ left: menu.x, top: menu.y }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              onDelete(menu.edgeId);
-              setMenu(null);
-            }}
-          >
-            <Trash2 size={13} />
-            Delete link
-          </button>
-        </div>
-      ) : null}
-    </>
-  );
+/**
+ * Older snapshots kept handle ids only in `edge.data`, which React Flow cannot
+ * anchor to, so links were drawn by a separate overlay. Lift the ids into the
+ * top-level fields so React Flow attaches each edge to the right handle dot,
+ * and drop `animated` so the curve renders solid.
+ */
+function normalizeEdges(edges: Edge[]): Edge[] {
+  return edges.map(({ animated: _animated, ...edge }) => ({
+    ...edge,
+    sourceHandle: edgeOutputHandle(edge),
+    targetHandle: edgeInputHandle(edge),
+  }));
 }
 
 export function App() {
@@ -446,6 +331,8 @@ export function App() {
   const [selectedWorkflowName, setSelectedWorkflowName] = useState('');
   const [selectedRunName, setSelectedRunName] = useState('');
   const [pendingLinkSource, setPendingLinkSource] = useState<LinkSource | null>(null);
+  const [linkMenu, setLinkMenu] = useState<LinkMenu | null>(null);
+  const [nodeSizes, setNodeSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [debug, setDebug] = useState('Ready');
   const [error, setError] = useState<string | null>(null);
@@ -514,11 +401,12 @@ export function App() {
       return;
     }
 
+    const loadedEdges = normalizeEdges(snapshot.edges);
     setWorkflowNodes(snapshot.nodes);
-    setEdges(snapshot.edges);
+    setEdges(loadedEdges);
     nodesRef.current = snapshot.nodes;
-    edgesRef.current = snapshot.edges;
-    writeCurrentSnapshot(snapshot.nodes, snapshot.edges);
+    edgesRef.current = loadedEdges;
+    writeCurrentSnapshot(snapshot.nodes, loadedEdges);
     setWorkflowName(selectedWorkflowName);
     setRunName(selectedRunName);
     setDebug(`Loaded ${selectedWorkflowName} / ${selectedRunName}`);
@@ -846,6 +734,22 @@ export function App() {
   }
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
+    // React Flow reports node measurements as 'dimensions' changes. They must be
+    // persisted and fed back through the nodes' `measured` field, otherwise the
+    // nodes count as unmeasured and React Flow refuses to draw their edges.
+    const sized = changes.filter(
+      (change): change is NodeChange & { type: 'dimensions'; id: string; dimensions: { width: number; height: number } } =>
+        change.type === 'dimensions' && Boolean(change.dimensions),
+    );
+    if (sized.length) {
+      setNodeSizes((current) => {
+        const next = { ...current };
+        for (const change of sized) {
+          next[change.id] = change.dimensions;
+        }
+        return next;
+      });
+    }
     setWorkflowNodes((current) => current.map((node) => {
       const change = changes.find((entry) => entry.type === 'position' && entry.id === node.id && entry.position);
       return change && 'position' in change && change.position ? { ...node, position: change.position } : node;
@@ -871,11 +775,8 @@ export function App() {
       id: `${connection.source}->${connection.target}:${connection.targetHandle}`,
       source: connection.source!,
       target: connection.target!,
-      animated: true,
-      data: {
-        sourceHandleId: connection.sourceHandle ?? 'output',
-        targetHandleId: connection.targetHandle,
-      },
+      sourceHandle: connection.sourceHandle ?? 'output',
+      targetHandle: connection.targetHandle,
       }, ...current.filter((edge) => !(edge.target === connection.target && edgeInputHandle(edge) === connection.targetHandle))];
       edgesRef.current = next;
       writeCurrentSnapshot(nodesRef.current, next);
@@ -895,11 +796,8 @@ export function App() {
         id: `${source.nodeId}:${source.handleId}->${targetNodeId}:${targetHandleId}`,
         source: source.nodeId,
         target: targetNodeId,
-        animated: true,
-        data: {
-          sourceHandleId: source.handleId,
-          targetHandleId,
-        },
+        sourceHandle: source.handleId,
+        targetHandle: targetHandleId,
       }, ...current.filter((edge) => !(edge.target === targetNodeId && edgeInputHandle(edge) === targetHandleId))];
       edgesRef.current = next;
       writeCurrentSnapshot(nodesRef.current, next);
@@ -918,6 +816,41 @@ export function App() {
     });
     setDebug('Removed a link');
   }, []);
+
+  const onEdgeContextMenu = useCallback((event: ReactMouseEvent, edge: Edge) => {
+    event.preventDefault();
+    // Keep the window-level contextmenu listener from instantly closing the menu.
+    event.stopPropagation();
+    setLinkMenu({ edgeId: edge.id, x: event.clientX, y: event.clientY });
+  }, []);
+
+  // A link the menu is open for may vanish (deleted, node removed); drop the menu.
+  useEffect(() => {
+    if (linkMenu && !edges.some((edge) => edge.id === linkMenu.edgeId)) {
+      setLinkMenu(null);
+    }
+  }, [edges, linkMenu]);
+
+  // Any click off the menu, or Escape, dismisses it.
+  useEffect(() => {
+    if (!linkMenu) {
+      return;
+    }
+    const close = () => setLinkMenu(null);
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLinkMenu(null);
+      }
+    };
+    window.addEventListener('click', close);
+    window.addEventListener('contextmenu', close);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('contextmenu', close);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [linkMenu]);
 
   const pickOutput = useCallback((nodeId: string, handleId: string) => {
     setPendingLinkSource({ nodeId, handleId });
@@ -944,6 +877,7 @@ export function App() {
             ? 'flexibleSplit'
             : 'flexibleText',
     position: node.position,
+    measured: nodeSizes[node.id],
     initialWidth: node.kind === 'agent' ? 430 : node.kind === 'if' ? 400 : node.kind === 'json' ? 380 : node.kind === 'split' ? 360 : 360,
     initialHeight: node.kind === 'agent'
       ? 520
@@ -1015,7 +949,13 @@ export function App() {
           onPickInput: pickInput,
           onRemove: removeNode,
         },
-  })), [workflowNodes, models, runningNodeId, pendingLinkSource, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, runNode, removeNode]);
+  })), [workflowNodes, nodeSizes, models, runningNodeId, pendingLinkSource, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, runNode, removeNode]);
+
+  // Highlight the link the context menu is open for.
+  const flowEdges: Edge[] = useMemo(
+    () => edges.map((edge) => (edge.id === linkMenu?.edgeId ? { ...edge, className: 'is-menu-open' } : edge)),
+    [edges, linkMenu],
+  );
 
   return (
     <main className="app-shell">
@@ -1176,7 +1116,7 @@ export function App() {
       <WorkflowCanvas
         resetKey={0}
         nodes={flowNodes}
-        edges={edges}
+        edges={flowEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={() => undefined}
@@ -1184,6 +1124,7 @@ export function App() {
         connectable
         draggable
         onConnect={onConnect}
+        onEdgeContextMenu={onEdgeContextMenu}
         onDrop={onDrop}
         onDragOver={(event) => {
           event.preventDefault();
@@ -1191,7 +1132,24 @@ export function App() {
         }}
         onInit={setFlowInstance}
       />
-      <VisualLinks edges={edges} nodes={workflowNodes} onDelete={deleteEdge} />
+      {linkMenu ? (
+        <div
+          className="link-context-menu"
+          style={{ left: linkMenu.x, top: linkMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              deleteEdge(linkMenu.edgeId);
+              setLinkMenu(null);
+            }}
+          >
+            <Trash2 size={13} />
+            Delete link
+          </button>
+        </div>
+      ) : null}
     </main>
   );
 }

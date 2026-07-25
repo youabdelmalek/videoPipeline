@@ -33,36 +33,22 @@
   border: 2px solid var(--panel);
 }
 
-.visual-link-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 24;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.visual-link-layer .visual-link-path {
-  fill: none;
+/* Links are native React Flow edges, styled to match the canvas. */
+.react-flow__edge .react-flow__edge-path {
   stroke: var(--teal);
   stroke-width: 3;
   stroke-linecap: round;
   filter: drop-shadow(0 1px 1px rgba(25, 23, 19, 0.2));
-  pointer-events: none;
 }
 
-.visual-link-layer .visual-link-path.is-active {
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge.is-menu-open .react-flow__edge-path {
   stroke: var(--rose);
 }
 
-/* Wide, invisible hit area so the thin curve is easy to click. */
-.visual-link-layer .visual-link-hit {
-  fill: none;
-  stroke: transparent;
+/* Wide, invisible hit area so the thin curve is easy to right-click. */
+.react-flow__edge .react-flow__edge-interaction {
   stroke-width: 18;
-  stroke-linecap: round;
-  pointer-events: stroke;
   cursor: pointer;
 }
 

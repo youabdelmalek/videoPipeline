@@ -29,6 +29,7 @@ type Props = {
   onPaneClick: () => void;
   /** Set only in composer mode, where links are drawn by hand. */
   onConnect?: (connection: Connection) => void;
+  onEdgeContextMenu?: (event: ReactMouseEvent, edge: Edge) => void;
   isValidConnection?: IsValidConnection;
   connectable?: boolean;
   draggable?: boolean;
