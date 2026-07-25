@@ -17,10 +17,13 @@ from backend.models import (
     BuildJsonFramesRequest,
     DetailVideosRequest,
     GenerateScenesRequest,
+    FlexibleLlmRequest,
+    FlexibleLlmResponse,
     JobResponse,
     JudgeScenesRequest,
     RewriteBoardRequest,
     RewriteShotsRequest,
+    RunWorkflowRequest,
     StartJobResponse,
 )
 from backend.pipelines import (
@@ -32,8 +35,10 @@ from backend.pipelines import (
     run_json_frames_job,
     run_judge_job,
     run_shot_rewrite_job,
+    run_workflow_job,
 )
 from backend.runs.paths import run_dir
+from backend.services.llm import llm_generate
 
 router = APIRouter()
 
@@ -46,6 +51,7 @@ _JOB_STAGES: dict[str, Callable[..., None]] = {
     "asset_catalog": run_asset_catalog_job,
     "json_assets": run_json_assets_job,
     "json_frames": run_json_frames_job,
+    "workflow": run_workflow_job,
 }
 
 
@@ -96,6 +102,18 @@ def build_json_assets(slug: str, request: BuildJsonAssetsRequest) -> StartJobRes
 @router.post("/runs/{slug}/json-frames", response_model=StartJobResponse)
 def build_json_frames(slug: str, request: BuildJsonFramesRequest) -> StartJobResponse:
     return _start("json_frames", slug, request.model, request.shot_ref)
+
+
+@router.post("/runs/{slug}/run-workflow", response_model=StartJobResponse)
+def run_workflow(slug: str, request: RunWorkflowRequest) -> StartJobResponse:
+    """Seed the composed workflow's inputs, then run its stages in order."""
+    return _start("workflow", slug, request.model)
+
+
+@router.post("/llm", response_model=FlexibleLlmResponse)
+def flexible_llm(request: FlexibleLlmRequest) -> FlexibleLlmResponse:
+    """Run one freeform prompt through the selected local LLM."""
+    return FlexibleLlmResponse(output=llm_generate("ollama", request.model, request.prompt))
 
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)

@@ -552,3 +552,427 @@
   font-size: 12px;
   white-space: nowrap;
 }
+
+/* Composer: the pasted-input and stage cards, and their port rows. */
+.node-input {
+  width: 380px;
+  background: #fbf3e4;
+  border-color: #c9ad74;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node-input textarea {
+  flex: 1;
+  min-height: 150px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.node-stage {
+  width: 340px;
+  background: #eef4f2;
+  border-color: #9ab8ae;
+}
+
+.node-stage.is-unsatisfied {
+  border-color: var(--rose);
+}
+
+.stage-description {
+  margin: 6px 0 10px;
+  color: #4f473b;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.port-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.port-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 22px;
+}
+
+.port-list li {
+  position: relative;
+  white-space: nowrap;
+  color: var(--teal-dark);
+}
+
+.port-list li.is-missing {
+  color: var(--rose);
+  font-weight: 700;
+}
+
+.port-list.is-outputs {
+  text-align: right;
+}
+
+.port-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #6f685d;
+}
+
+.port-check.is-ok {
+  color: var(--teal-dark);
+  font-weight: 700;
+}
+
+.port-check.is-bad {
+  color: var(--rose);
+  font-weight: 700;
+}
+
+/* Composer ports: a visible dot per port, sitting on the card edge so a link
+   can be dragged straight off it. Bigger and higher-contrast than the fixed
+   pipeline's decorative handles, because these are the thing you aim at. */
+.node-input .react-flow__handle,
+.node-stage .react-flow__handle {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--line);
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.node-input .react-flow__handle:hover,
+.node-stage .react-flow__handle:hover {
+  transform: scale(1.35);
+  background: var(--teal);
+}
+
+/* A port with nothing linked to it reads as "still needs something". */
+.node-stage .port-list li.is-missing .react-flow__handle {
+  background: var(--rose);
+}
+
+.node-stage .port-list li.is-linked .react-flow__handle {
+  background: var(--teal);
+}
+
+/* React Flow puts the handle at the node edge; nudge it onto the card border
+   so the dot lines up with its own port label row. */
+.node-stage .port-list .react-flow__handle-left {
+  left: -23px;
+}
+
+.node-stage .port-list .react-flow__handle-right {
+  right: -23px;
+}
+
+.node-input .react-flow__handle-right {
+  right: -7px;
+}
+
+/* While dragging a link, show where it can legally land. */
+.react-flow__handle-connecting {
+  background: var(--rose) !important;
+}
+
+.react-flow__handle-valid {
+  background: var(--teal) !important;
+  transform: scale(1.4);
+}
+
+.react-flow__connectionline path,
+.react-flow__connection-path {
+  stroke: var(--teal);
+  stroke-width: 2.5;
+}
+
+.flexible-node {
+  width: 430px;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-node {
+  background: #eef4f2;
+  border-color: #9ab8ae;
+}
+
+.text-node {
+  width: 360px;
+  min-height: 260px;
+  background: #fbf3e4;
+  border-color: #c9ad74;
+}
+
+.json-node {
+  width: 380px;
+  min-height: 430px;
+  background: #f4f0e4;
+  border-color: #bca15c;
+}
+
+.json-node.has-error {
+  border-color: var(--rose);
+}
+
+.if-node {
+  width: 400px;
+  min-height: 560px;
+  background: #f5eef2;
+  border-color: #c39ab6;
+}
+
+.if-condition {
+  min-height: 54px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.if-input-row {
+  grid-template-columns: 56px minmax(0, 1fr);
+}
+
+.if-port-name {
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.if-run-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.if-status {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.if-output .output-box {
+  min-height: 64px;
+}
+
+.if-prompt-label {
+  gap: 4px;
+}
+
+.if-output.is-success {
+  border-left: 3px solid var(--teal);
+  padding-left: 8px;
+}
+
+.if-output.is-retry {
+  border-left: 3px solid #b06a8f;
+  padding-left: 8px;
+}
+
+.split-node {
+  width: 360px;
+  min-height: 340px;
+  background: #eaf3ef;
+  border-color: #93bbaa;
+}
+
+.split-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.split-output .output-box {
+  min-height: 52px;
+}
+
+.json-input-block {
+  position: relative;
+}
+
+.json-node-error {
+  margin: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(168, 59, 69, 0.28);
+  border-radius: 8px;
+  background: rgba(168, 59, 69, 0.08);
+  color: var(--rose);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.node-title-input {
+  width: 240px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 2px 0;
+}
+
+.node-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--teal);
+}
+
+.node-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.node-grid.two {
+  grid-template-columns: 88px minmax(0, 1fr);
+}
+
+.node-grid.three {
+  grid-template-columns: 86px 1fr 1fr;
+  align-items: end;
+}
+
+.flexible-node label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.flexible-node input,
+.flexible-node select,
+.flexible-node textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffcf6;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.flexible-node input,
+.flexible-node select {
+  min-height: 30px;
+  padding: 0 8px;
+}
+
+.flexible-node textarea {
+  resize: vertical;
+  padding: 8px;
+  line-height: 1.35;
+}
+
+.prompt-box {
+  min-height: 115px;
+}
+
+.output-box {
+  min-height: 120px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.input-editor,
+.output-block,
+.text-pass-block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.input-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 95px minmax(0, 1fr) 28px;
+  gap: 5px;
+  align-items: center;
+}
+
+.run-node-button,
+.icon-button {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #efe5d5;
+  color: var(--teal-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.run-node-button {
+  padding: 0 10px;
+  background: var(--teal);
+  color: #fffaf1;
+  border-color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.check-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+}
+
+.check-label input {
+  width: auto;
+  min-height: 0;
+}
+
+.flexible-node .react-flow__handle {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--line);
+  cursor: crosshair;
+}
+
+.flexible-node .react-flow__handle-left {
+  left: -23px;
+}
+
+.flexible-node .react-flow__handle-right {
+  right: -23px;
+}
+
+.flexible-node .react-flow__handle.is-link-source {
+  background: var(--teal);
+  box-shadow: 0 0 0 4px rgba(17, 100, 102, 0.24);
+  transform: scale(1.25);
+}
+
+.flexible-node .react-flow__handle.is-link-target {
+  background: #d9961f;
+  box-shadow: 0 0 0 4px rgba(217, 150, 31, 0.22);
+}

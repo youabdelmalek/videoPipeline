@@ -156,3 +156,56 @@ export type JobState = {
   updated_at: number;
   events: string[];
 };
+
+// Composable workflows: the stage/port contracts the backend serves, and the
+// hand-linked graph the canvas saves back.
+export type PortInfo = {
+  id: string;
+  label: string;
+  hint: string;
+};
+
+export type StageInfo = {
+  id: string;
+  label: string;
+  description: string;
+  inputs: string[];
+  outputs: string[];
+};
+
+export type StageCatalog = {
+  stages: StageInfo[];
+  ports: PortInfo[];
+};
+
+export type PortCheck = {
+  ok: boolean;
+  count: number;
+  summary: string;
+  errors: string[];
+};
+
+export type WorkflowNode = {
+  id: string;
+  kind: 'input' | 'stage';
+  port: string;
+  stage: string;
+  text: string;
+  position: { x?: number; y?: number };
+};
+
+export type WorkflowEdge = {
+  source: string;
+  target: string;
+  source_handle: string;
+  target_handle: string;
+};
+
+export type WorkflowDefinition = {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+};
+
+export type FlexibleLlmResponse = {
+  output: string;
+};

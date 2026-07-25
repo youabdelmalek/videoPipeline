@@ -1,4 +1,4 @@
-import { ClipboardList, Eye, EyeOff, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { ClipboardList, Eye, EyeOff, Loader2, RotateCcw, Trash2, Workflow } from 'lucide-react';
 import type { JobState, RunSummary } from '../api';
 
 type Props = {
@@ -12,6 +12,9 @@ type Props = {
   /** Whether the judge and the other advanced nodes are drawn. */
   showAdvanced: boolean;
   onToggleAdvanced: () => void;
+  /** True on /custom-workflow; the button then goes back to /default. */
+  composing: boolean;
+  onToggleComposing: () => void;
 };
 
 function runOptionLabel(run: RunSummary): string {
@@ -29,6 +32,8 @@ export function TopBar({
   onReset,
   showAdvanced,
   onToggleAdvanced,
+  composing,
+  onToggleComposing,
 }: Props) {
   return (
     <header className="topbar">
@@ -77,6 +82,16 @@ export function TopBar({
         >
           {showAdvanced ? <EyeOff size={16} /> : <Eye size={16} />}
           {showAdvanced ? 'Hide judge' : 'Show judge'}
+        </button>
+        <button
+          className="reset-button"
+          type="button"
+          onClick={onToggleComposing}
+          title={composing ? 'Back to /default' : 'Go to /custom-workflow'}
+          aria-pressed={composing}
+        >
+          <Workflow size={16} />
+          {composing ? 'Default' : 'Custom workflow'}
         </button>
         <button className="reset-button" type="button" onClick={onReset} disabled={busy} title="Reset canvas">
           <RotateCcw size={16} />

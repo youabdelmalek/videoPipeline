@@ -11,11 +11,53 @@ from backend.models import (
     CreateRunResponse,
     DeleteRunResponse,
     ListRunsResponse,
+    PortCheck,
+    PortInfo,
     RunResponse,
+    StagesResponse,
+    ValidatePortRequest,
+    WorkflowDefinition,
+    WorkflowResponse,
 )
 from backend.runs import artifact_text, create_run, delete_run, load_run, run_summaries
+from backend.runs.paths import run_dir
+from backend.runs.ports import PORTS, check_port
+from backend.runs.workflow import load_workflow, save_workflow
+from backend.stages.registry import stage_infos
 
 router = APIRouter()
+
+
+@router.get("/stages", response_model=StagesResponse)
+def get_stages() -> StagesResponse:
+    """The stage and port contracts the canvas renders its handles from."""
+    return StagesResponse(
+        stages=stage_infos(),
+        ports=[PortInfo(id=port.id, label=port.label, hint=port.hint) for port in PORTS.values()],
+    )
+
+
+@router.post("/validate", response_model=PortCheck)
+def post_validate(request: ValidatePortRequest) -> PortCheck:
+    """Structural check on pasted text. Writes nothing."""
+    return check_port(request.port, request.text)
+
+
+@router.get("/runs/{slug}/workflow", response_model=WorkflowResponse)
+def get_workflow(slug: str) -> WorkflowResponse:
+    path = run_dir(slug)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+    return WorkflowResponse(workflow=load_workflow(path))
+
+
+@router.put("/runs/{slug}/workflow", response_model=WorkflowResponse)
+def put_workflow(slug: str, workflow: WorkflowDefinition) -> WorkflowResponse:
+    path = run_dir(slug)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Run not found")
+    save_workflow(path, workflow)
+    return WorkflowResponse(workflow=workflow)
 
 
 @router.post("/runs", response_model=CreateRunResponse)

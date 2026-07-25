@@ -182,6 +182,83 @@ class AssetCatalogGroup(BaseModel):
     items: list[AssetCatalogItem]
 
 
+# Composable workflows: ports are the artifacts that move between stages, and a
+# workflow is a hand-linked graph of pasted inputs and stages.
+class PortCheck(BaseModel):
+    """Structural verification of one pasted input: does it parse, how many items."""
+
+    ok: bool
+    #: Items found - videos, shots, specs - so the UI can show "8 videos".
+    count: int = 0
+    summary: str = ""
+    errors: list[str] = Field(default_factory=list)
+
+
+class PortInfo(BaseModel):
+    id: str
+    label: str
+    hint: str
+
+
+class StageInfo(BaseModel):
+    id: str
+    label: str
+    description: str
+    inputs: list[str]
+    outputs: list[str]
+
+
+class StagesResponse(BaseModel):
+    stages: list[StageInfo]
+    ports: list[PortInfo]
+
+
+class ValidatePortRequest(BaseModel):
+    port: str
+    text: str = ""
+
+
+class WorkflowNode(BaseModel):
+    id: str
+    #: "input" for a pasted text box, "stage" for something that runs.
+    kind: Literal["input", "stage"]
+    #: Set on input nodes: which port the pasted text is.
+    port: str = ""
+    #: Set on stage nodes: which stage runs.
+    stage: str = ""
+    text: str = ""
+    position: dict[str, float] = Field(default_factory=dict)
+
+
+class WorkflowEdge(BaseModel):
+    source: str
+    target: str
+    source_handle: str = ""
+    target_handle: str = ""
+
+
+class WorkflowDefinition(BaseModel):
+    nodes: list[WorkflowNode] = Field(default_factory=list)
+    edges: list[WorkflowEdge] = Field(default_factory=list)
+
+
+class WorkflowResponse(BaseModel):
+    workflow: WorkflowDefinition
+
+
+class RunWorkflowRequest(BaseModel):
+    model: str = DEFAULT_MODEL
+
+
+class FlexibleLlmRequest(BaseModel):
+    prompt: str = Field(min_length=1)
+    model: str = DEFAULT_MODEL
+
+
+class FlexibleLlmResponse(BaseModel):
+    output: str
+
+
 class FrameDeltaDetail(BaseModel):
     """What actually moves between the two frames, split by what is moving.
 

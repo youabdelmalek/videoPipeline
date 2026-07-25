@@ -6,6 +6,7 @@ from backend.pipelines.json_assets import run_json_assets_job
 from backend.pipelines.json_frames import run_json_frames_job
 from backend.pipelines.judge import run_judge_job
 from backend.pipelines.shot_rewrite import run_shot_rewrite_job
+from backend.pipelines.workflow import run_workflow_job
 
 __all__ = [
     "run_board_rewrite_job",
@@ -16,4 +17,5 @@ __all__ = [
     "run_json_frames_job",
     "run_judge_job",
     "run_shot_rewrite_job",
+    "run_workflow_job",
 ]

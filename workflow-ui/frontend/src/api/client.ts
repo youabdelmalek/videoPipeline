@@ -37,6 +37,7 @@ function isRetryableFetchError(error: unknown): boolean {
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  init.signal?.addEventListener('abort', () => controller.abort(), { once: true });
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
@@ -44,7 +45,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = REQU
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, init?: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
   let lastError: unknown = null;
 
   for (const apiBase of orderedApiBases()) {
@@ -55,7 +56,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
           ...(init?.headers ?? {}),
         },
         ...init,
-      });
+      }, timeoutMs);
 
       if (!response.ok) {
         const text = await response.text();

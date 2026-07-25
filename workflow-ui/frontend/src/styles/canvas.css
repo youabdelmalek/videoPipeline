@@ -33,3 +33,67 @@
   border: 2px solid var(--panel);
 }
 
+.visual-link-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.visual-link-layer .visual-link-path {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 1px rgba(25, 23, 19, 0.2));
+  pointer-events: none;
+}
+
+.visual-link-layer .visual-link-path.is-active {
+  stroke: var(--rose);
+}
+
+/* Wide, invisible hit area so the thin curve is easy to click. */
+.visual-link-layer .visual-link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  stroke-linecap: round;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.link-context-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 132px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgba(25, 23, 19, 0.22);
+}
+
+.link-context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--rose);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-context-menu button:hover {
+  background: rgba(168, 59, 69, 0.1);
+}
+

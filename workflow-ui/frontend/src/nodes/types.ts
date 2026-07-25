@@ -1,5 +1,8 @@
 import type {
   ArtifactEntry,
+  PortCheck,
+  PortInfo,
+  StageInfo,
   AssetCatalogGroup,
   BoardProvider,
   DetailedVideo,
@@ -159,4 +162,169 @@ export type ShotRewriterNodeData = VideoSelectionNodeData & {
 export type ArtifactNodeData = CollapsibleNodeData & {
   slug: string | null;
   artifacts: ArtifactEntry[];
+};
+
+
+// Composed-workflow nodes. These are not collapsible: they are editors, not
+// output panes, so they carry their own callbacks rather than CollapsibleNodeData.
+export type InputNodeData = {
+  nodeId: string;
+  port: string;
+  text: string;
+  ports: PortInfo[];
+  /** Latest structural check, or null while it is in flight. */
+  check: PortCheck | null;
+  onPortChange: (nodeId: string, port: string) => void;
+  onTextChange: (nodeId: string, text: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type StageNodeData = {
+  nodeId: string;
+  stage: StageInfo;
+  /** Input ports nothing is linked to yet. */
+  unsatisfied: string[];
+  portLabel: (port: string) => string;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleInput = {
+  id: string;
+  name: string;
+  value: string;
+};
+
+export type FlexibleAgentNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  prompt: string;
+  model: string;
+  models: ModelOption[];
+  inputs: FlexibleInput[];
+  output: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleAgentPatch>) => void;
+  onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
+  onAddInput: (nodeId: string) => void;
+  onRemoveInput: (nodeId: string, inputId: string) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleAgentPatch = {
+  name: string;
+  order: number;
+  prompt: string;
+  model: string;
+  output: string;
+};
+
+export type FlexibleTextNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  text: string;
+  hasInput: boolean;
+  hasOutput: boolean;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleTextPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleTextPatch = {
+  name: string;
+  order: number;
+  text: string;
+  hasInput: boolean;
+  hasOutput: boolean;
+};
+
+export type FlexibleIfNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  input1: string;
+  input2: string;
+  condition: string;
+  prompt: string;
+  output1: string;
+  output2: string;
+  status: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleIfPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleIfPatch = {
+  name: string;
+  order: number;
+  input1: string;
+  input2: string;
+  condition: string;
+  prompt: string;
+  output1: string;
+  output2: string;
+  status: string;
+};
+
+export type FlexibleSplitNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  input: string;
+  delimiter: string;
+  count: number;
+  outputs: string[];
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleSplitPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleSplitPatch = {
+  name: string;
+  order: number;
+  input: string;
+  delimiter: string;
+  count: number;
+  outputs: string[];
+};
+
+export type FlexibleJsonNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  input: string;
+  path: string;
+  output: string;
+  error: string | null;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleJsonPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleJsonPatch = {
+  name: string;
+  order: number;
+  input: string;
+  path: string;
+  output: string;
+  error: string | null;
 };

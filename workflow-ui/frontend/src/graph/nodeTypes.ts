@@ -4,6 +4,12 @@ import {
   ArtifactNode,
   AssetCatalogNode,
   BoardRewriterNode,
+  FlexibleAgentNode,
+  FlexibleIfNode,
+  FlexibleJsonNode,
+  FlexibleSplitNode,
+  FlexibleTextNode,
+  InputNode,
   JsonAssetsNode,
   JsonFramesNode,
   JudgeNode,
@@ -11,6 +17,7 @@ import {
   SceneNode,
   ShotRewriterNode,
   ShotsListNode,
+  StageNode,
   VideoDetailerNode,
   VideoListNode,
 } from '../nodes';
@@ -30,6 +37,13 @@ export const nodeTypes = {
   shotRewriter: ShotRewriterNode,
   judge: JudgeNode,
   artifacts: ArtifactNode,
+  composerInput: InputNode,
+  composerStage: StageNode,
+  flexibleAgent: FlexibleAgentNode,
+  flexibleIf: FlexibleIfNode,
+  flexibleJson: FlexibleJsonNode,
+  flexibleSplit: FlexibleSplitNode,
+  flexibleText: FlexibleTextNode,
 };
 
 const MINIMAP_COLORS: Record<string, string> = {
@@ -46,6 +60,13 @@ const MINIMAP_COLORS: Record<string, string> = {
   shotRewriter: '#8a4f7d',
   judge: '#a83b45',
   artifacts: '#4b6f9f',
+  composerInput: '#7c5b2c',
+  composerStage: '#116466',
+  flexibleAgent: '#116466',
+  flexibleIf: '#8a4f7d',
+  flexibleJson: '#8a6f2f',
+  flexibleSplit: '#2f7f6a',
+  flexibleText: '#7c5b2c',
 };
 
 const MINIMAP_FALLBACK = '#6f685d';

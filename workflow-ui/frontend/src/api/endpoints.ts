@@ -1,7 +1,18 @@
 /** One function per backend endpoint. */
 
 import { request } from './client';
-import type { BoardProvider, JobState, ModelList, RunState, RunSummary, ShotProvider } from './types';
+import type {
+  BoardProvider,
+  JobState,
+  ModelList,
+  PortCheck,
+  RunState,
+  RunSummary,
+  ShotProvider,
+  StageCatalog,
+  WorkflowDefinition,
+  FlexibleLlmResponse,
+} from './types';
 
 /** The local models the backend will accept, annotated with what is pulled. */
 export async function fetchModels(): Promise<ModelList> {
@@ -126,4 +137,58 @@ export async function buildJsonFrames(
 
 export async function fetchJob(jobId: string): Promise<JobState> {
   return request<JobState>(`/jobs/${jobId}`);
+}
+
+/** The stage and port contracts the composer renders handles from. */
+export async function fetchStages(): Promise<StageCatalog> {
+  return request<StageCatalog>('/stages');
+}
+
+/** Structural check on pasted text. Writes nothing. */
+export async function validatePort(port: string, text: string): Promise<PortCheck> {
+  return request<PortCheck>('/validate', {
+    method: 'POST',
+    body: JSON.stringify({ port, text }),
+  });
+}
+
+export async function fetchWorkflow(slug: string): Promise<WorkflowDefinition> {
+  const data = await request<{ workflow: WorkflowDefinition }>(`/runs/${slug}/workflow`);
+  return data.workflow;
+}
+
+export async function saveWorkflow(
+  slug: string,
+  workflow: WorkflowDefinition,
+): Promise<WorkflowDefinition> {
+  const data = await request<{ workflow: WorkflowDefinition }>(`/runs/${slug}/workflow`, {
+    method: 'PUT',
+    body: JSON.stringify(workflow),
+  });
+  return data.workflow;
+}
+
+export async function runWorkflow(slug: string, model: string): Promise<JobState> {
+  const data = await request<{ job: JobState }>(`/runs/${slug}/run-workflow`, {
+    method: 'POST',
+    body: JSON.stringify({ model }),
+  });
+  return data.job;
+}
+
+export async function runFlexibleLlm(
+  prompt: string,
+  model: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const data = await request<FlexibleLlmResponse>(
+    '/llm',
+    {
+      method: 'POST',
+      body: JSON.stringify({ prompt, model }),
+      signal,
+    },
+    10 * 60 * 1000,
+  );
+  return data.output;
 }

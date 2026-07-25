@@ -8,6 +8,7 @@ import {
   deleteRun,
   fetchRun,
   fetchRuns,
+  runWorkflow,
   type BoardProvider,
   type JobState,
   type RunState,
@@ -144,6 +145,20 @@ export function useWorkflowRun() {
     setError,
   });
 
+  /** Seed the composed workflow's inputs and run its stages. */
+  async function runComposedWorkflow() {
+    setError(null);
+    if (!run?.slug) {
+      setError('Create or load a run before running a composed workflow');
+      return;
+    }
+    try {
+      setJob(await runWorkflow(run.slug, model));
+    } catch (caught) {
+      setError(messageFrom(caught, 'Could not start the workflow'));
+    }
+  }
+
   async function loadRun(slug: string) {
     setError(null);
     setRunMessage(null);
@@ -189,6 +204,7 @@ export function useWorkflowRun() {
     runMessage,
     busy,
     loadRun,
+    runComposedWorkflow,
     deleteSelectedRun,
     reset,
     generate,

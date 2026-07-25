@@ -1,12 +1,16 @@
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { DragEventHandler, MouseEvent as ReactMouseEvent } from 'react';
 import {
   Background,
   Controls,
   MiniMap,
   ReactFlow,
+  type Connection,
   type Edge,
+  type EdgeChange,
+  type IsValidConnection,
   type Node,
   type NodeChange,
+  type ReactFlowInstance,
 } from '@xyflow/react';
 import { minimapNodeColor, nodeTypes } from '../graph/nodeTypes';
 
@@ -20,22 +24,44 @@ type Props = {
   nodes: Node[];
   edges: Edge[];
   onNodesChange: (changes: NodeChange[]) => void;
+  onEdgesChange?: (changes: EdgeChange[]) => void;
   onNodeClick: (event: ReactMouseEvent, node: Node) => void;
   onPaneClick: () => void;
+  /** Set only in composer mode, where links are drawn by hand. */
+  onConnect?: (connection: Connection) => void;
+  isValidConnection?: IsValidConnection;
+  connectable?: boolean;
+  draggable?: boolean;
+  onDrop?: DragEventHandler<HTMLElement>;
+  onDragOver?: DragEventHandler<HTMLElement>;
+  onInit?: (instance: ReactFlowInstance) => void;
 };
 
-export function WorkflowCanvas({ resetKey, nodes, edges, ...flowHandlers }: Props) {
+export function WorkflowCanvas({
+  resetKey,
+  nodes,
+  edges,
+  connectable = false,
+  draggable = false,
+  onDrop,
+  onDragOver,
+  onInit,
+  ...flowHandlers
+}: Props) {
   return (
-    <section className="canvas-wrap">
+    <section className="canvas-wrap" onDrop={onDrop} onDragOver={onDragOver}>
       <ReactFlow
         key={resetKey}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         {...flowHandlers}
-        nodesDraggable={false}
+        nodesDraggable={draggable}
+        nodesConnectable={connectable}
+        edgesReconnectable={false}
         panOnDrag={PAN_BUTTONS}
         fitView
+        onInit={onInit}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
       >
