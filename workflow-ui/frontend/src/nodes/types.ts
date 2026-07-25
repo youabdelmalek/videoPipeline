@@ -304,6 +304,72 @@ export type FlexibleSplitPatch = {
   outputs: string[];
 };
 
+export type FlexibleWorkflowInputNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  value: string;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleWorkflowInputPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleWorkflowInputPatch = {
+  name: string;
+  order: number;
+  value: string;
+};
+
+export type FlexibleWorkflowOutputNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  value: string;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleWorkflowOutputPatch>) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleWorkflowOutputPatch = {
+  name: string;
+  order: number;
+  value: string;
+};
+
+/** One saved workflow, for the workflow node's picker. */
+export type WorkflowOption = {
+  name: string;
+};
+
+export type FlexibleWorkflowNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  workflowName: string;
+  inputs: FlexibleInput[];
+  outputs: { name: string; value: string }[];
+  status: string;
+  running: boolean;
+  workflowOptions: WorkflowOption[];
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleWorkflowPatch>) => void;
+  onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
+  onPickWorkflow: (nodeId: string, workflowName: string) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleWorkflowPatch = {
+  name: string;
+  order: number;
+  status: string;
+};
+
 export type FlexibleJsonNodeData = {
   nodeId: string;
   name: string;

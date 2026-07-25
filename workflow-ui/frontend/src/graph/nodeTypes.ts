@@ -9,6 +9,9 @@ import {
   FlexibleJsonNode,
   FlexibleSplitNode,
   FlexibleTextNode,
+  FlexibleWorkflowInputNode,
+  FlexibleWorkflowNode,
+  FlexibleWorkflowOutputNode,
   InputNode,
   JsonAssetsNode,
   JsonFramesNode,
@@ -44,6 +47,9 @@ export const nodeTypes = {
   flexibleJson: FlexibleJsonNode,
   flexibleSplit: FlexibleSplitNode,
   flexibleText: FlexibleTextNode,
+  flexibleWorkflowInput: FlexibleWorkflowInputNode,
+  flexibleWorkflowOutput: FlexibleWorkflowOutputNode,
+  flexibleWorkflow: FlexibleWorkflowNode,
 };
 
 const MINIMAP_COLORS: Record<string, string> = {
@@ -67,6 +73,9 @@ const MINIMAP_COLORS: Record<string, string> = {
   flexibleJson: '#8a6f2f',
   flexibleSplit: '#2f7f6a',
   flexibleText: '#7c5b2c',
+  flexibleWorkflowInput: '#8a6f2f',
+  flexibleWorkflowOutput: '#6b4f9f',
+  flexibleWorkflow: '#116466',
 };
 
 const MINIMAP_FALLBACK = '#6f685d';

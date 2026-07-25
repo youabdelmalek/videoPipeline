@@ -1,4 +1,5 @@
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Loader2, Play, Plus, Trash2, X } from 'lucide-react';
 import type { FlexibleAgentNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
@@ -51,6 +52,13 @@ export function FlexibleAgentNode({ data }: NodeProps<Node<FlexibleAgentNodeData
   const [name, setName] = useDraftValue(data.name, (value) => data.onChange(data.nodeId, { name: value }));
   const [prompt, setPrompt] = useDraftValue(data.prompt, (value) => data.onChange(data.nodeId, { prompt: value }));
   const [output, setOutput] = useDraftValue(data.output, (value) => data.onChange(data.nodeId, { output: value }));
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // Adding or removing inputs adds and removes handles; React Flow must
+  // re-measure them or their edges anchor to stale positions.
+  useEffect(() => {
+    updateNodeInternals(data.nodeId);
+  }, [data.nodeId, data.inputs.length, updateNodeInternals]);
 
   return (
     <section className="node flexible-node agent-node">

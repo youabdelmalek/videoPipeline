@@ -1,4 +1,5 @@
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Play, Trash2 } from 'lucide-react';
 import type { FlexibleSplitNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
@@ -10,6 +11,13 @@ export function FlexibleSplitNode({ data }: NodeProps<Node<FlexibleSplitNodeData
   const [name, setName] = useDraftValue(data.name, (value) => data.onChange(data.nodeId, { name: value }));
   const [delimiter, setDelimiter] = useDraftValue(data.delimiter, (value) => data.onChange(data.nodeId, { delimiter: value }));
   const [input, setInput] = useDraftValue(data.input, (value) => data.onChange(data.nodeId, { input: value }));
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // Changing the output count adds and removes handles; React Flow must
+  // re-measure them or their edges anchor to stale positions.
+  useEffect(() => {
+    updateNodeInternals(data.nodeId);
+  }, [data.nodeId, data.count, updateNodeInternals]);
 
   const sourceClass = (handle: string) =>
     data.pendingSourceNodeId === data.nodeId && data.pendingSourceHandleId === handle ? 'is-link-source' : '';

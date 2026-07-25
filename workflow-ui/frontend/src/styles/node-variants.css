@@ -780,6 +780,33 @@
   padding-left: 8px;
 }
 
+.wf-input-node {
+  width: 360px;
+  min-height: 240px;
+  background: #f6efdd;
+  border-color: #c9a961;
+}
+
+.wf-output-node {
+  width: 360px;
+  min-height: 240px;
+  background: #efeaf4;
+  border-color: #a693c4;
+}
+
+.workflow-node {
+  width: 400px;
+  background: #e2eeec;
+  border-color: #5f948b;
+}
+
+.workflow-status {
+  display: block;
+  margin-top: 4px;
+  color: #6f685d;
+  font-size: 12px;
+}
+
 .split-node {
   width: 360px;
   min-height: 340px;

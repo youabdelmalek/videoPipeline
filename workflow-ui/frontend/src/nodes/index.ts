@@ -8,6 +8,9 @@ export { FlexibleIfNode } from './FlexibleIfNode';
 export { FlexibleJsonNode } from './FlexibleJsonNode';
 export { FlexibleSplitNode } from './FlexibleSplitNode';
 export { FlexibleTextNode } from './FlexibleTextNode';
+export { FlexibleWorkflowInputNode } from './FlexibleWorkflowInputNode';
+export { FlexibleWorkflowNode } from './FlexibleWorkflowNode';
+export { FlexibleWorkflowOutputNode } from './FlexibleWorkflowOutputNode';
 export { InputNode } from './InputNode';
 export { JsonAssetsNode } from './JsonAssetsNode';
 export { JsonFramesNode } from './JsonFramesNode';
@@ -38,6 +41,13 @@ export type {
   FlexibleSplitPatch,
   FlexibleTextNodeData,
   FlexibleTextPatch,
+  FlexibleWorkflowInputNodeData,
+  FlexibleWorkflowInputPatch,
+  FlexibleWorkflowNodeData,
+  FlexibleWorkflowOutputNodeData,
+  FlexibleWorkflowOutputPatch,
+  FlexibleWorkflowPatch,
+  WorkflowOption,
   InputNodeData,
   JsonAssetsNodeData,
   JsonFramesNodeData,

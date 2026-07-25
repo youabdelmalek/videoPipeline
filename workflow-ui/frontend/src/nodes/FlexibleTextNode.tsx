@@ -1,4 +1,5 @@
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import { useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Trash2 } from 'lucide-react';
 import type { FlexibleTextNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
@@ -6,6 +7,13 @@ import { useDraftValue } from './useDraftValue';
 export function FlexibleTextNode({ data }: NodeProps<Node<FlexibleTextNodeData>>) {
   const [name, setName] = useDraftValue(data.name, (value) => data.onChange(data.nodeId, { name: value }));
   const [text, setText] = useDraftValue(data.text, (value) => data.onChange(data.nodeId, { text: value }));
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  // The checkboxes add and remove handles; React Flow must re-measure them or
+  // edges to this node anchor to stale positions (or not render at all).
+  useEffect(() => {
+    updateNodeInternals(data.nodeId);
+  }, [data.nodeId, data.hasInput, data.hasOutput, updateNodeInternals]);
 
   return (
     <section className="node flexible-node text-node">
