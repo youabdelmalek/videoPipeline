@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Square, Trash2, Type, Workflow } from 'lucide-react';
+import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { DEFAULT_MODEL } from './constants';
-import { deleteFlexibleWorkflow, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow } from './api';
+import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
   edgeOutputHandle,
   hydrateNode,
   normalizeEdges,
+  outputOf,
   resolveWorkflowSnapshot,
   stepNode,
   workflowOutputHandle,
@@ -96,6 +97,42 @@ function buildNode(
       };
     case 'split':
       return { id, kind, name: `Split ${order}`, order, input: '', delimiter: ',', count: 2, outputs: [], position };
+    case 'imageUpload':
+      return {
+        id,
+        kind,
+        name: `Upload ${order}`,
+        order,
+        outputUrl: '',
+        outputName: '',
+        status: '',
+        position,
+      };
+    case 'imageDisplay':
+      return {
+        id,
+        kind,
+        name: `Display ${order}`,
+        order,
+        imageUrl: '',
+        position,
+      };
+    case 'imageGenerate':
+      return {
+        id,
+        kind,
+        name: `Generate ${order}`,
+        order,
+        prompt: '',
+        referenceImage: '',
+        seed: '',
+        steps: 8,
+        strength: 1,
+        outputUrl: '',
+        outputName: '',
+        status: '',
+        position,
+      };
     case 'forEach':
       return {
         id,
@@ -171,6 +208,7 @@ export function App() {
   const [workflowNodes, setWorkflowNodes] = useState<WorkflowNodeState[]>(initial.nodes);
   const [edges, setEdges] = useState<Edge[]>(initial.edges);
   const [savedLibrary, setSavedLibrary] = useState<WorkflowLibrary>(initialLibrary);
+  const [imageInputDir, setImageInputDir] = useState('');
   const [workflowName, setWorkflowName] = useState('Default workflow');
   const [runName, setRunName] = useState(defaultRunName);
   const [selectedWorkflowName, setSelectedWorkflowName] = useState('');
@@ -190,6 +228,11 @@ export function App() {
   const savedLibraryRef = useRef(savedLibrary);
   const { models, modelsNotice } = useModels();
 
+  const refreshImages = useCallback(async () => {
+    const data = await fetchComfyImages();
+    setImageInputDir(data.input_dir);
+  }, []);
+
   useEffect(() => {
     nodesRef.current = workflowNodes;
     writeCurrentSnapshot(workflowNodes, edges);
@@ -203,6 +246,18 @@ export function App() {
   useEffect(() => {
     savedLibraryRef.current = savedLibrary;
   }, [savedLibrary]);
+
+  useEffect(() => {
+    let alive = true;
+    refreshImages().catch((caught) => {
+      if (alive) {
+        setDebug(`Image folder unavailable: ${messageFrom(caught, 'Could not load images')}`);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [refreshImages]);
 
   useEffect(() => {
     let alive = true;
@@ -351,8 +406,27 @@ export function App() {
   }
 
   const patchNode = useCallback((nodeId: string, patch: Record<string, unknown>) => {
-    setWorkflowNodes((current) => current.map((node) => (node.id === nodeId ? { ...node, ...patch } as WorkflowNodeState : node)));
+    setWorkflowNodes((current) => {
+      const next = current.map((node) => (node.id === nodeId ? { ...node, ...patch } as WorkflowNodeState : node));
+      nodesRef.current = next;
+      return next;
+    });
   }, []);
+
+  const uploadImageForNode = useCallback(async (nodeId: string, file: File) => {
+    setError(null);
+    try {
+      setDebug(`Uploading ${file.name}`);
+      const image = await uploadComfyImage(file);
+      patchNode(nodeId, { outputUrl: image.url, outputName: image.name, status: `Uploaded ${image.name}` });
+      await refreshImages();
+      setDebug(`Uploaded ${image.name}`);
+    } catch (caught) {
+      const message = messageFrom(caught, 'Could not upload image');
+      setError(message);
+      setDebug(message);
+    }
+  }, [patchNode, refreshImages]);
 
   const patchInput = useCallback((nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => {
     setWorkflowNodes((current) => current.map((node) => {
@@ -420,8 +494,8 @@ export function App() {
       return false;
     }
 
-    // Agent, workflow, and loop nodes are slow and abortable; the rest are instant.
-    const slow = node.kind === 'agent' || node.kind === 'workflow' || node.kind === 'forEach';
+    // API-backed nodes are slow and abortable; local transform nodes are instant.
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
@@ -429,6 +503,8 @@ export function App() {
     }
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
+    } else if (node.kind === 'imageGenerate') {
+      setDebug(`Step ${node.order}: ${node.name} is calling ComfyUI`);
     } else if (node.kind === 'workflow') {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
     } else if (node.kind === 'forEach') {
@@ -453,6 +529,9 @@ export function App() {
         setDebug(result.error);
         return false;
       }
+      if (node.kind === 'imageGenerate') {
+        await refreshImages().catch(() => undefined);
+      }
       setDebug(`Step ${node.order}: ${result.note}`);
       return true;
     } catch (caught) {
@@ -466,7 +545,7 @@ export function App() {
         controllerRef.current = null;
       }
     }
-  }, [hydrateNodeInputs, patchNode]);
+  }, [hydrateNodeInputs, patchNode, refreshImages]);
 
   async function runAll() {
     setError(null);
@@ -723,7 +802,14 @@ export function App() {
     [savedLibrary],
   );
 
-  const flowNodes: Node[] = useMemo(() => workflowNodes.map((node) => {
+  const flowNodes: Node[] = useMemo(() => {
+    const byId = new Map(workflowNodes.map((node) => [node.id, node]));
+    const linkedValue = (targetNodeId: string, targetHandleId: string): string | null => {
+      const link = edges.find((edge) => edge.target === targetNodeId && edgeInputHandle(edge) === targetHandleId);
+      return link ? outputOf(byId.get(link.source), edgeOutputHandle(link)) : null;
+    };
+
+    return workflowNodes.map((node) => {
     const shared = {
       nodeId: node.id,
       pendingSourceNodeId: pendingLinkSource?.nodeId ?? null,
@@ -773,6 +859,46 @@ export function App() {
             height: 300 + node.count * 96,
             data: { ...node, ...shared, pendingSourceHandleId: pendingHandle, onRun: runNode },
           };
+        case 'imageUpload':
+          return {
+            type: 'flexibleImageUpload',
+            width: 390,
+            height: 430,
+            data: {
+              ...node,
+              ...shared,
+              pendingSourceHandleId: pendingHandle,
+              imageInputDir,
+              onUploadImage: uploadImageForNode,
+            },
+          };
+        case 'imageDisplay':
+          return {
+            type: 'flexibleImageDisplay',
+            width: 390,
+            height: 420,
+            data: {
+              ...node,
+              ...shared,
+              imageUrl: linkedValue(node.id, 'image') ?? node.imageUrl,
+              pendingSourceHandleId: pendingHandle,
+            },
+          };
+        case 'imageGenerate':
+          return {
+            type: 'flexibleImageGenerate',
+            width: 440,
+            height: 650,
+            data: {
+              ...node,
+              ...shared,
+              prompt: linkedValue(node.id, 'prompt') ?? node.prompt,
+              referenceImage: linkedValue(node.id, 'reference') ?? node.referenceImage,
+              running: runningNodeId === node.id,
+              pendingSourceHandleId: pendingHandle,
+              onRun: runNode,
+            },
+          };
         case 'forEach':
           return {
             type: 'flexibleForEach',
@@ -821,7 +947,8 @@ export function App() {
       initialHeight: spec.height,
       data: spec.data,
     };
-  }), [workflowNodes, nodeSizes, models, runningNodeId, pendingLinkSource, workflowOptions, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, runNode, removeNode]);
+    });
+  }, [workflowNodes, edges, nodeSizes, models, runningNodeId, pendingLinkSource, workflowOptions, imageInputDir, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, uploadImageForNode, runNode, removeNode]);
 
   // Highlight the link the context menu is open for.
   const flowEdges: Edge[] = useMemo(
@@ -967,6 +1094,39 @@ export function App() {
             >
               <Braces size={16} />
               <span>JSON extract</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'imageUpload')}
+              onClick={() => addWorkflowNode('imageUpload')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Upload size={16} />
+              <span>Upload image</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'imageGenerate')}
+              onClick={() => addWorkflowNode('imageGenerate')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Sparkles size={16} />
+              <span>Generate image</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'imageDisplay')}
+              onClick={() => addWorkflowNode('imageDisplay')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Eye size={16} />
+              <span>Display image</span>
             </button>
             <button
               className="drawer-item"

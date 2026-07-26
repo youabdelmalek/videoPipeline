@@ -304,6 +304,82 @@ export type FlexibleSplitPatch = {
   outputs: string[];
 };
 
+export type FlexibleImageUploadNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  imageInputDir: string;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleImageUploadPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onUploadImage: (nodeId: string, file: File) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleImageUploadPatch = {
+  name: string;
+  order: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+};
+
+export type FlexibleImageDisplayNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  imageUrl: string;
+  pendingSourceNodeId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleImageDisplayPatch>) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleImageDisplayPatch = {
+  name: string;
+  order: number;
+  imageUrl: string;
+};
+
+export type FlexibleImageGenerateNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  prompt: string;
+  referenceImage: string;
+  seed: string;
+  steps: number;
+  strength: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleImageGeneratePatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleImageGeneratePatch = {
+  name: string;
+  order: number;
+  prompt: string;
+  referenceImage: string;
+  seed: string;
+  steps: number;
+  strength: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+};
+
 export type FlexibleWorkflowInputNodeData = {
   nodeId: string;
   name: string;

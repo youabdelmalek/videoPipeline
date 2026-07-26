@@ -725,6 +725,74 @@
   border-color: var(--rose);
 }
 
+.image-upload-node {
+  width: 390px;
+  min-height: 410px;
+  background: #f3efe7;
+  border-color: #b9a884;
+}
+
+.image-display-node {
+  width: 390px;
+  min-height: 390px;
+  background: #eef2f6;
+  border-color: #9daec1;
+}
+
+.image-generate-node {
+  width: 440px;
+  min-height: 620px;
+  background: #eef4f2;
+  border-color: #8fb5ad;
+}
+
+.image-settings {
+  grid-template-columns: 82px minmax(0, 1fr);
+}
+
+.image-upload-button {
+  width: 100%;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.image-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffcf6;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.image-display-preview {
+  aspect-ratio: 1 / 1;
+}
+
+.image-url-output .output-box,
+.image-output .output-box {
+  min-height: 58px;
+}
+
+.image-generate-node .text-pass-block .output-box {
+  min-height: 70px;
+}
+
 .if-node {
   width: 400px;
   min-height: 560px;

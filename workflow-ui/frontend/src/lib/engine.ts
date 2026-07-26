@@ -8,7 +8,7 @@
  */
 
 import type { Edge } from '@xyflow/react';
-import { runFlexibleLlm } from '../api';
+import { generateComfyImage, runFlexibleLlm } from '../api';
 import type { FlexibleInput } from '../nodes';
 
 export type AgentNodeState = {
@@ -109,6 +109,42 @@ export type WorkflowRefNodeState = {
   position: { x: number; y: number };
 };
 
+export type ImageUploadNodeState = {
+  id: string;
+  kind: 'imageUpload';
+  name: string;
+  order: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  position: { x: number; y: number };
+};
+
+export type ImageDisplayNodeState = {
+  id: string;
+  kind: 'imageDisplay';
+  name: string;
+  order: number;
+  imageUrl: string;
+  position: { x: number; y: number };
+};
+
+export type ImageGenerateNodeState = {
+  id: string;
+  kind: 'imageGenerate';
+  name: string;
+  order: number;
+  prompt: string;
+  referenceImage: string;
+  seed: string;
+  steps: number;
+  strength: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  position: { x: number; y: number };
+};
+
 /** Runs a saved workflow once per item. */
 export type ForEachNodeState = {
   id: string;
@@ -127,6 +163,9 @@ export type WorkflowNodeState =
   | AgentNodeState
   | TextNodeState
   | JsonNodeState
+  | ImageUploadNodeState
+  | ImageDisplayNodeState
+  | ImageGenerateNodeState
   | IfNodeState
   | SplitNodeState
   | InputNodeState
@@ -400,6 +439,11 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
     case 'agent':
     case 'json':
       return node.output;
+    case 'imageUpload':
+    case 'imageGenerate':
+      return node.outputUrl;
+    case 'imageDisplay':
+      return '';
     case 'if':
       // The If node has two outputs; only the fired branch carries a value.
       return handle === 'output2' ? node.output2 : node.output1;
@@ -444,6 +488,21 @@ export function hydrateNode(
     case 'json': {
       const link = incoming[0];
       return link ? { ...node, input: valueOf(link) } : node;
+    }
+    case 'imageUpload':
+      return node;
+    case 'imageDisplay': {
+      const link = incoming.find((edge) => edgeInputHandle(edge) === 'image') ?? incoming[0];
+      return link ? { ...node, imageUrl: valueOf(link) } : node;
+    }
+    case 'imageGenerate': {
+      const promptLink = incoming.find((edge) => edgeInputHandle(edge) === 'prompt');
+      const referenceLink = incoming.find((edge) => edgeInputHandle(edge) === 'reference');
+      return {
+        ...node,
+        prompt: promptLink ? valueOf(promptLink) : node.prompt,
+        referenceImage: referenceLink ? valueOf(referenceLink) : node.referenceImage,
+      };
     }
     case 'split': {
       const inputLink = incoming.find((edge) => edgeInputHandle(edge) === 'input');
@@ -525,6 +584,57 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
     case 'json': {
       const result = extractJsonPath(node.input, node.path);
       return { patch: { ...result }, error: result.error, note: `${node.name} extracted ${node.path}` };
+    }
+    case 'imageUpload':
+      return { patch: {}, error: null, note: `${node.name} provided its image URL` };
+    case 'imageDisplay':
+      return { patch: {}, error: null, note: `${node.name} displayed its image URL` };
+    case 'imageGenerate': {
+      if (!node.prompt.trim()) {
+        const error = 'Prompt is required';
+        return { patch: { status: error }, error, note: '' };
+      }
+      if (!node.referenceImage.trim()) {
+        const error = 'Link an image URL';
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      let seed: number | null = null;
+      const seedText = node.seed.trim();
+      if (seedText) {
+        seed = Math.trunc(Number(seedText));
+        if (!Number.isFinite(seed)) {
+          const error = 'Seed must be a number';
+          return { patch: { status: error }, error, note: '' };
+        }
+      }
+
+      const steps = Math.min(150, Math.max(1, Math.round(Number(node.steps) || 8)));
+      const strengthValue = Number(node.strength);
+      const strength = Number.isFinite(strengthValue) ? Math.min(2, Math.max(0, strengthValue)) : 1;
+      const result = await generateComfyImage(
+        {
+          prompt: node.prompt,
+          reference_image: node.referenceImage,
+          seed,
+          steps,
+          strength,
+          timeout_seconds: 900,
+        },
+        ctx.signal,
+      );
+      return {
+        patch: {
+          outputUrl: result.url,
+          outputName: result.filename,
+          seed: String(result.seed),
+          steps,
+          strength,
+          status: `Generated ${result.filename}`,
+        },
+        error: null,
+        note: `${node.name} generated ${result.filename}`,
+      };
     }
     case 'split': {
       const outputs = splitInto(node.input, node.delimiter, node.count);

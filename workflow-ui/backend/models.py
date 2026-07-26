@@ -276,6 +276,47 @@ class FlexibleLlmResponse(BaseModel):
     output: str
 
 
+class ComfyImageInfo(BaseModel):
+    name: str
+    url: str
+    size_bytes: int
+    updated_at: float
+
+
+class ComfyImageListResponse(BaseModel):
+    images: list[ComfyImageInfo] = Field(default_factory=list)
+    input_dir: str
+
+
+class UploadComfyImageRequest(BaseModel):
+    filename: str = Field(min_length=1)
+    #: Browser uploads arrive as a data URL so FastAPI does not need multipart parsing.
+    data_url: str = Field(min_length=1)
+
+
+class UploadComfyImageResponse(BaseModel):
+    image: ComfyImageInfo
+
+
+class GenerateComfyImageRequest(BaseModel):
+    prompt: str = Field(min_length=1)
+    #: A filename from the image input folder, or a URL returned by this API.
+    reference_image: str = Field(min_length=1)
+    #: None means the backend chooses a fresh timestamp-derived seed.
+    seed: int | None = None
+    steps: int = Field(default=8, ge=1, le=150)
+    strength: float = Field(default=1.0, ge=0.0, le=2.0)
+    timeout_seconds: int = Field(default=900, ge=5, le=3600)
+
+
+class GenerateComfyImageResponse(BaseModel):
+    url: str
+    filename: str
+    reference_image: str
+    prompt_id: str
+    seed: int
+
+
 class FrameDeltaDetail(BaseModel):
     """What actually moves between the two frames, split by what is moving.
 

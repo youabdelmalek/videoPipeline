@@ -26,7 +26,7 @@ if str(WORKFLOW_UI_DIR) not in sys.path:
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
-from backend.api import jobs_router, models_router, runs_router  # noqa: E402
+from backend.api import comfyui_router, jobs_router, models_router, runs_router  # noqa: E402
 from backend.config import CORS_ORIGINS  # noqa: E402
 from backend.models import DEFAULT_MODEL  # noqa: E402
 
@@ -48,3 +48,4 @@ def health() -> dict[str, str]:
 app.include_router(runs_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(models_router, prefix="/api")
+app.include_router(comfyui_router, prefix="/api")

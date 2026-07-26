@@ -31,6 +31,22 @@ def _load_env_file(path: Path) -> None:
 
 _load_env_file(ROOT / ".env")
 
+
+def _configured_path(key: str, default: Path) -> Path:
+    raw = os.environ.get(key, "").strip()
+    if not raw:
+        return default
+    path = Path(raw).expanduser()
+    return path if path.is_absolute() else ROOT / path
+
+
+# Folder the flexible image node uses for style references and generated images.
+IMAGE_INPUT_DIR = _configured_path("WORKFLOW_IMAGE_INPUT_DIR", ROOT / "input")
+
+# Local ComfyUI HTTP API used by the image generation node.
+COMFYUI_PORT = int(os.environ.get("COMFYUI_PORT", "9000"))
+COMFYUI_SERVER = f"http://127.0.0.1:{COMFYUI_PORT}"
+
 # Source prompt template authored outside the UI. It is optional: the judge
 # prompt builder falls back to a built-in default when the file is missing.
 SCENE_JUDGE_PROMPT = ROOT / "createScenes" / "sceneDetailerJudge.txt"

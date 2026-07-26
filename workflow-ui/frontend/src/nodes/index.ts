@@ -6,6 +6,9 @@ export { DetailPanel } from './DetailPanel';
 export { FlexibleAgentNode } from './FlexibleAgentNode';
 export { FlexibleForEachNode } from './FlexibleForEachNode';
 export { FlexibleIfNode } from './FlexibleIfNode';
+export { FlexibleImageDisplayNode } from './FlexibleImageDisplayNode';
+export { FlexibleImageGenerateNode } from './FlexibleImageGenerateNode';
+export { FlexibleImageUploadNode } from './FlexibleImageUploadNode';
 export { FlexibleJsonNode } from './FlexibleJsonNode';
 export { FlexibleSplitNode } from './FlexibleSplitNode';
 export { FlexibleTextNode } from './FlexibleTextNode';
@@ -37,6 +40,12 @@ export type {
   FlexibleForEachPatch,
   FlexibleIfNodeData,
   FlexibleIfPatch,
+  FlexibleImageDisplayNodeData,
+  FlexibleImageDisplayPatch,
+  FlexibleImageGenerateNodeData,
+  FlexibleImageGeneratePatch,
+  FlexibleImageUploadNodeData,
+  FlexibleImageUploadPatch,
   FlexibleInput,
   FlexibleJsonNodeData,
   FlexibleJsonPatch,

@@ -3,6 +3,10 @@
 import { request } from './client';
 import type {
   BoardProvider,
+  ComfyImageInfo,
+  ComfyImageListResponse,
+  GenerateComfyImageRequest,
+  GenerateComfyImageResponse,
   JobState,
   ModelList,
   PortCheck,
@@ -12,6 +16,7 @@ import type {
   StageCatalog,
   WorkflowDefinition,
   FlexibleLlmResponse,
+  UploadComfyImageResponse,
 } from './types';
 import type { SavedWorkflow, WorkflowLibrary } from '../lib/engine';
 
@@ -192,6 +197,53 @@ export async function runFlexibleLlm(
     10 * 60 * 1000,
   );
   return data.output;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Could not read image file'));
+      }
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Could not read image file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function fetchComfyImages(): Promise<ComfyImageListResponse> {
+  return request<ComfyImageListResponse>('/comfyui/images');
+}
+
+export async function uploadComfyImage(file: File): Promise<ComfyImageInfo> {
+  const dataUrl = await readFileAsDataUrl(file);
+  const data = await request<UploadComfyImageResponse>(
+    '/comfyui/images',
+    {
+      method: 'POST',
+      body: JSON.stringify({ filename: file.name, data_url: dataUrl }),
+    },
+    2 * 60 * 1000,
+  );
+  return data.image;
+}
+
+export async function generateComfyImage(
+  requestBody: GenerateComfyImageRequest,
+  signal?: AbortSignal,
+): Promise<GenerateComfyImageResponse> {
+  return request<GenerateComfyImageResponse>(
+    '/comfyui/generate',
+    {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      signal,
+    },
+    (requestBody.timeout_seconds ?? 900) * 1000 + 30 * 1000,
+  );
 }
 
 export async function fetchFlexibleWorkflowLibrary(): Promise<WorkflowLibrary> {

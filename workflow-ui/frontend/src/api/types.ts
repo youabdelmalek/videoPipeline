@@ -209,3 +209,36 @@ export type WorkflowDefinition = {
 export type FlexibleLlmResponse = {
   output: string;
 };
+
+export type ComfyImageInfo = {
+  name: string;
+  url: string;
+  size_bytes: number;
+  updated_at: number;
+};
+
+export type ComfyImageListResponse = {
+  images: ComfyImageInfo[];
+  input_dir: string;
+};
+
+export type UploadComfyImageResponse = {
+  image: ComfyImageInfo;
+};
+
+export type GenerateComfyImageRequest = {
+  prompt: string;
+  reference_image: string;
+  seed?: number | null;
+  steps?: number;
+  strength?: number;
+  timeout_seconds?: number;
+};
+
+export type GenerateComfyImageResponse = {
+  url: string;
+  filename: string;
+  reference_image: string;
+  prompt_id: string;
+  seed: number;
+};
