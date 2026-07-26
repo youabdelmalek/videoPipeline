@@ -370,6 +370,37 @@ export type FlexibleWorkflowPatch = {
   status: string;
 };
 
+export type FlexibleForEachNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  items: string;
+  workflowName: string;
+  output: string;
+  iterations: number;
+  status: string;
+  running: boolean;
+  workflowOptions: WorkflowOption[];
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleForEachPatch>) => void;
+  onPickWorkflow: (nodeId: string, workflowName: string) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleForEachPatch = {
+  name: string;
+  order: number;
+  items: string;
+  workflowName: string;
+  output: string;
+  iterations: number;
+  status: string;
+};
+
 export type FlexibleJsonNodeData = {
   nodeId: string;
   name: string;

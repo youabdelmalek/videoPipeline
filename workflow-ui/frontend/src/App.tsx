@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Save, Scissors, Square, Trash2, Type, Workflow } from 'lucide-react';
+import { Bot, Braces, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Square, Trash2, Type, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { DEFAULT_MODEL } from './constants';
+import { deleteFlexibleWorkflow, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow } from './api';
 import {
   edgeInputHandle,
   edgeOutputHandle,
@@ -95,6 +96,19 @@ function buildNode(
       };
     case 'split':
       return { id, kind, name: `Split ${order}`, order, input: '', delimiter: ',', count: 2, outputs: [], position };
+    case 'forEach':
+      return {
+        id,
+        kind,
+        name: `For Each ${order}`,
+        order,
+        items: '[]',
+        workflowName: '',
+        output: '',
+        iterations: 0,
+        status: '',
+        position,
+      };
     case 'input':
       return { id, kind, name: `input${order}`, order, value: '', position };
     case 'output':
@@ -190,6 +204,41 @@ export function App() {
     savedLibraryRef.current = savedLibrary;
   }, [savedLibrary]);
 
+  useEffect(() => {
+    let alive = true;
+    async function loadWorkflowFiles() {
+      try {
+        const library = await fetchFlexibleWorkflowLibrary();
+        if (!alive) {
+          return;
+        }
+        const repoCount = Object.keys(library).length;
+        const cachedEntries = Object.entries(savedLibraryRef.current);
+        if (repoCount > 0) {
+          persistLibrary(library);
+          setDebug(`Loaded ${repoCount} saved workflow(s) from repo files`);
+          return;
+        }
+        if (cachedEntries.length > 0) {
+          for (const [name, workflow] of cachedEntries) {
+            await saveFlexibleWorkflow(name, workflow);
+          }
+          setDebug(`Moved ${cachedEntries.length} browser-saved workflow(s) into repo files`);
+          return;
+        }
+        setDebug('No saved workflow files yet');
+      } catch (caught) {
+        if (alive) {
+          setDebug(`Using browser cache for saved workflows: ${messageFrom(caught, 'Could not read repo files')}`);
+        }
+      }
+    }
+    loadWorkflowFiles();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const workflowNames = useMemo(() => Object.keys(savedLibrary).sort(), [savedLibrary]);
   const runNames = useMemo(
     () => Object.keys(savedLibrary[selectedWorkflowName]?.runs ?? {}).sort(),
@@ -201,7 +250,7 @@ export function App() {
     window.localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(next));
   }
 
-  function saveNamedRun() {
+  async function saveNamedRun() {
     setError(null);
     const cleanWorkflowName = workflowName.trim();
     const cleanRunName = runName.trim();
@@ -227,6 +276,13 @@ export function App() {
     setSelectedWorkflowName(cleanWorkflowName);
     setSelectedRunName(cleanRunName);
     setDebug(`Saved ${cleanWorkflowName} / ${cleanRunName}`);
+    try {
+      const library = await saveFlexibleWorkflow(cleanWorkflowName, next[cleanWorkflowName]);
+      persistLibrary(library);
+      setDebug(`Saved ${cleanWorkflowName} / ${cleanRunName} to repo files`);
+    } catch (caught) {
+      setError(messageFrom(caught, 'Could not save workflow file'));
+    }
   }
 
   function newWorkflow() {
@@ -267,6 +323,31 @@ export function App() {
     setRunName(selectedRunName);
     setDebug(`Loaded ${selectedWorkflowName} / ${selectedRunName}`);
     window.setTimeout(() => flowInstance?.fitView({ padding: 0.18, duration: 250 }), 50);
+  }
+
+  async function deleteSelectedWorkflow() {
+    setError(null);
+    const name = selectedWorkflowName.trim();
+    if (!name) {
+      setError('Pick a workflow to delete');
+      return;
+    }
+
+    try {
+      await deleteFlexibleWorkflow(name);
+      const next = { ...savedLibrary };
+      delete next[name];
+      persistLibrary(next);
+      setSelectedWorkflowName('');
+      setSelectedRunName('');
+      if (workflowName === name) {
+        setWorkflowName('Untitled workflow');
+        setRunName(defaultRunName());
+      }
+      setDebug(`Deleted ${name}`);
+    } catch (caught) {
+      setError(messageFrom(caught, 'Could not delete workflow file'));
+    }
   }
 
   const patchNode = useCallback((nodeId: string, patch: Record<string, unknown>) => {
@@ -339,8 +420,8 @@ export function App() {
       return false;
     }
 
-    // Agent and workflow nodes are slow and abortable; the rest are instant.
-    const slow = node.kind === 'agent' || node.kind === 'workflow';
+    // Agent, workflow, and loop nodes are slow and abortable; the rest are instant.
+    const slow = node.kind === 'agent' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
@@ -349,6 +430,8 @@ export function App() {
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
     } else if (node.kind === 'workflow') {
+      setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
+    } else if (node.kind === 'forEach') {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
     }
 
@@ -607,6 +690,34 @@ export function App() {
     });
   }, []);
 
+  const pickBodyWorkflow = useCallback((nodeId: string, workflowName: string) => {
+    const snapshot = resolveWorkflowSnapshot(savedLibraryRef.current, workflowName);
+    const subInputs = (snapshot?.nodes ?? [])
+      .filter((node) => node.kind === 'input')
+      .sort((a, b) => a.order - b.order);
+    const subOutputs = (snapshot?.nodes ?? [])
+      .filter((node) => node.kind === 'output')
+      .sort((a, b) => a.order - b.order);
+
+    setWorkflowNodes((current) => current.map((node) => {
+      if (node.id !== nodeId || node.kind !== 'forEach') {
+        return node;
+      }
+      const status = !workflowName
+        ? ''
+        : snapshot
+          ? subInputs[0]
+            ? `Each item -> ${subInputs[0].name}; collects ${subOutputs[0]?.name ?? 'first output'}`
+            : 'Body workflow needs one Workflow input'
+          : 'Saved workflow not found';
+      return {
+        ...node,
+        workflowName,
+        status,
+      };
+    }));
+  }, []);
+
   const workflowOptions: WorkflowOption[] = useMemo(
     () => Object.keys(savedLibrary).sort().map((name) => ({ name })),
     [savedLibrary],
@@ -662,6 +773,21 @@ export function App() {
             height: 300 + node.count * 96,
             data: { ...node, ...shared, pendingSourceHandleId: pendingHandle, onRun: runNode },
           };
+        case 'forEach':
+          return {
+            type: 'flexibleForEach',
+            width: 430,
+            height: 520,
+            data: {
+              ...node,
+              ...shared,
+              running: runningNodeId === node.id,
+              pendingSourceHandleId: pendingHandle,
+              workflowOptions,
+              onPickWorkflow: pickBodyWorkflow,
+              onRun: runNode,
+            },
+          };
         case 'input':
           return { type: 'flexibleWorkflowInput', width: 360, height: 260, data: { ...node, ...shared } };
         case 'output':
@@ -695,7 +821,7 @@ export function App() {
       initialHeight: spec.height,
       data: spec.data,
     };
-  }), [workflowNodes, nodeSizes, models, runningNodeId, pendingLinkSource, workflowOptions, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, runNode, removeNode]);
+  }), [workflowNodes, nodeSizes, models, runningNodeId, pendingLinkSource, workflowOptions, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, runNode, removeNode]);
 
   // Highlight the link the context menu is open for.
   const flowEdges: Edge[] = useMemo(
@@ -777,6 +903,19 @@ export function App() {
             Load
           </button>
         </div>
+        <div className="save-load-group delete-workflow-group">
+          <div className="node-kicker">Delete</div>
+          <button
+            className="compact-action-button delete-workflow-button"
+            type="button"
+            onClick={deleteSelectedWorkflow}
+            disabled={!selectedWorkflowName}
+            title="Delete the selected saved workflow"
+          >
+            <Trash2 size={12} />
+            Delete workflow
+          </button>
+        </div>
       </aside>
 
       <aside className="debug-window">
@@ -839,6 +978,17 @@ export function App() {
             >
               <GitBranch size={16} />
               <span>If</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'forEach')}
+              onClick={() => addWorkflowNode('forEach')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Repeat size={16} />
+              <span>For each</span>
             </button>
             <button
               className="drawer-item"

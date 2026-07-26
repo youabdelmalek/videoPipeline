@@ -4,8 +4,10 @@ export {
   buildAssetCatalog,
   buildJsonAssets,
   buildJsonFrames,
+  deleteFlexibleWorkflow,
   deleteRun,
   detailVideos,
+  fetchFlexibleWorkflowLibrary,
   fetchJob,
   fetchModels,
   fetchRun,
@@ -18,6 +20,7 @@ export {
   rewriteShots,
   runWorkflow,
   runFlexibleLlm,
+  saveFlexibleWorkflow,
   saveWorkflow,
   validatePort,
 } from './endpoints';

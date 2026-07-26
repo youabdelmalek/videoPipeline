@@ -13,6 +13,7 @@ import type {
   WorkflowDefinition,
   FlexibleLlmResponse,
 } from './types';
+import type { SavedWorkflow, WorkflowLibrary } from '../lib/engine';
 
 /** The local models the backend will accept, annotated with what is pulled. */
 export async function fetchModels(): Promise<ModelList> {
@@ -191,4 +192,21 @@ export async function runFlexibleLlm(
     10 * 60 * 1000,
   );
   return data.output;
+}
+
+export async function fetchFlexibleWorkflowLibrary(): Promise<WorkflowLibrary> {
+  const data = await request<{ library: WorkflowLibrary }>('/flexible-workflows');
+  return data.library;
+}
+
+export async function saveFlexibleWorkflow(name: string, workflow: SavedWorkflow): Promise<WorkflowLibrary> {
+  const data = await request<{ library: WorkflowLibrary }>(`/flexible-workflows/${encodeURIComponent(name)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ workflow }),
+  });
+  return data.library;
+}
+
+export async function deleteFlexibleWorkflow(name: string): Promise<{ deleted: string }> {
+  return request<{ deleted: string }>(`/flexible-workflows/${encodeURIComponent(name)}`, { method: 'DELETE' });
 }

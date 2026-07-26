@@ -814,6 +814,34 @@
   border-color: #93bbaa;
 }
 
+.loop-node {
+  width: 430px;
+  min-height: 760px;
+}
+
+.foreach-node {
+  min-height: 430px;
+  background: #edf5ec;
+  border-color: #8cb78d;
+}
+
+.loop-node .node-grid.three {
+  grid-template-columns: 82px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.loop-node .text-pass-block .output-box {
+  min-height: 76px;
+}
+
+.loop-node .output-block .output-box {
+  min-height: 56px;
+}
+
+.foreach-node .text-pass-block .output-box,
+.foreach-output .output-box {
+  min-height: 132px;
+}
+
 .split-outputs {
   display: flex;
   flex-direction: column;

@@ -109,6 +109,20 @@ export type WorkflowRefNodeState = {
   position: { x: number; y: number };
 };
 
+/** Runs a saved workflow once per item. */
+export type ForEachNodeState = {
+  id: string;
+  kind: 'forEach';
+  name: string;
+  order: number;
+  items: string;
+  workflowName: string;
+  output: string;
+  iterations: number;
+  status: string;
+  position: { x: number; y: number };
+};
+
 export type WorkflowNodeState =
   | AgentNodeState
   | TextNodeState
@@ -117,7 +131,8 @@ export type WorkflowNodeState =
   | SplitNodeState
   | InputNodeState
   | OutputNodeState
-  | WorkflowRefNodeState;
+  | WorkflowRefNodeState
+  | ForEachNodeState;
 
 export type NodeKind = WorkflowNodeState['kind'];
 
@@ -296,6 +311,62 @@ export function extractJsonPath(input: string, path: string): { output: string; 
   return { output: valueToString(current), error: null };
 }
 
+function messageFromError(caught: unknown, fallback: string): string {
+  return caught instanceof Error && caught.message ? caught.message : fallback;
+}
+
+function formatArray(values: string[]): string {
+  return JSON.stringify(values, null, 2);
+}
+
+function parseLoopItems(input: string): { items: string[]; error: string | null } {
+  const text = input.trim();
+  if (!text) {
+    return { items: [], error: 'Items are empty' };
+  }
+
+  if (text.startsWith('[') || text.startsWith('{')) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch (caught) {
+      return { items: [], error: `Invalid items JSON: ${messageFromError(caught, 'Invalid JSON')}` };
+    }
+    if (!Array.isArray(parsed)) {
+      return { items: [], error: 'Items must be a JSON array or line-separated text' };
+    }
+    return { items: parsed.map(valueToString), error: null };
+  }
+
+  const lines = input
+    .split(/\r?\n/g)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return { items: lines.length ? lines : [input], error: null };
+}
+
+function pickNamedOutput(outputs: Record<string, string>, preferredName: string): string {
+  if (preferredName && preferredName in outputs) {
+    return outputs[preferredName] ?? '';
+  }
+  if ('result' in outputs) {
+    return outputs.result ?? '';
+  }
+  return Object.values(outputs)[0] ?? '';
+}
+
+function sortedWorkflowInputs(snapshot: WorkflowSnapshot): InputNodeState[] {
+  return snapshot.nodes
+    .filter((node): node is InputNodeState => node.kind === 'input')
+    .sort((a, b) => a.order - b.order);
+}
+
+function sortedWorkflowOutputs(snapshot: WorkflowSnapshot): OutputNodeState[] {
+  return snapshot.nodes
+    .filter((node): node is OutputNodeState => node.kind === 'output')
+    .sort((a, b) => a.order - b.order);
+}
+
 export function edgeInputHandle(edge: Edge): string | null {
   const handle = edge.data?.targetHandleId;
   return typeof handle === 'string' ? handle : edge.targetHandle ?? null;
@@ -346,6 +417,8 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
       const found = name ? node.outputs.find((output) => output.name === name) : node.outputs[0];
       return found?.value ?? '';
     }
+    case 'forEach':
+      return node.output;
     case 'text':
       return node.hasOutput ? node.text : '';
   }
@@ -407,6 +480,13 @@ export function hydrateNode(
         }),
       };
     }
+    case 'forEach': {
+      const itemsLink = incoming.find((edge) => edgeInputHandle(edge) === 'items');
+      return {
+        ...node,
+        items: itemsLink ? valueOf(itemsLink) : node.items,
+      };
+    }
     case 'output': {
       const link = incoming.find((edge) => edgeInputHandle(edge) === 'input') ?? incoming[0];
       return link ? { ...node, value: valueOf(link) } : node;
@@ -450,6 +530,84 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       const outputs = splitInto(node.input, node.delimiter, node.count);
       const filled = outputs.filter((part) => part).length;
       return { patch: { outputs }, error: null, note: `${node.name} split into ${node.count} (${filled} filled)` };
+    }
+    case 'forEach': {
+      const parsed = parseLoopItems(node.items);
+      if (parsed.error) {
+        return { patch: { status: parsed.error }, error: parsed.error, note: '' };
+      }
+
+      if (!node.workflowName) {
+        const error = 'Pick a saved workflow first';
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      const snapshot = resolveWorkflowSnapshot(ctx.library, node.workflowName);
+      if (!snapshot) {
+        const error = `Saved workflow not found: ${node.workflowName}`;
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      const stack = ctx.stack ?? [];
+      if (stack.includes(node.workflowName)) {
+        const error = `${node.workflowName} calls itself`;
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      const bodyInput = sortedWorkflowInputs(snapshot)[0];
+      if (!bodyInput) {
+        const error = `${node.workflowName} needs one Workflow input`;
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      const bodyOutput = sortedWorkflowOutputs(snapshot)[0];
+      const results: string[] = [];
+
+      for (let index = 0; index < parsed.items.length; index += 1) {
+        if (ctx.signal?.aborted) {
+          throw new Error('Workflow aborted');
+        }
+
+        ctx.onProgress?.(`${node.name} - item ${index + 1}/${parsed.items.length}`);
+        try {
+          const outputs = await executeWorkflow({
+            nodes: snapshot.nodes,
+            edges: normalizeEdges(snapshot.edges),
+            inputValues: { [bodyInput.name]: parsed.items[index] },
+            library: ctx.library,
+            signal: ctx.signal,
+            onProgress: ctx.onProgress,
+            stack: [...stack, node.workflowName],
+          });
+          results.push(pickNamedOutput(outputs, bodyOutput?.name ?? ''));
+        } catch (caught) {
+          if (ctx.signal?.aborted) {
+            throw caught;
+          }
+          const message = `Item ${index + 1}: ${messageFromError(caught, 'Iteration failed')}`;
+          return {
+            patch: {
+              output: formatArray(results),
+              iterations: index,
+              status: message,
+            },
+            error: message,
+            note: '',
+          };
+        }
+      }
+
+      const output = formatArray(results);
+      const status = `Ran ${parsed.items.length} item(s)`;
+      return {
+        patch: {
+          output,
+          iterations: parsed.items.length,
+          status,
+        },
+        error: null,
+        note: `${node.name} ${status}`,
+      };
     }
     case 'if': {
       const values = { input1: node.input1, input2: node.input2 };

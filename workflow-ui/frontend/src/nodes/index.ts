@@ -4,6 +4,7 @@ export { AssetCatalogNode } from './AssetCatalogNode';
 export { BoardRewriterNode } from './BoardRewriterNode';
 export { DetailPanel } from './DetailPanel';
 export { FlexibleAgentNode } from './FlexibleAgentNode';
+export { FlexibleForEachNode } from './FlexibleForEachNode';
 export { FlexibleIfNode } from './FlexibleIfNode';
 export { FlexibleJsonNode } from './FlexibleJsonNode';
 export { FlexibleSplitNode } from './FlexibleSplitNode';
@@ -32,6 +33,8 @@ export type {
   CollapsibleNodeData,
   FlexibleAgentNodeData,
   FlexibleAgentPatch,
+  FlexibleForEachNodeData,
+  FlexibleForEachPatch,
   FlexibleIfNodeData,
   FlexibleIfPatch,
   FlexibleInput,

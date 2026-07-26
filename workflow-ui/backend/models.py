@@ -246,6 +246,23 @@ class WorkflowResponse(BaseModel):
     workflow: WorkflowDefinition
 
 
+class FlexibleWorkflowFile(BaseModel):
+    name: str
+    workflow: dict[str, Any] = Field(default_factory=dict)
+
+
+class FlexibleWorkflowLibraryResponse(BaseModel):
+    library: dict[str, Any] = Field(default_factory=dict)
+
+
+class SaveFlexibleWorkflowRequest(BaseModel):
+    workflow: dict[str, Any] = Field(default_factory=dict)
+
+
+class DeleteFlexibleWorkflowResponse(BaseModel):
+    deleted: str
+
+
 class RunWorkflowRequest(BaseModel):
     model: str = DEFAULT_MODEL
 

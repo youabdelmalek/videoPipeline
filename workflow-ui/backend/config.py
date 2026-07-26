@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 RUNS_DIR = ROOT / "runs"
+SAVED_WORKFLOWS_DIR = ROOT / "saved-workflows"
 
 
 def _load_env_file(path: Path) -> None:
