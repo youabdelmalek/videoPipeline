@@ -350,6 +350,7 @@ export type FlexibleImageGenerateNodeData = {
   name: string;
   order: number;
   prompt: string;
+  inputs: FlexibleInput[];
   referenceImage: string;
   seed: string;
   steps: number;
@@ -361,6 +362,9 @@ export type FlexibleImageGenerateNodeData = {
   pendingSourceNodeId: string | null;
   pendingSourceHandleId: string | null;
   onChange: (nodeId: string, patch: Partial<FlexibleImageGeneratePatch>) => void;
+  onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
+  onAddInput: (nodeId: string) => void;
+  onRemoveInput: (nodeId: string, inputId: string) => void;
   onPickOutput: (nodeId: string, handleId: string) => void;
   onPickInput: (nodeId: string, handleId: string) => void;
   onRun: (nodeId: string) => void;
@@ -377,6 +381,40 @@ export type FlexibleImageGeneratePatch = {
   strength: number;
   outputUrl: string;
   outputName: string;
+  status: string;
+};
+
+export type FlexibleImageTextNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  prompt: string;
+  model: string;
+  models: ModelOption[];
+  imageUrl: string;
+  inputs: FlexibleInput[];
+  output: string;
+  status: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleImageTextPatch>) => void;
+  onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
+  onAddInput: (nodeId: string) => void;
+  onRemoveInput: (nodeId: string, inputId: string) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleImageTextPatch = {
+  name: string;
+  order: number;
+  prompt: string;
+  model: string;
+  imageUrl: string;
+  output: string;
   status: string;
 };
 

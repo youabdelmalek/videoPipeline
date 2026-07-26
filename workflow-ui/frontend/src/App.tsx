@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
 import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
-import { DEFAULT_MODEL } from './constants';
+import { DEFAULT_MODEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from './constants';
 import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
@@ -123,13 +123,28 @@ function buildNode(
         kind,
         name: `Generate ${order}`,
         order,
-        prompt: '',
+        prompt: 'Create an image of ${input1}',
+        inputs: [{ id: 'input1', name: 'input1', value: '' }],
         referenceImage: '',
         seed: '',
         steps: 8,
         strength: 1,
         outputUrl: '',
         outputName: '',
+        status: '',
+        position,
+      };
+    case 'imageText':
+      return {
+        id,
+        kind,
+        name: `Image Text ${order}`,
+        order,
+        prompt: 'Describe this image using ${input1}.',
+        model: DEFAULT_VISION_MODEL,
+        imageUrl: '',
+        inputs: [{ id: 'input1', name: 'input1', value: '' }],
+        output: '',
         status: '',
         position,
       };
@@ -430,35 +445,36 @@ export function App() {
 
   const patchInput = useCallback((nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'workflow')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
         return node;
       }
       return {
         ...node,
-        inputs: node.inputs.map((input) => (input.id === inputId ? { ...input, ...patch } : input)),
+        inputs: (node.inputs ?? []).map((input) => (input.id === inputId ? { ...input, ...patch } : input)),
       };
     }));
   }, []);
 
   const addInput = useCallback((nodeId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || node.kind !== 'agent') {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageText')) {
         return node;
       }
-      const nextNumber = node.inputs.length + 1;
+      const inputs = node.inputs ?? [];
+      const nextNumber = inputs.length + 1;
       return {
         ...node,
-        inputs: [...node.inputs, { id: `input${nextNumber}`, name: `input${nextNumber}`, value: '' }],
+        inputs: [...inputs, { id: `input${nextNumber}`, name: `input${nextNumber}`, value: '' }],
       };
     }));
   }, []);
 
   const removeInput = useCallback((nodeId: string, inputId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || node.kind !== 'agent') {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageText')) {
         return node;
       }
-      return { ...node, inputs: node.inputs.filter((input) => input.id !== inputId) };
+      return { ...node, inputs: (node.inputs ?? []).filter((input) => input.id !== inputId) };
     }));
     setEdges((current) => current.filter((edge) => !(edge.target === nodeId && edgeInputHandle(edge) === inputId)));
   }, []);
@@ -495,7 +511,7 @@ export function App() {
     }
 
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'workflow' || node.kind === 'forEach';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
@@ -505,6 +521,8 @@ export function App() {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
     } else if (node.kind === 'imageGenerate') {
       setDebug(`Step ${node.order}: ${node.name} is calling ComfyUI`);
+    } else if (node.kind === 'imageText') {
+      setDebug(`Step ${node.order}: ${node.name} is reading the image with ${node.model}`);
     } else if (node.kind === 'workflow') {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
     } else if (node.kind === 'forEach') {
@@ -801,6 +819,13 @@ export function App() {
     () => Object.keys(savedLibrary).sort().map((name) => ({ name })),
     [savedLibrary],
   );
+  const visionModels = useMemo(() => {
+    const names = new Set<string>(VISION_MODEL_NAMES);
+    const listed = models.filter((entry) => names.has(entry.name));
+    return listed.length
+      ? listed
+      : [{ name: DEFAULT_VISION_MODEL, label: 'Qwen 2.5 VL 3B (vision)', size_bytes: 0, installed: true }];
+  }, [models]);
 
   const flowNodes: Node[] = useMemo(() => {
     const byId = new Map(workflowNodes.map((node) => [node.id, node]));
@@ -885,17 +910,48 @@ export function App() {
             },
           };
         case 'imageGenerate':
+          const imageInputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
           return {
             type: 'flexibleImageGenerate',
             width: 440,
-            height: 650,
+            height: 690 + imageInputs.length * 36,
             data: {
               ...node,
               ...shared,
-              prompt: linkedValue(node.id, 'prompt') ?? node.prompt,
+              inputs: imageInputs.map((input) => ({
+                ...input,
+                value: linkedValue(node.id, input.id) ?? input.value,
+              })),
               referenceImage: linkedValue(node.id, 'reference') ?? node.referenceImage,
               running: runningNodeId === node.id,
               pendingSourceHandleId: pendingHandle,
+              onInputChange: patchInput,
+              onAddInput: addInput,
+              onRemoveInput: removeInput,
+              onRun: runNode,
+            },
+          };
+        case 'imageText':
+          const imageTextInputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
+          return {
+            type: 'flexibleImageText',
+            width: 440,
+            height: 640 + imageTextInputs.length * 36,
+            data: {
+              ...node,
+              ...shared,
+              inputs: imageTextInputs.map((input) => ({
+                ...input,
+                value: linkedValue(node.id, input.id) ?? input.value,
+              })),
+              imageUrl: linkedValue(node.id, 'image') ?? node.imageUrl,
+              model: visionModels.some((entry) => entry.name === node.model) ? node.model : DEFAULT_VISION_MODEL,
+              models: visionModels,
+              running: runningNodeId === node.id,
+              pendingSourceHandleId: pendingHandle,
+              onInputChange: patchInput,
+              onAddInput: addInput,
+              onRemoveInput: removeInput,
               onRun: runNode,
             },
           };
@@ -948,7 +1004,7 @@ export function App() {
       data: spec.data,
     };
     });
-  }, [workflowNodes, edges, nodeSizes, models, runningNodeId, pendingLinkSource, workflowOptions, imageInputDir, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, uploadImageForNode, runNode, removeNode]);
+  }, [workflowNodes, edges, nodeSizes, models, visionModels, runningNodeId, pendingLinkSource, workflowOptions, imageInputDir, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, uploadImageForNode, runNode, removeNode]);
 
   // Highlight the link the context menu is open for.
   const flowEdges: Edge[] = useMemo(
@@ -1127,6 +1183,17 @@ export function App() {
             >
               <Eye size={16} />
               <span>Display image</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'imageText')}
+              onClick={() => addWorkflowNode('imageText')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Type size={16} />
+              <span>Image text</span>
             </button>
             <button
               className="drawer-item"

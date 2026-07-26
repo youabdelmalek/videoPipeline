@@ -8,7 +8,8 @@
  */
 
 import type { Edge } from '@xyflow/react';
-import { generateComfyImage, runFlexibleLlm } from '../api';
+import { generateComfyImage, runFlexibleImageLlm, runFlexibleLlm } from '../api';
+import { DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
 import type { FlexibleInput } from '../nodes';
 
 export type AgentNodeState = {
@@ -135,12 +136,27 @@ export type ImageGenerateNodeState = {
   name: string;
   order: number;
   prompt: string;
+  inputs: FlexibleInput[];
   referenceImage: string;
   seed: string;
   steps: number;
   strength: number;
   outputUrl: string;
   outputName: string;
+  status: string;
+  position: { x: number; y: number };
+};
+
+export type ImageTextNodeState = {
+  id: string;
+  kind: 'imageText';
+  name: string;
+  order: number;
+  prompt: string;
+  model: string;
+  imageUrl: string;
+  inputs: FlexibleInput[];
+  output: string;
   status: string;
   position: { x: number; y: number };
 };
@@ -166,6 +182,7 @@ export type WorkflowNodeState =
   | ImageUploadNodeState
   | ImageDisplayNodeState
   | ImageGenerateNodeState
+  | ImageTextNodeState
   | IfNodeState
   | SplitNodeState
   | InputNodeState
@@ -358,6 +375,10 @@ function formatArray(values: string[]): string {
   return JSON.stringify(values, null, 2);
 }
 
+function visionModelOrDefault(model: string): string {
+  return VISION_MODEL_NAMES.some((name) => name === model) ? model : DEFAULT_VISION_MODEL;
+}
+
 function parseLoopItems(input: string): { items: string[]; error: string | null } {
   const text = input.trim();
   if (!text) {
@@ -437,6 +458,7 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
   }
   switch (node.kind) {
     case 'agent':
+    case 'imageText':
     case 'json':
       return node.output;
     case 'imageUpload':
@@ -496,12 +518,27 @@ export function hydrateNode(
       return link ? { ...node, imageUrl: valueOf(link) } : node;
     }
     case 'imageGenerate': {
-      const promptLink = incoming.find((edge) => edgeInputHandle(edge) === 'prompt');
+      const inputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
       const referenceLink = incoming.find((edge) => edgeInputHandle(edge) === 'reference');
       return {
         ...node,
-        prompt: promptLink ? valueOf(promptLink) : node.prompt,
+        inputs: inputs.map((input) => {
+          const link = incoming.find((edge) => edgeInputHandle(edge) === input.id);
+          return link ? { ...input, value: valueOf(link) } : input;
+        }),
         referenceImage: referenceLink ? valueOf(referenceLink) : node.referenceImage,
+      };
+    }
+    case 'imageText': {
+      const inputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
+      const imageLink = incoming.find((edge) => edgeInputHandle(edge) === 'image');
+      return {
+        ...node,
+        imageUrl: imageLink ? valueOf(imageLink) : node.imageUrl,
+        inputs: inputs.map((input) => {
+          const link = incoming.find((edge) => edgeInputHandle(edge) === input.id);
+          return link ? { ...input, value: valueOf(link) } : input;
+        }),
       };
     }
     case 'split': {
@@ -590,7 +627,8 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
     case 'imageDisplay':
       return { patch: {}, error: null, note: `${node.name} displayed its image URL` };
     case 'imageGenerate': {
-      if (!node.prompt.trim()) {
+      const prompt = interpolate(node.prompt, node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }]);
+      if (!prompt.trim()) {
         const error = 'Prompt is required';
         return { patch: { status: error }, error, note: '' };
       }
@@ -614,7 +652,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       const strength = Number.isFinite(strengthValue) ? Math.min(2, Math.max(0, strengthValue)) : 1;
       const result = await generateComfyImage(
         {
-          prompt: node.prompt,
+          prompt,
           reference_image: node.referenceImage,
           seed,
           steps,
@@ -634,6 +672,24 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         },
         error: null,
         note: `${node.name} generated ${result.filename}`,
+      };
+    }
+    case 'imageText': {
+      const prompt = interpolate(node.prompt, node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }]);
+      if (!prompt.trim()) {
+        const error = 'Prompt is required';
+        return { patch: { status: error }, error, note: '' };
+      }
+      if (!node.imageUrl.trim()) {
+        const error = 'Link an image URL';
+        return { patch: { status: error }, error, note: '' };
+      }
+      const model = visionModelOrDefault(node.model);
+      const output = await runFlexibleImageLlm(prompt, node.imageUrl, model, ctx.signal);
+      return {
+        patch: { output, model, status: 'Finished' },
+        error: null,
+        note: `${node.name} finished`,
       };
     }
     case 'split': {

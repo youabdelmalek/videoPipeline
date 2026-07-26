@@ -746,6 +746,13 @@
   border-color: #8fb5ad;
 }
 
+.image-text-node {
+  width: 440px;
+  min-height: 600px;
+  background: #f5eef2;
+  border-color: #c39ab6;
+}
+
 .image-settings {
   grid-template-columns: 82px minmax(0, 1fr);
 }
@@ -791,6 +798,14 @@
 
 .image-generate-node .text-pass-block .output-box {
   min-height: 70px;
+}
+
+.image-text-url .output-box {
+  min-height: 66px;
+}
+
+.image-text-output .output-box {
+  min-height: 120px;
 }
 
 .if-node {

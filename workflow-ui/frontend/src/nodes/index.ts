@@ -8,6 +8,7 @@ export { FlexibleForEachNode } from './FlexibleForEachNode';
 export { FlexibleIfNode } from './FlexibleIfNode';
 export { FlexibleImageDisplayNode } from './FlexibleImageDisplayNode';
 export { FlexibleImageGenerateNode } from './FlexibleImageGenerateNode';
+export { FlexibleImageTextNode } from './FlexibleImageTextNode';
 export { FlexibleImageUploadNode } from './FlexibleImageUploadNode';
 export { FlexibleJsonNode } from './FlexibleJsonNode';
 export { FlexibleSplitNode } from './FlexibleSplitNode';
@@ -44,6 +45,8 @@ export type {
   FlexibleImageDisplayPatch,
   FlexibleImageGenerateNodeData,
   FlexibleImageGeneratePatch,
+  FlexibleImageTextNodeData,
+  FlexibleImageTextPatch,
   FlexibleImageUploadNodeData,
   FlexibleImageUploadPatch,
   FlexibleInput,

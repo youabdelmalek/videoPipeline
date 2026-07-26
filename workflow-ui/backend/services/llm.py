@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import Callable
 
-from backend.models import DEFAULT_MODEL
+from backend.models import DEFAULT_MODEL, DEFAULT_VISION_MODEL
 from backend.services.kimi import KIMI_ENABLED, KIMI_MODEL, kimi_generate
-from backend.services.ollama import ollama_generate
+from backend.services.ollama import ollama_generate, ollama_generate_with_images
 
 OLLAMA = "ollama"
 KIMI = "kimi"
@@ -46,3 +46,9 @@ def llm_generate(provider: str, model: str, prompt: str) -> str:
             f"Unknown model provider '{provider}'. Expected one of: {', '.join(known_providers())}."
         )
     return generate(model=model or default_model_for(provider), prompt=prompt)
+
+
+def llm_generate_with_images(provider: str, model: str, prompt: str, images: list[str]) -> str:
+    if provider != OLLAMA:
+        raise RuntimeError("Image prompts are only supported through Ollama.")
+    return ollama_generate_with_images(model=model or DEFAULT_VISION_MODEL, prompt=prompt, images=images)

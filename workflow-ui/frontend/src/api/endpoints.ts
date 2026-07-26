@@ -15,6 +15,7 @@ import type {
   ShotProvider,
   StageCatalog,
   WorkflowDefinition,
+  FlexibleImageLlmResponse,
   FlexibleLlmResponse,
   UploadComfyImageResponse,
 } from './types';
@@ -192,6 +193,24 @@ export async function runFlexibleLlm(
     {
       method: 'POST',
       body: JSON.stringify({ prompt, model }),
+      signal,
+    },
+    10 * 60 * 1000,
+  );
+  return data.output;
+}
+
+export async function runFlexibleImageLlm(
+  prompt: string,
+  imageUrl: string,
+  model: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const data = await request<FlexibleImageLlmResponse>(
+    '/image-llm',
+    {
+      method: 'POST',
+      body: JSON.stringify({ prompt, image_url: imageUrl, model }),
       signal,
     },
     10 * 60 * 1000,

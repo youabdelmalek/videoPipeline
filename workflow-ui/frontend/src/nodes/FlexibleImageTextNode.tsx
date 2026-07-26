@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Loader2, Play, Plus, Trash2, X } from 'lucide-react';
-import type { FlexibleImageGenerateNodeData } from './types';
+import type { FlexibleImageTextNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
 
-function ImagePromptInputRow({
+function ImageTextInputRow({
   data,
   input,
 }: {
-  data: FlexibleImageGenerateNodeData;
-  input: FlexibleImageGenerateNodeData['inputs'][number];
+  data: FlexibleImageTextNodeData;
+  input: FlexibleImageTextNodeData['inputs'][number];
 }) {
   const [name, setName] = useDraftValue(input.name, (value) => data.onInputChange(data.nodeId, input.id, { name: value }));
   const [value, setValue] = useDraftValue(input.value, (next) => data.onInputChange(data.nodeId, input.id, { value: next }));
@@ -48,14 +48,11 @@ function ImagePromptInputRow({
   );
 }
 
-export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImageGenerateNodeData>>) {
+export function FlexibleImageTextNode({ data }: NodeProps<Node<FlexibleImageTextNodeData>>) {
   const [name, setName] = useDraftValue(data.name, (value) => data.onChange(data.nodeId, { name: value }));
   const [prompt, setPrompt] = useDraftValue(data.prompt, (value) => data.onChange(data.nodeId, { prompt: value }));
-  const [referenceImage, setReferenceImage] = useDraftValue(
-    data.referenceImage,
-    (value) => data.onChange(data.nodeId, { referenceImage: value }),
-  );
-  const [seed, setSeed] = useDraftValue(data.seed, (value) => data.onChange(data.nodeId, { seed: value }));
+  const [imageUrl, setImageUrl] = useDraftValue(data.imageUrl, (value) => data.onChange(data.nodeId, { imageUrl: value }));
+  const [output, setOutput] = useDraftValue(data.output, (value) => data.onChange(data.nodeId, { output: value }));
   const updateNodeInternals = useUpdateNodeInternals();
   const sourceClass =
     data.pendingSourceNodeId === data.nodeId && data.pendingSourceHandleId === 'output' ? 'is-link-source' : '';
@@ -65,10 +62,10 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
   }, [data.nodeId, data.inputs.length, updateNodeInternals]);
 
   return (
-    <section className="node flexible-node image-generate-node">
+    <section className="node flexible-node image-text-node">
       <div className="node-header">
         <div>
-          <div className="node-kicker">Generate image</div>
+          <div className="node-kicker">Image text</div>
           <input
             className="node-title-input nodrag nopan"
             value={name}
@@ -87,48 +84,29 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
         </button>
       </div>
 
-      <label>
-        Order
-        <input
-          className="nodrag nopan"
-          type="number"
-          value={data.order}
-          onChange={(event) => data.onChange(data.nodeId, { order: Number(event.target.value) || 0 })}
-        />
-      </label>
-
-      <div className="node-grid three">
+      <div className="node-grid two">
         <label>
-          Seed
-          <input
-            className="nodrag nopan"
-            value={seed}
-            onChange={(event) => setSeed(event.target.value)}
-            placeholder="auto"
-          />
-        </label>
-        <label>
-          Steps
+          Order
           <input
             className="nodrag nopan"
             type="number"
-            min={1}
-            max={150}
-            value={data.steps}
-            onChange={(event) => data.onChange(data.nodeId, { steps: Number(event.target.value) || 8 })}
+            value={data.order}
+            onChange={(event) => data.onChange(data.nodeId, { order: Number(event.target.value) || 0 })}
           />
         </label>
         <label>
-          Strength
-          <input
+          Model
+          <select
             className="nodrag nopan"
-            type="number"
-            min={0}
-            max={2}
-            step={0.05}
-            value={data.strength}
-            onChange={(event) => data.onChange(data.nodeId, { strength: Number(event.target.value) || 1 })}
-          />
+            value={data.model}
+            onChange={(event) => data.onChange(data.nodeId, { model: event.target.value })}
+          >
+            {data.models.map((model) => (
+              <option key={model.name} value={model.name} disabled={!model.installed}>
+                {model.label}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 
@@ -138,7 +116,7 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
           className="prompt-box nodrag nopan"
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder="Create an image of ${input1}"
+          placeholder="Describe this image using ${input1}"
         />
       </label>
 
@@ -149,50 +127,48 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
             <Plus size={14} />
           </button>
         </div>
-        {data.inputs.map((input) => <ImagePromptInputRow key={input.id} data={data} input={input} />)}
+        {data.inputs.map((input) => <ImageTextInputRow key={input.id} data={data} input={input} />)}
       </div>
 
-      <div className="text-pass-block">
+      <div className="text-pass-block image-text-url">
         <Handle
           className={data.pendingSourceNodeId ? 'is-link-target' : ''}
           type="target"
           position={Position.Left}
-          id="reference"
-          onClick={() => data.onPickInput(data.nodeId, 'reference')}
+          id="image"
+          onClick={() => data.onPickInput(data.nodeId, 'image')}
         />
         <label>
-          Reference URL
+          Image URL
           <textarea
             className="output-box nodrag nopan"
-            value={referenceImage}
-            onChange={(event) => setReferenceImage(event.target.value)}
-            placeholder="Link the upload node here"
+            value={imageUrl}
+            onChange={(event) => setImageUrl(event.target.value)}
+            placeholder="Link an upload or generated image URL"
           />
         </label>
       </div>
 
-      <div className="if-run-row">
-        <button
-          className="run-node-button nodrag nopan"
-          type="button"
-          onClick={() => data.onRun(data.nodeId)}
-          disabled={data.running || !prompt.trim() || !referenceImage.trim()}
-        >
-          {data.running ? <Loader2 className="spin" size={14} /> : <Play size={14} />}
-          Generate
-        </button>
-        {data.status ? <span className="if-status">{data.status}</span> : null}
-      </div>
-
-      <div className="output-block image-output">
+      <div className="output-block image-text-output">
         <div className="row-title">
-          <span>Output URL</span>
-          {data.outputName ? <span>{data.outputName}</span> : null}
+          <span>Output</span>
+          <button
+            className="run-node-button nodrag nopan"
+            type="button"
+            onClick={() => data.onRun(data.nodeId)}
+            disabled={data.running || !prompt.trim() || !imageUrl.trim()}
+          >
+            {data.running ? <Loader2 className="spin" size={14} /> : <Play size={14} />}
+            Run
+          </button>
         </div>
-        <textarea className="output-box nodrag nopan" value={data.outputUrl} readOnly placeholder="Generated image URL" />
-        <div className="image-preview image-output-preview">
-          {data.outputUrl ? <img src={data.outputUrl} alt="Generated output" /> : <span>Output</span>}
-        </div>
+        <textarea
+          className="output-box nodrag nopan"
+          value={output}
+          onChange={(event) => setOutput(event.target.value)}
+          placeholder="Image description or judgment"
+        />
+        {data.status ? <span className="workflow-status">{data.status}</span> : null}
         <Handle
           className={sourceClass}
           type="source"

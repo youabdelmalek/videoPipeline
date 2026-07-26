@@ -53,6 +53,36 @@ def ollama_generate(model: str, prompt: str, timeout_seconds: int = 900) -> str:
     return strip_thinking(text)
 
 
+def ollama_generate_with_images(
+    model: str,
+    prompt: str,
+    images: list[str],
+    timeout_seconds: int = 900,
+) -> str:
+    """Run one multimodal completion with base64-encoded images."""
+    response = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": model,
+            "prompt": prompt,
+            "images": images,
+            "stream": False,
+            "think": False,
+            "options": {
+                "temperature": _TEMPERATURE,
+                "num_ctx": _CONTEXT_TOKENS,
+            },
+        },
+        timeout=timeout_seconds,
+    )
+    response.raise_for_status()
+
+    text = response.json().get("response")
+    if not isinstance(text, str) or not text.strip():
+        raise RuntimeError("Ollama returned an empty response")
+    return strip_thinking(text)
+
+
 def ollama_unload_model(model: str, timeout_seconds: int = 60) -> None:
     """Ask Ollama to drop the model from memory (keep_alive=0)."""
     response = requests.post(

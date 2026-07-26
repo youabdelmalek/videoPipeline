@@ -210,6 +210,10 @@ export type FlexibleLlmResponse = {
   output: string;
 };
 
+export type FlexibleImageLlmResponse = {
+  output: string;
+};
+
 export type ComfyImageInfo = {
   name: string;
   url: string;

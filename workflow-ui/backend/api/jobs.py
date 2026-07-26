@@ -6,10 +6,15 @@ write a pipeline function and add it here.
 
 from __future__ import annotations
 
+import base64
+from pathlib import Path
 from typing import Callable
+from urllib.parse import unquote, urlparse
 
+import requests
 from fastapi import APIRouter, HTTPException
 
+from backend.config import IMAGE_INPUT_DIR
 from backend.jobs import create_job, job_response, lookup_job, submit
 from backend.models import (
     BuildAssetCatalogRequest,
@@ -17,6 +22,8 @@ from backend.models import (
     BuildJsonFramesRequest,
     DetailVideosRequest,
     GenerateScenesRequest,
+    FlexibleImageLlmRequest,
+    FlexibleImageLlmResponse,
     FlexibleLlmRequest,
     FlexibleLlmResponse,
     JobResponse,
@@ -38,9 +45,11 @@ from backend.pipelines import (
     run_workflow_job,
 )
 from backend.runs.paths import run_dir
-from backend.services.llm import llm_generate
+from backend.services.llm import llm_generate, llm_generate_with_images
 
 router = APIRouter()
+
+MAX_IMAGE_BYTES = 40 * 1024 * 1024
 
 _JOB_STAGES: dict[str, Callable[..., None]] = {
     "scene_writer_judge": run_generate_job,
@@ -62,6 +71,38 @@ def _start(stage: str, slug: str, *args: object) -> StartJobResponse:
     job = create_job(stage, slug)
     submit(_JOB_STAGES[stage], job.id, slug, *args)
     return StartJobResponse(job=job_response(job))
+
+
+def _image_bytes_from_url(image_url: str) -> bytes:
+    parsed = urlparse(image_url.strip())
+    if parsed.scheme in ("http", "https"):
+        path = unquote(parsed.path)
+        if "/comfyui/images/" in path:
+            filename = Path(path.rsplit("/comfyui/images/", 1)[1]).name
+            local_path = IMAGE_INPUT_DIR / filename
+            if local_path.exists() and local_path.is_file():
+                data = local_path.read_bytes()
+                if len(data) > MAX_IMAGE_BYTES:
+                    raise HTTPException(status_code=413, detail="Image is larger than 40 MB")
+                return data
+        try:
+            response = requests.get(image_url, timeout=60)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise HTTPException(status_code=400, detail=f"Could not fetch image URL: {exc}") from exc
+        data = response.content
+    else:
+        filename = Path(unquote(parsed.path or image_url)).name
+        local_path = IMAGE_INPUT_DIR / filename
+        if not local_path.exists() or not local_path.is_file():
+            raise HTTPException(status_code=404, detail=f"Image not found in input folder: {filename}")
+        data = local_path.read_bytes()
+
+    if not data:
+        raise HTTPException(status_code=400, detail="Image is empty")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Image is larger than 40 MB")
+    return data
 
 
 @router.post("/runs/{slug}/generate-scenes", response_model=StartJobResponse)
@@ -114,6 +155,15 @@ def run_workflow(slug: str, request: RunWorkflowRequest) -> StartJobResponse:
 def flexible_llm(request: FlexibleLlmRequest) -> FlexibleLlmResponse:
     """Run one freeform prompt through the selected local LLM."""
     return FlexibleLlmResponse(output=llm_generate("ollama", request.model, request.prompt))
+
+
+@router.post("/image-llm", response_model=FlexibleImageLlmResponse)
+def flexible_image_llm(request: FlexibleImageLlmRequest) -> FlexibleImageLlmResponse:
+    """Run one prompt against an image through a local multimodal Ollama model."""
+    image_b64 = base64.b64encode(_image_bytes_from_url(request.image_url)).decode("ascii")
+    return FlexibleImageLlmResponse(
+        output=llm_generate_with_images("ollama", request.model, request.prompt, [image_b64])
+    )
 
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)

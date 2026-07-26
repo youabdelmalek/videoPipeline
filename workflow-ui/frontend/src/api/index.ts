@@ -20,6 +20,7 @@ export {
   judgeScenes,
   rewriteBoard,
   rewriteShots,
+  runFlexibleImageLlm,
   runWorkflow,
   runFlexibleLlm,
   saveFlexibleWorkflow,

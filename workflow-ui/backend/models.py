@@ -4,6 +4,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 DEFAULT_MODEL = "VladimirGav/gemma4-26b-16GB-VRAM"
+DEFAULT_VISION_MODEL = "qwen2.5vl:3b"
 
 #: The local models offered in the UI, in picker order. Anything else that is
 #: installed stays hidden; `GET /api/models` intersects this with `ollama list`.
@@ -12,6 +13,8 @@ ALLOWED_MODELS: tuple[tuple[str, str], ...] = (
     ("VladimirGav/gemma4-26b-16GB-VRAM", "Gemma 4 26B 16GB (default)"),
     ("qwen3.5:9b", "Qwen 3.5 9B (small)"),
     ("acidos/Qwen3.6-27B-IQ4_XS", "Qwen 3.6 27B IQ4_XS (16GB)"),
+    ("qwen2.5vl:3b", "Qwen 2.5 VL 3B (vision)"),
+    ("qwen3.5:9b-q8_0", "Qwen 3.5 9B Q8 (vision)"),
 )
 MIN_VIDEO_BULLETS = 8
 MAX_VIDEO_BULLETS = 12
@@ -273,6 +276,16 @@ class FlexibleLlmRequest(BaseModel):
 
 
 class FlexibleLlmResponse(BaseModel):
+    output: str
+
+
+class FlexibleImageLlmRequest(BaseModel):
+    prompt: str = Field(min_length=1)
+    image_url: str = Field(min_length=1)
+    model: str = DEFAULT_VISION_MODEL
+
+
+class FlexibleImageLlmResponse(BaseModel):
     output: str
 
 
