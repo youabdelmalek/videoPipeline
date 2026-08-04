@@ -20,12 +20,16 @@ export type ArtifactEntry = {
  */
 export type BoardProvider = 'ollama';
 
+export type ThinkingLevel = 'off' | 'on' | 'low' | 'medium' | 'high';
+
 /** One local model offered in the model picker. */
 export type ModelOption = {
   name: string;
   label: string;
   size_bytes: number;
   installed: boolean;
+  vision: boolean;
+  thinking_levels: ThinkingLevel[];
 };
 
 export type ModelList = {

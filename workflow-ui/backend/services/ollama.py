@@ -29,7 +29,12 @@ def ollama_installed_models(timeout_seconds: int = 10) -> list[dict[str, object]
     ]
 
 
-def ollama_generate(model: str, prompt: str, timeout_seconds: int = 900) -> str:
+def ollama_generate(
+    model: str,
+    prompt: str,
+    timeout_seconds: int = 900,
+    think: bool | str = False,
+) -> str:
     """Run one completion and return its text, minus any <think> block."""
     response = requests.post(
         OLLAMA_URL,
@@ -37,7 +42,7 @@ def ollama_generate(model: str, prompt: str, timeout_seconds: int = 900) -> str:
             "model": model,
             "prompt": prompt,
             "stream": False,
-            "think": False,
+            "think": think,
             "options": {
                 "temperature": _TEMPERATURE,
                 "num_ctx": _CONTEXT_TOKENS,
@@ -58,6 +63,7 @@ def ollama_generate_with_images(
     prompt: str,
     images: list[str],
     timeout_seconds: int = 900,
+    think: bool | str = False,
 ) -> str:
     """Run one multimodal completion with base64-encoded images."""
     response = requests.post(
@@ -67,7 +73,7 @@ def ollama_generate_with_images(
             "prompt": prompt,
             "images": images,
             "stream": False,
-            "think": False,
+            "think": think,
             "options": {
                 "temperature": _TEMPERATURE,
                 "num_ctx": _CONTEXT_TOKENS,

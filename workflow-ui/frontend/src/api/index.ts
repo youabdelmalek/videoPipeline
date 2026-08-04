@@ -54,6 +54,7 @@ export type {
   ShotProvider,
   StageCatalog,
   StageInfo,
+  ThinkingLevel,
   UploadComfyImageResponse,
   VideoCard,
   WorkflowDefinition,

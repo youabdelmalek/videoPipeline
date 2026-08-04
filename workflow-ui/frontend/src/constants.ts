@@ -1,7 +1,14 @@
+import type { ModelOption } from './api';
+
 export const DEFAULT_MODEL = 'VladimirGav/gemma4-26b-16GB-VRAM';
-export const DEFAULT_VISION_MODEL = 'qwen2.5vl:3b';
-export const QWEN_35_VISION_MODEL = 'qwen3.5:9b-q8_0';
-export const VISION_MODEL_NAMES = [DEFAULT_VISION_MODEL, QWEN_35_VISION_MODEL] as const;
+export const DEFAULT_VISION_MODEL = 'gemma4:12b';
+export const DEFAULT_THINKING_LEVEL = 'off' as const;
+export const VISION_MODEL_NAMES = [
+  'vaultbox/qwen3.5-uncensored:9b',
+  'devstral-small-2:24b',
+  'gemma4:12b',
+  'qwen3.5:9b',
+] as const;
 
 /**
  * Every pass runs locally. Kimi K3 is disabled backend-side
@@ -13,13 +20,55 @@ export const DEFAULT_BOARD_PROVIDER = 'ollama';
 export const DEFAULT_SHOT_PROVIDER = 'ollama';
 
 /** Shown until `GET /api/models` answers; mirrors ALLOWED_MODELS in backend/models.py. */
-export const FALLBACK_MODELS = [
-  { name: 'gemma4:12b', label: 'Gemma 4 12B (small)', size_bytes: 0, installed: true },
-  { name: DEFAULT_MODEL, label: 'Gemma 4 26B 16GB (default)', size_bytes: 0, installed: true },
-  { name: 'qwen3.5:9b', label: 'Qwen 3.5 9B (small)', size_bytes: 0, installed: true },
-  { name: 'acidos/Qwen3.6-27B-IQ4_XS', label: 'Qwen 3.6 27B IQ4_XS (16GB)', size_bytes: 0, installed: true },
-  { name: DEFAULT_VISION_MODEL, label: 'Qwen 2.5 VL 3B (vision)', size_bytes: 0, installed: true },
-  { name: QWEN_35_VISION_MODEL, label: 'Qwen 3.5 9B Q8 (vision)', size_bytes: 0, installed: true },
+export const FALLBACK_MODELS: ModelOption[] = [
+  {
+    name: 'vaultbox/qwen3.5-uncensored:9b',
+    label: 'Qwen 3.5 Uncensored 9B',
+    size_bytes: 0,
+    installed: true,
+    vision: true,
+    thinking_levels: ['off', 'on'],
+  },
+  {
+    name: 'devstral-small-2:24b',
+    label: 'Devstral Small 2 24B',
+    size_bytes: 0,
+    installed: true,
+    vision: true,
+    thinking_levels: [],
+  },
+  {
+    name: 'gpt-oss:20b',
+    label: 'GPT-OSS 20B',
+    size_bytes: 0,
+    installed: true,
+    vision: false,
+    thinking_levels: ['off', 'low', 'medium', 'high'],
+  },
+  {
+    name: DEFAULT_MODEL,
+    label: 'Gemma 4 26B 16GB (default)',
+    size_bytes: 0,
+    installed: true,
+    vision: false,
+    thinking_levels: ['off', 'on'],
+  },
+  {
+    name: DEFAULT_VISION_MODEL,
+    label: 'Gemma 4 12B',
+    size_bytes: 0,
+    installed: true,
+    vision: true,
+    thinking_levels: ['off', 'on'],
+  },
+  {
+    name: 'qwen3.5:9b',
+    label: 'Qwen 3.5 9B',
+    size_bytes: 0,
+    installed: true,
+    vision: true,
+    thinking_levels: ['off', 'on'],
+  },
 ];
 
 export const STARTER_PROMPT =

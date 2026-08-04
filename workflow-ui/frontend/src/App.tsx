@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
 import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
-import { DEFAULT_MODEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from './constants';
+import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
 import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
@@ -34,6 +34,7 @@ const STARTER_NODES: WorkflowNodeState[] = [
     order: 1,
     prompt: 'Use ${input1} and produce a clear string output.',
     model: DEFAULT_MODEL,
+    thinking: DEFAULT_THINKING_LEVEL,
     inputs: [{ id: 'input1', name: 'input1', value: '' }],
     output: '',
     position: { x: 120, y: 120 },
@@ -74,6 +75,7 @@ function buildNode(
         order,
         prompt: 'Write a useful response using ${input1}.',
         model,
+        thinking: DEFAULT_THINKING_LEVEL,
         inputs: [{ id: 'input1', name: 'input1', value: '' }],
         output: '',
         position,
@@ -820,11 +822,10 @@ export function App() {
     [savedLibrary],
   );
   const visionModels = useMemo(() => {
-    const names = new Set<string>(VISION_MODEL_NAMES);
-    const listed = models.filter((entry) => names.has(entry.name));
+    const listed = models.filter((entry) => entry.vision);
     return listed.length
       ? listed
-      : [{ name: DEFAULT_VISION_MODEL, label: 'Qwen 2.5 VL 3B (vision)', size_bytes: 0, installed: true }];
+      : FALLBACK_MODELS.filter((entry) => entry.vision);
   }, [models]);
 
   const flowNodes: Node[] = useMemo(() => {
@@ -854,6 +855,7 @@ export function App() {
             data: {
               ...node,
               ...shared,
+              thinking: node.thinking ?? DEFAULT_THINKING_LEVEL,
               models,
               running: runningNodeId === node.id,
               onInputChange: patchInput,

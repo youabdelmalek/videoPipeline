@@ -14,6 +14,7 @@ import type {
   RunSummary,
   ShotProvider,
   StageCatalog,
+  ThinkingLevel,
   WorkflowDefinition,
   FlexibleImageLlmResponse,
   FlexibleLlmResponse,
@@ -187,12 +188,13 @@ export async function runFlexibleLlm(
   prompt: string,
   model: string,
   signal?: AbortSignal,
+  thinking: ThinkingLevel = 'off',
 ): Promise<string> {
   const data = await request<FlexibleLlmResponse>(
     '/llm',
     {
       method: 'POST',
-      body: JSON.stringify({ prompt, model }),
+      body: JSON.stringify({ prompt, model, thinking }),
       signal,
     },
     10 * 60 * 1000,

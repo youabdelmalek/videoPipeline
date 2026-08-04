@@ -154,7 +154,9 @@ def run_workflow(slug: str, request: RunWorkflowRequest) -> StartJobResponse:
 @router.post("/llm", response_model=FlexibleLlmResponse)
 def flexible_llm(request: FlexibleLlmRequest) -> FlexibleLlmResponse:
     """Run one freeform prompt through the selected local LLM."""
-    return FlexibleLlmResponse(output=llm_generate("ollama", request.model, request.prompt))
+    return FlexibleLlmResponse(
+        output=llm_generate("ollama", request.model, request.prompt, request.thinking)
+    )
 
 
 @router.post("/image-llm", response_model=FlexibleImageLlmResponse)

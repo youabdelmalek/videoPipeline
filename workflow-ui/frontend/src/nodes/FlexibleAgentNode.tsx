@@ -1,8 +1,18 @@
 import { useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Loader2, Play, Plus, Trash2, X } from 'lucide-react';
+import type { ThinkingLevel } from '../api';
+import { DEFAULT_THINKING_LEVEL } from '../constants';
 import type { FlexibleAgentNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
+
+const THINKING_LABELS: Record<ThinkingLevel, string> = {
+  off: 'Off',
+  on: 'On',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+};
 
 function AgentInputRow({
   data,
@@ -53,6 +63,15 @@ export function FlexibleAgentNode({ data }: NodeProps<Node<FlexibleAgentNodeData
   const [prompt, setPrompt] = useDraftValue(data.prompt, (value) => data.onChange(data.nodeId, { prompt: value }));
   const [output, setOutput] = useDraftValue(data.output, (value) => data.onChange(data.nodeId, { output: value }));
   const updateNodeInternals = useUpdateNodeInternals();
+  const selectedModel = data.models.find((model) => model.name === data.model);
+  const thinkingLevels = selectedModel?.thinking_levels ?? [];
+
+  function handleModelChange(model: string) {
+    const nextModel = data.models.find((entry) => entry.name === model);
+    const nextThinkingLevels = nextModel?.thinking_levels ?? [];
+    const thinking = nextThinkingLevels.includes(data.thinking) ? data.thinking : DEFAULT_THINKING_LEVEL;
+    data.onChange(data.nodeId, { model, thinking });
+  }
 
   // Adding or removing inputs adds and removes handles; React Flow must
   // re-measure them or their edges anchor to stale positions.
@@ -98,7 +117,7 @@ export function FlexibleAgentNode({ data }: NodeProps<Node<FlexibleAgentNodeData
           <select
             className="nodrag nopan"
             value={data.model}
-            onChange={(event) => data.onChange(data.nodeId, { model: event.target.value })}
+            onChange={(event) => handleModelChange(event.target.value)}
           >
             {data.models.map((model) => (
               <option key={model.name} value={model.name} disabled={!model.installed}>
@@ -107,6 +126,22 @@ export function FlexibleAgentNode({ data }: NodeProps<Node<FlexibleAgentNodeData
             ))}
           </select>
         </label>
+        {thinkingLevels.length > 1 ? (
+          <label>
+            Thinking
+            <select
+              className="nodrag nopan"
+              value={data.thinking}
+              onChange={(event) => data.onChange(data.nodeId, { thinking: event.target.value as ThinkingLevel })}
+            >
+              {thinkingLevels.map((level) => (
+                <option key={level} value={level}>
+                  {THINKING_LABELS[level]}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
 
       <label>

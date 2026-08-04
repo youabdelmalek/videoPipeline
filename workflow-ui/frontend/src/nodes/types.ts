@@ -11,6 +11,7 @@ import type {
   ModelOption,
   SceneCard,
   ShotProvider,
+  ThinkingLevel,
 } from '../api';
 import type { PickableVideo } from './VideoPicker';
 
@@ -200,6 +201,7 @@ export type FlexibleAgentNodeData = {
   order: number;
   prompt: string;
   model: string;
+  thinking: ThinkingLevel;
   models: ModelOption[];
   inputs: FlexibleInput[];
   output: string;
@@ -220,6 +222,7 @@ export type FlexibleAgentPatch = {
   order: number;
   prompt: string;
   model: string;
+  thinking: ThinkingLevel;
   output: string;
 };
 

@@ -3,18 +3,54 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
+ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
 DEFAULT_MODEL = "VladimirGav/gemma4-26b-16GB-VRAM"
-DEFAULT_VISION_MODEL = "qwen2.5vl:3b"
+DEFAULT_VISION_MODEL = "gemma4:12b"
+DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"
 
-#: The local models offered in the UI, in picker order. Anything else that is
-#: installed stays hidden; `GET /api/models` intersects this with `ollama list`.
-ALLOWED_MODELS: tuple[tuple[str, str], ...] = (
-    ("gemma4:12b", "Gemma 4 12B (small)"),
-    ("VladimirGav/gemma4-26b-16GB-VRAM", "Gemma 4 26B 16GB (default)"),
-    ("qwen3.5:9b", "Qwen 3.5 9B (small)"),
-    ("acidos/Qwen3.6-27B-IQ4_XS", "Qwen 3.6 27B IQ4_XS (16GB)"),
-    ("qwen2.5vl:3b", "Qwen 2.5 VL 3B (vision)"),
-    ("qwen3.5:9b-q8_0", "Qwen 3.5 9B Q8 (vision)"),
+
+@dataclass(frozen=True)
+class ModelCatalogEntry:
+    name: str
+    label: str
+    vision: bool = False
+    thinking_levels: tuple[ThinkingLevel, ...] = ()
+
+
+MODEL_CATALOG: tuple[ModelCatalogEntry, ...] = (
+    ModelCatalogEntry(
+        "vaultbox/qwen3.5-uncensored:9b",
+        "Qwen 3.5 Uncensored 9B",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
+    ModelCatalogEntry("devstral-small-2:24b", "Devstral Small 2 24B", vision=True),
+    ModelCatalogEntry(
+        "gpt-oss:20b",
+        "GPT-OSS 20B",
+        thinking_levels=("off", "low", "medium", "high"),
+    ),
+    ModelCatalogEntry(
+        "VladimirGav/gemma4-26b-16GB-VRAM",
+        "Gemma 4 26B 16GB (default)",
+        thinking_levels=("off", "on"),
+    ),
+    ModelCatalogEntry(
+        "gemma4:12b",
+        "Gemma 4 12B",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
+    ModelCatalogEntry(
+        "qwen3.5:9b",
+        "Qwen 3.5 9B",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
+)
+
+ALLOWED_MODELS: tuple[tuple[str, str], ...] = tuple(
+    (entry.name, entry.label) for entry in MODEL_CATALOG
 )
 MIN_VIDEO_BULLETS = 8
 MAX_VIDEO_BULLETS = 12
@@ -129,6 +165,8 @@ class ModelOption(BaseModel):
     size_bytes: int = 0
     #: False when the model is in ALLOWED_MODELS but not pulled yet.
     installed: bool = True
+    vision: bool = False
+    thinking_levels: list[ThinkingLevel] = Field(default_factory=list)
 
 
 class ListModelsResponse(BaseModel):
@@ -273,6 +311,7 @@ class RunWorkflowRequest(BaseModel):
 class FlexibleLlmRequest(BaseModel):
     prompt: str = Field(min_length=1)
     model: str = DEFAULT_MODEL
+    thinking: ThinkingLevel = DEFAULT_THINKING_LEVEL
 
 
 class FlexibleLlmResponse(BaseModel):

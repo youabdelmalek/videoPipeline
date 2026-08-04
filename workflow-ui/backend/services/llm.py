@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from backend.models import DEFAULT_MODEL, DEFAULT_VISION_MODEL
+from backend.models import DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, ThinkingLevel
 from backend.services.kimi import KIMI_ENABLED, KIMI_MODEL, kimi_generate
 from backend.services.ollama import ollama_generate, ollama_generate_with_images
 
@@ -39,13 +39,33 @@ def default_model_for(provider: str) -> str:
     return DEFAULT_MODELS.get(provider, DEFAULT_MODEL)
 
 
-def llm_generate(provider: str, model: str, prompt: str) -> str:
+def _ollama_think_value(level: ThinkingLevel) -> bool | str:
+    if level == "off":
+        return False
+    if level == "on":
+        return True
+    return level
+
+
+def llm_generate(
+    provider: str,
+    model: str,
+    prompt: str,
+    thinking: ThinkingLevel = DEFAULT_THINKING_LEVEL,
+) -> str:
     generate = _GENERATORS.get(provider)
     if generate is None:
         raise RuntimeError(
             f"Unknown model provider '{provider}'. Expected one of: {', '.join(known_providers())}."
         )
-    return generate(model=model or default_model_for(provider), prompt=prompt)
+    selected_model = model or default_model_for(provider)
+    if provider == OLLAMA:
+        return ollama_generate(
+            model=selected_model,
+            prompt=prompt,
+            think=_ollama_think_value(thinking),
+        )
+    return generate(model=selected_model, prompt=prompt)
 
 
 def llm_generate_with_images(provider: str, model: str, prompt: str, images: list[str]) -> str:

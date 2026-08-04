@@ -9,7 +9,8 @@
 
 import type { Edge } from '@xyflow/react';
 import { generateComfyImage, runFlexibleImageLlm, runFlexibleLlm } from '../api';
-import { DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
+import { DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
+import type { ThinkingLevel } from '../api';
 import type { FlexibleInput } from '../nodes';
 
 export type AgentNodeState = {
@@ -19,6 +20,7 @@ export type AgentNodeState = {
   order: number;
   prompt: string;
   model: string;
+  thinking: ThinkingLevel;
   inputs: FlexibleInput[];
   output: string;
   position: { x: number; y: number };
@@ -794,7 +796,12 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       return { patch: { output1, output2, status }, error: null, note: `${node.name} — ${status}` };
     }
     case 'agent': {
-      const output = await runFlexibleLlm(interpolate(node.prompt, node.inputs), node.model, ctx.signal);
+      const output = await runFlexibleLlm(
+        interpolate(node.prompt, node.inputs),
+        node.model,
+        ctx.signal,
+        node.thinking ?? DEFAULT_THINKING_LEVEL,
+      );
       return { patch: { output }, error: null, note: `${node.name} finished` };
     }
     case 'workflow': {

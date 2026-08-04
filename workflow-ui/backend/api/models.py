@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from backend.models import ALLOWED_MODELS, DEFAULT_MODEL, ListModelsResponse, ModelOption
+from backend.models import DEFAULT_MODEL, MODEL_CATALOG, ListModelsResponse, ModelOption
 from backend.services.ollama import ollama_installed_models
 
 from fastapi import APIRouter
@@ -32,12 +32,14 @@ def get_models() -> ListModelsResponse:
     return ListModelsResponse(
         models=[
             ModelOption(
-                name=name,
-                label=label,
-                size_bytes=sizes.get(name, 0),
-                installed=name in sizes,
+                name=entry.name,
+                label=entry.label,
+                size_bytes=sizes.get(entry.name, 0),
+                installed=entry.name in sizes,
+                vision=entry.vision,
+                thinking_levels=list(entry.thinking_levels),
             )
-            for name, label in ALLOWED_MODELS
+            for entry in MODEL_CATALOG
         ],
         default=DEFAULT_MODEL,
         unreachable=unreachable,
