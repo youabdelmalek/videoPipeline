@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "series-workflow-ui": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": ["${workspaceFolder}\\workflow-ui\\mcp_server.py"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "WORKFLOW_UI_API_URL": "http://127.0.0.1:8000/api",
+        "WORKFLOW_UI_FRONTEND_URL": "http://127.0.0.1:5173"
+      }
+    }
+  }
+}
