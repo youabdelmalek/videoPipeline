@@ -1,0 +1,222 @@
+{
+  "name": "simple-no-loop",
+  "workflow": {
+    "runs": {
+      "first-success": {
+        "nodes": [
+          {
+            "id": "prompt-input",
+            "kind": "input",
+            "name": "Prompt",
+            "order": 1,
+            "value": "A small red fox astronaut sitting on a moonlit rooftop.",
+            "position": {
+              "x": 437.92287917737787,
+              "y": -104.58611825192803
+            }
+          },
+          {
+            "id": "prompt-enhancer",
+            "kind": "agent",
+            "name": "Prompt Enhancer",
+            "order": 2,
+            "prompt": "You convert user descriptions into efficient prompts for image-generation models. Image models need concrete visual instructions, not poetic language, marketing terms, or subjective quality claims.\n\nAct as a technical image-prompt editor.\n\nRewrite the input as a detailed, factual image-generation prompt.\n\nKeep only information that visibly affects the generated image:\n\n* Main subject and appearance\n* Clothing, objects, and materials\n* Subject pose and action\n* Environment\n* Camera angle\n* shot type\n* composition\n* Lighting direction, intensity, and color\n* Relevant art style and rendering medium\n* Important colors and textures\n\nRemove:\n* Poetic descriptions\n* Terms such as “masterpiece,” “8K,” “highly detailed,” “stunning,” or “cinematic” unless they define a concrete visual feature.\n\nmake sure to include specific texture, \nReturn only the rewritten prompt.\n\n### Input\n ${input1} ",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "A small red fox astronaut sitting on a moonlit rooftop."
+              }
+            ],
+            "output": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.",
+            "position": {
+              "x": -88,
+              "y": 239.0745501285347
+            }
+          },
+          {
+            "id": "prompt-judge",
+            "kind": "agent",
+            "name": "Prompt Judge",
+            "order": 3,
+            "prompt": "You are the final prompt quality judge. Evaluate the candidate prompt below for an image generation.\n\nReturn ONLY valid JSON, with no Markdown or extra text, using exactly this shape example:\n{\"score\": 0, \"prompt\": \"${input1}\", \"fixes\": [\"missing composition and art style to add\"]}\n\nSet multiple scores based on character details pose details, background details, composition details, camera details, then generate a single score based all the previous scores to an integer from 0 to 100 based on the factual prompt for image generation, Score subject clarity, visual specificity, composition, lighting, and style direction. In prompt, return the corrected production-ready image prompt. In fixes, return a list of factual fixes that should be addressed to get a better prompt for image generation theses changes should visibly affect the generated image\n\nCandidate prompt:\n${input1}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style."
+              }
+            ],
+            "output": "{\"score\": 100, \"prompt\": \"A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.\", \"fixes\": []}",
+            "position": {
+              "x": 455.1568123393315,
+              "y": 254.70437017994857
+            }
+          },
+          {
+            "id": "prompt-score-json",
+            "kind": "json",
+            "name": "Prompt Score JSON",
+            "order": 4,
+            "input": "{\"score\": 100, \"prompt\": \"A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.\", \"fixes\": []}",
+            "path": "score",
+            "output": "100",
+            "error": null,
+            "position": {
+              "x": 1099.9074550128532,
+              "y": 98.14910025706942
+            }
+          },
+          {
+            "id": "approved-prompt-json",
+            "kind": "json",
+            "name": "Approved Prompt JSON",
+            "order": 5,
+            "input": "{\"score\": 100, \"prompt\": \"A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.\", \"fixes\": []}",
+            "path": "prompt",
+            "output": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.",
+            "error": null,
+            "position": {
+              "x": 1093.6555269922876,
+              "y": 591.9280205655526
+            }
+          },
+          {
+            "id": "prompt-score-gate",
+            "kind": "if",
+            "name": "Prompt Score Gate",
+            "order": 6,
+            "input1": "100",
+            "input2": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.",
+            "condition": "${input1} > 90",
+            "prompt": "Do not generate an image because the prompt score is ${input1}; it must be above 90.",
+            "output1": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style.",
+            "output2": "",
+            "status": "Condition true → output 1 (success)",
+            "position": {
+              "x": 1674.6426735218508,
+              "y": 229.69665809768642
+            }
+          },
+          {
+            "id": "style-image-generator",
+            "kind": "imageGenerate",
+            "name": "Style Image Generator",
+            "order": 7,
+            "prompt": "${input1}",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style."
+              }
+            ],
+            "referenceImage": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260726_162626_459.png",
+            "seed": "1268144387",
+            "steps": 8,
+            "strength": 1,
+            "outputUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260804_080517_491.png",
+            "outputName": "krea2_style_20260804_080517_491.png",
+            "status": "Generated krea2_style_20260804_080517_491.png",
+            "position": {
+              "x": 2116.5244215938305,
+              "y": -98.52956298200516
+            }
+          },
+          {
+            "id": "image-judge",
+            "kind": "imageText",
+            "name": "Image Judge",
+            "order": 8,
+            "prompt": "Judge the generated image against this rubric: ${input1}. Check whether the fox astronaut is clear, the composition is coherent, and the reference image's painterly blue-gray brushwork and soft lighting are reflected. Return PASS or REVISE followed by concise reasons.",
+            "model": "gemma4:12b",
+            "imageUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260804_080517_491.png",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "A small red fox wearing a white NASA-style space suit with matte fabric textures and metallic silver buckles, sitting upright on a dark slate rooftop. The scene is illuminated by cool blue moonlight from a high angle, creating sharp highlights on the fox's fur and soft shadows on the roof tiles. Background features a night sky with distant stars and a large, glowing lunar surface. Wide shot, eye-level composition, realistic photographic style."
+              }
+            ],
+            "output": "PASS\n\nThe image successfully captures all key elements of the prompt:\n*   **Subject:** A clear fox in a detailed NASA-style space suit with metallic accents is the central focus.\n*   **Setting:** The fox is sitting upright on a textured slate roof under a prominent moon and starry sky.\n*   **Lighting/Style:** The cool blue moonlight creates high-contrast highlights, and while the style leans toward \"digital painting\" rather than \"photorealistic,\" it captures the specific atmosphere and texture of the reference description.\n*   **Composition:** It is a wide shot at eye-level with a coherent layout.",
+            "status": "Finished",
+            "position": {
+              "x": 2603.413881748072,
+              "y": 626.694087403599
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "prompt-score-gate->image-judge:input1",
+            "source": "prompt-score-gate",
+            "target": "image-judge",
+            "sourceHandle": "output1",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "approved-prompt-json->prompt-score-gate:input2",
+            "source": "approved-prompt-json",
+            "target": "prompt-score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input2"
+          },
+          {
+            "id": "prompt-score-json->prompt-score-gate:input1",
+            "source": "prompt-score-json",
+            "target": "prompt-score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "prompt-to-enhancer",
+            "source": "prompt-input",
+            "target": "prompt-enhancer",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "enhancer-to-prompt-judge",
+            "source": "prompt-enhancer",
+            "target": "prompt-judge",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "prompt-judge-to-score-json",
+            "source": "prompt-judge",
+            "target": "prompt-score-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "prompt-judge-to-approved-prompt-json",
+            "source": "prompt-judge",
+            "target": "approved-prompt-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-gate-to-image-generator",
+            "source": "prompt-score-gate",
+            "target": "style-image-generator",
+            "sourceHandle": "output1",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "image-to-image-judge",
+            "source": "style-image-generator",
+            "target": "image-judge",
+            "sourceHandle": "output",
+            "targetHandle": "image"
+          }
+        ],
+        "updatedAt": 1785827221912
+      }
+    }
+  }
+}

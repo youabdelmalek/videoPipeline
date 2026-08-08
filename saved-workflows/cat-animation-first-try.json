@@ -1,0 +1,222 @@
+{
+  "name": "cat animation first try",
+  "workflow": {
+    "runs": {
+      "Run 2026-08-08": {
+        "nodes": [
+          {
+            "id": "prompt-input",
+            "kind": "input",
+            "name": "Prompt",
+            "order": 1,
+            "value": "zoom out, simplified anime, a girl with headphones sitting on her desk with a pen in her hand, caressing her cute black cat pet with her other hand. the black cat pet is laying on top of the desk, cute peaceful, at her side the homework the girl is working on. the cat is providing her calmness to work on her homework",
+            "position": {
+              "x": 437.92287917737787,
+              "y": -104.58611825192803
+            }
+          },
+          {
+            "id": "prompt-enhancer",
+            "kind": "agent",
+            "name": "Prompt Enhancer",
+            "order": 2,
+            "prompt": "You convert user descriptions into efficient prompts for image-generation models. Image models need concrete visual instructions, not poetic language, marketing terms, or subjective quality claims.\n\nAct as a technical image-prompt editor.\n\nRewrite the input as a detailed, factual image-generation prompt.\n\nKeep only information that visibly affects the generated image:\n\n* Main subject and appearance\n* Clothing, objects, and materials\n* Subject pose and action\n* Environment\n* Camera angle\n* shot type\n* composition\n* Lighting direction, intensity, and color\n* Relevant art style and rendering medium\n* Important colors and textures\n\nRemove:\n* Poetic descriptions\n* Terms such as “masterpiece,” “8K,” “highly detailed,” “stunning,” or “cinematic” unless they define a concrete visual feature.\n\nmake sure to include specific texture, \nReturn only the rewritten prompt.\n\n### Input\n ${input1} ",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "zoom out, simplified anime, a girl with headphones sitting on her desk with a pen in her hand, caressing her cute black cat pet with her other hand. the black cat pet is laying on top of the desk, cute peaceful, at her side the homework the girl is working on. the cat is providing her calmness to work on her homework"
+              }
+            ],
+            "output": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.",
+            "position": {
+              "x": -88,
+              "y": 239.0745501285347
+            }
+          },
+          {
+            "id": "prompt-judge",
+            "kind": "agent",
+            "name": "Prompt Judge",
+            "order": 3,
+            "prompt": "You are the final prompt quality judge. Evaluate the candidate prompt below for an image generation.\n\nReturn ONLY valid JSON, with no Markdown or extra text, using exactly this shape example:\n{\"score\": 0, \"prompt\": \"${input1}\", \"fixes\": [\"missing composition and art style to add\"]}\n\nSet multiple scores based on character details pose details, background details, composition details, camera details, then generate a single score based all the previous scores to an integer from 0 to 100 based on the factual prompt for image generation, Score subject clarity, visual specificity, composition, lighting, and style direction. In prompt, return the corrected production-ready image prompt. In fixes, return a list of factual fixes that should be addressed to get a better prompt for image generation theses changes should visibly affect the generated image\n\nCandidate prompt:\n${input1}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art."
+              }
+            ],
+            "output": "{\"score\": 95, \"prompt\": \"Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.\", \"fixes\": []}",
+            "position": {
+              "x": 455.1568123393315,
+              "y": 254.70437017994857
+            }
+          },
+          {
+            "id": "prompt-score-json",
+            "kind": "json",
+            "name": "Prompt Score JSON",
+            "order": 4,
+            "input": "{\"score\": 95, \"prompt\": \"Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.\", \"fixes\": []}",
+            "path": "score",
+            "output": "95",
+            "error": null,
+            "position": {
+              "x": 1099.9074550128532,
+              "y": 98.14910025706942
+            }
+          },
+          {
+            "id": "approved-prompt-json",
+            "kind": "json",
+            "name": "Approved Prompt JSON",
+            "order": 5,
+            "input": "{\"score\": 95, \"prompt\": \"Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.\", \"fixes\": []}",
+            "path": "prompt",
+            "output": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.",
+            "error": null,
+            "position": {
+              "x": 1093.6555269922876,
+              "y": 591.9280205655526
+            }
+          },
+          {
+            "id": "prompt-score-gate",
+            "kind": "if",
+            "name": "Prompt Score Gate",
+            "order": 6,
+            "input1": "95",
+            "input2": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.",
+            "condition": "${input1} > 90",
+            "prompt": "Do not generate an image because the prompt score is ${input1}; it must be above 90.",
+            "output1": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art.",
+            "output2": "",
+            "status": "Condition true → output 1 (success)",
+            "position": {
+              "x": 1674.6426735218508,
+              "y": 229.69665809768642
+            }
+          },
+          {
+            "id": "style-image-generator",
+            "kind": "imageGenerate",
+            "name": "Style Image Generator",
+            "order": 7,
+            "prompt": "${input1}",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art."
+              }
+            ],
+            "referenceImage": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260726_162626_459.png",
+            "seed": "1268144387",
+            "steps": 8,
+            "strength": 1,
+            "outputUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260808_093233_783.png",
+            "outputName": "krea2_style_20260808_093233_783.png",
+            "status": "Generated krea2_style_20260808_093233_783.png",
+            "position": {
+              "x": 2116.5244215938305,
+              "y": -98.52956298200516
+            }
+          },
+          {
+            "id": "image-judge",
+            "kind": "imageText",
+            "name": "Image Judge",
+            "order": 8,
+            "prompt": "Judge the generated image against this rubric: ${input1}. Check whether it is clear, the composition is coherent, and the art style is respected . Return PASS or REVISE followed by concise reasons.",
+            "model": "gemma4:12b",
+            "imageUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260808_093233_783.png",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": "Wide shot, simplified anime style, flat cel shading. A teenage girl wearing over-ear headphones sits at a wooden desk. She holds a ballpoint pen in one hand and uses the other hand to stroke a small black cat with soft, matte fur. The black cat is curled up asleep on the desk surface. Beside her lies an open notebook filled with handwritten notes and sketches. Composition shows the girl from the waist up, including the desk surface and surrounding workspace. Soft, even indoor lighting, pastel color palette, clean line art."
+              }
+            ],
+            "output": "REVISE\n\n**Reasoning:**\n1. **Art Style & Rendering:** The image uses a painterly, textured digital painting style rather than \"flat cel shading\" or \"clean line art.\"\n2. **Composition:** It is not a \"wide shot\"; it is a medium close-up/close-up focusing on the girl's torso and the desk.\n3. **Details:** The cat's fur is not \"matte\"; it has highlights and texture. The handwriting consists of illegible scribbles rather than clear \"notes and sketches.\"",
+            "status": "Finished",
+            "position": {
+              "x": 2745.553492259043,
+              "y": 196.32693335649148
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "prompt-score-gate->image-judge:input1",
+            "source": "prompt-score-gate",
+            "target": "image-judge",
+            "sourceHandle": "output1",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "approved-prompt-json->prompt-score-gate:input2",
+            "source": "approved-prompt-json",
+            "target": "prompt-score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input2"
+          },
+          {
+            "id": "prompt-score-json->prompt-score-gate:input1",
+            "source": "prompt-score-json",
+            "target": "prompt-score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "prompt-to-enhancer",
+            "source": "prompt-input",
+            "target": "prompt-enhancer",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "enhancer-to-prompt-judge",
+            "source": "prompt-enhancer",
+            "target": "prompt-judge",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "prompt-judge-to-score-json",
+            "source": "prompt-judge",
+            "target": "prompt-score-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "prompt-judge-to-approved-prompt-json",
+            "source": "prompt-judge",
+            "target": "approved-prompt-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-gate-to-image-generator",
+            "source": "prompt-score-gate",
+            "target": "style-image-generator",
+            "sourceHandle": "output1",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "image-to-image-judge",
+            "source": "style-image-generator",
+            "target": "image-judge",
+            "sourceHandle": "output",
+            "targetHandle": "image"
+          }
+        ],
+        "updatedAt": 1786178074485
+      }
+    }
+  }
+}

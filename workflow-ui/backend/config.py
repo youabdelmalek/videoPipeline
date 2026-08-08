@@ -51,7 +51,12 @@ COMFYUI_SERVER = f"http://127.0.0.1:{COMFYUI_PORT}"
 # prompt builder falls back to a built-in default when the file is missing.
 SCENE_JUDGE_PROMPT = ROOT / "createScenes" / "sceneDetailerJudge.txt"
 
-CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+]
 
 
 def workspace_path(path: Path) -> str:

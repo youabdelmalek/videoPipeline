@@ -853,6 +853,67 @@
   gap: 4px;
 }
 
+.prompt-loop-node {
+  width: 520px;
+  min-height: 1060px;
+  background: #f6eee5;
+  border-color: #bd815e;
+}
+
+.prompt-loop-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgba(189, 129, 94, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 252, 246, 0.7);
+}
+
+.prompt-loop-pipeline span {
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: #ead8cb;
+  color: #713f2b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.prompt-loop-input {
+  position: relative;
+}
+
+.prompt-loop-summary {
+  display: grid;
+  grid-template-columns: 1fr 70px 1fr 70px;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffcf6;
+  color: var(--teal-dark);
+  font-size: 11px;
+}
+
+.prompt-loop-summary span {
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 800;
+}
+
+.prompt-loop-output .output-box {
+  min-height: 58px;
+}
+
+.prompt-loop-output:first-of-type .output-box {
+  min-height: 100px;
+}
+
+.prompt-loop-output:last-of-type .output-box {
+  min-height: 72px;
+}
+
 .if-output.is-success {
   border-left: 3px solid var(--teal);
   padding-left: 8px;

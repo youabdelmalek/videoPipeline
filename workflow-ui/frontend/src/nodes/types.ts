@@ -226,6 +226,52 @@ export type FlexibleAgentPatch = {
   output: string;
 };
 
+export type FlexiblePromptLoopNodeData = {
+  nodeId: string;
+  name: string;
+  order: number;
+  prompt: string;
+  judgePrompt: string;
+  fixerPrompt: string;
+  model: string;
+  thinking: ThinkingLevel;
+  models: ModelOption[];
+  threshold: number;
+  maxRetries: number;
+  score: string;
+  fixes: string;
+  approvedPrompt: string;
+  attempts: number;
+  trace: string;
+  status: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexiblePromptLoopPatch>) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexiblePromptLoopPatch = {
+  name: string;
+  order: number;
+  prompt: string;
+  judgePrompt: string;
+  fixerPrompt: string;
+  model: string;
+  thinking: ThinkingLevel;
+  threshold: number;
+  maxRetries: number;
+  score: string;
+  fixes: string;
+  approvedPrompt: string;
+  attempts: number;
+  trace: string;
+  status: string;
+};
+
 export type FlexibleTextNodeData = {
   nodeId: string;
   name: string;

@@ -177,6 +177,27 @@ export type ForEachNodeState = {
   position: { x: number; y: number };
 };
 
+export type PromptLoopNodeState = {
+  id: string;
+  kind: 'promptLoop';
+  name: string;
+  order: number;
+  prompt: string;
+  judgePrompt: string;
+  fixerPrompt: string;
+  model: string;
+  thinking: ThinkingLevel;
+  threshold: number;
+  maxRetries: number;
+  score: string;
+  fixes: string;
+  approvedPrompt: string;
+  attempts: number;
+  trace: string;
+  status: string;
+  position: { x: number; y: number };
+};
+
 export type WorkflowNodeState =
   | AgentNodeState
   | TextNodeState
@@ -190,7 +211,8 @@ export type WorkflowNodeState =
   | InputNodeState
   | OutputNodeState
   | WorkflowRefNodeState
-  | ForEachNodeState;
+  | ForEachNodeState
+  | PromptLoopNodeState;
 
 export type NodeKind = WorkflowNodeState['kind'];
 
@@ -205,6 +227,30 @@ export type SavedWorkflow = {
 };
 
 export type WorkflowLibrary = Record<string, SavedWorkflow>;
+
+export const DEFAULT_PROMPT_LOOP_JUDGE_PROMPT = `Context: An image-generation prompt must be concrete, visually testable, and complete.
+Role: Act as a strict prompt-quality judge.
+Task: Score the candidate from 0 to 100 for subject clarity, visible specificity, composition, camera, lighting, and style direction. Return a corrected prompt and only concise factual fixes that would visibly improve the image.
+Desired output format: Return only valid JSON with this exact shape: {"score": 0, "prompt": "corrected prompt", "fixes": ["factual fix"]}.
+
+Input:
+Candidate prompt:
+\${candidate}`;
+
+export const DEFAULT_PROMPT_LOOP_FIXER_PROMPT = `Context: Improve an image-generation prompt without changing its subject or intent.
+Role: Act as a precise prompt-fixing agent.
+Task: Apply the judge's factual fixes, preserve useful details, remove vague quality language, and return one production-ready image prompt.
+Desired output format: Return only the rewritten prompt as plain text, with no JSON, Markdown, commentary, or preamble.
+
+Input:
+Current prompt:
+\${candidate}
+
+Judge suggestion:
+\${judgePrompt}
+
+Extracted fixes:
+\${fixes}`;
 
 /** Handle id of a workflow node's source dot for a named output. */
 export function workflowOutputHandle(name: string): string {
@@ -302,6 +348,10 @@ export function evaluateCondition(
     return { result: applyComparator(left, rightRaw.slice(1, -1), op), error: null };
   }
 
+  if (!left || !rightRaw) {
+    return { result: false, error: `Cannot compare an empty value: "${left}" ${op} ${rightRaw}` };
+  }
+
   const leftNum = Number(left);
   const rightNum = Number(rightRaw);
   if (Number.isNaN(leftNum) || Number.isNaN(rightNum)) {
@@ -344,13 +394,92 @@ function valueToString(value: unknown): string {
   return JSON.stringify(value);
 }
 
+function jsonCandidateAt(text: string, start: number): string | null {
+  const opening = text[start];
+  if (opening !== '{' && opening !== '[') {
+    return null;
+  }
+
+  const closing = opening === '{' ? '}' : ']';
+  const stack = [closing];
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start + 1; index < text.length; index += 1) {
+    const character = text[index];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      continue;
+    }
+    if (character === '{') {
+      stack.push('}');
+      continue;
+    }
+    if (character === '[') {
+      stack.push(']');
+      continue;
+    }
+    if (character === '}' || character === ']') {
+      if (stack.pop() !== character) {
+        return null;
+      }
+      if (!stack.length) {
+        return text.slice(start, index + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
+function parseJsonInput(input: string): { value: unknown; error: string | null } {
+  const text = input.replace(/^\uFEFF/, '').trim();
+  const candidates: string[] = [];
+  const seen = new Set<string>();
+  const addCandidate = (candidate: string | null | undefined) => {
+    const trimmed = candidate?.trim();
+    if (trimmed && !seen.has(trimmed)) {
+      seen.add(trimmed);
+      candidates.push(trimmed);
+    }
+  };
+
+  addCandidate(text);
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  addCandidate(fenced?.[1]);
+  for (let index = 0; index < text.length; index += 1) {
+    if (text[index] === '{' || text[index] === '[') {
+      addCandidate(jsonCandidateAt(text, index));
+    }
+  }
+
+  let lastError = 'Invalid JSON';
+  for (const candidate of candidates) {
+    try {
+      return { value: JSON.parse(candidate) as unknown, error: null };
+    } catch (caught) {
+      lastError = caught instanceof Error ? caught.message : lastError;
+    }
+  }
+
+  return { value: null, error: `Invalid JSON: ${lastError}` };
+}
+
 export function extractJsonPath(input: string, path: string): { output: string; error: string | null } {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(input);
-  } catch (caught) {
-    const message = caught instanceof Error ? caught.message : 'Invalid JSON';
-    return { output: '', error: `Invalid JSON: ${message}` };
+  const parsedResult = parseJsonInput(input);
+  if (parsedResult.error) {
+    return { output: '', error: parsedResult.error };
   }
 
   const parts = path.split('.').map((part) => part.trim()).filter(Boolean);
@@ -358,7 +487,7 @@ export function extractJsonPath(input: string, path: string): { output: string; 
     return { output: '', error: 'Key path is required' };
   }
 
-  let current = parsed;
+  let current = parsedResult.value;
   for (const part of parts) {
     if (current === null || typeof current !== 'object' || !(part in current)) {
       return { output: '', error: `Key not found: ${parts.join('.')}` };
@@ -487,6 +616,20 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
     }
     case 'forEach':
       return node.output;
+    case 'promptLoop':
+      if (handle === 'score') {
+        return node.score;
+      }
+      if (handle === 'fixes') {
+        return node.fixes;
+      }
+      if (handle === 'attempts') {
+        return String(node.attempts);
+      }
+      if (handle === 'trace') {
+        return node.trace;
+      }
+      return node.approvedPrompt;
     case 'text':
       return node.hasOutput ? node.text : '';
   }
@@ -584,6 +727,10 @@ export function hydrateNode(
         ...node,
         items: itemsLink ? valueOf(itemsLink) : node.items,
       };
+    }
+    case 'promptLoop': {
+      const promptLink = incoming.find((edge) => edgeInputHandle(edge) === 'prompt') ?? incoming[0];
+      return promptLink ? { ...node, prompt: valueOf(promptLink) } : node;
     }
     case 'output': {
       const link = incoming.find((edge) => edgeInputHandle(edge) === 'input') ?? incoming[0];
@@ -775,6 +922,103 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         },
         error: null,
         note: `${node.name} ${status}`,
+      };
+    }
+    case 'promptLoop': {
+      const thresholdValue = Number(node.threshold);
+      const threshold = Number.isFinite(thresholdValue) ? Math.min(100, Math.max(0, thresholdValue)) : 95;
+      const retryValue = Number(node.maxRetries);
+      const maxRetries = Number.isFinite(retryValue) ? Math.min(10, Math.max(0, Math.round(retryValue))) : 3;
+      let candidate = node.prompt.trim();
+      let score = '';
+      let fixes = '[]';
+      let approvedPrompt = candidate;
+      let attempts = 0;
+      const trace: string[] = [];
+
+      if (!candidate) {
+        const error = 'Candidate prompt is required';
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      for (let retry = 0; retry <= maxRetries; retry += 1) {
+        if (ctx.signal?.aborted) {
+          throw new Error('Workflow aborted');
+        }
+
+        attempts = retry + 1;
+        ctx.onProgress?.(`${node.name} - judge ${attempts}/${maxRetries + 1}`);
+        const judgeOutput = await runFlexibleLlm(
+          interpolateText(node.judgePrompt, { candidate }),
+          node.model,
+          ctx.signal,
+          node.thinking ?? DEFAULT_THINKING_LEVEL,
+        );
+        const scoreResult = extractJsonPath(judgeOutput, 'score');
+        const promptResult = extractJsonPath(judgeOutput, 'prompt');
+        const fixesResult = extractJsonPath(judgeOutput, 'fixes');
+        if (scoreResult.error || promptResult.error || fixesResult.error) {
+          const error = `Judge JSON extraction failed: ${scoreResult.error ?? promptResult.error ?? fixesResult.error}`;
+          return {
+            patch: { score, fixes, approvedPrompt: candidate, attempts, trace: trace.join('\n'), status: error },
+            error,
+            note: '',
+          };
+        }
+
+        score = scoreResult.output.trim();
+        const scoreNumber = Number(score);
+        if (!Number.isFinite(scoreNumber)) {
+          const error = `Judge score is not numeric: ${score}`;
+          return {
+            patch: { score, fixes, approvedPrompt: candidate, attempts, trace: trace.join('\n'), status: error },
+            error,
+            note: '',
+          };
+        }
+
+        approvedPrompt = promptResult.output.trim() || candidate;
+        fixes = fixesResult.output.trim() || '[]';
+        trace.push(`Judge ${attempts}: ${score}/100`);
+
+        if (scoreNumber > threshold) {
+          const status = `Approved ${score}/100 after ${attempts} judge pass(es)`;
+          return {
+            patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
+            error: null,
+            note: `${node.name} ${status}`,
+          };
+        }
+
+        if (retry >= maxRetries) {
+          break;
+        }
+
+        ctx.onProgress?.(`${node.name} - fixer after judge ${attempts}`);
+        const fixerOutput = await runFlexibleLlm(
+          interpolateText(node.fixerPrompt, { candidate, judgePrompt: approvedPrompt, fixes }),
+          node.model,
+          ctx.signal,
+          node.thinking ?? DEFAULT_THINKING_LEVEL,
+        );
+        candidate = fixerOutput.trim();
+        if (!candidate) {
+          const error = 'Fixer returned an empty prompt';
+          return {
+            patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status: error },
+            error,
+            note: '',
+          };
+        }
+        trace.push(`Fixer ${attempts}: applied extracted fixes`);
+      }
+
+      const status = `Stopped at ${score}/100 after ${maxRetries} retry(ies)`;
+      const error = `Prompt score ${score} did not exceed ${threshold} after ${maxRetries} retry(ies)`;
+      return {
+        patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
+        error,
+        note: '',
       };
     }
     case 'if': {

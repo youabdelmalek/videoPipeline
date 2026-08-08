@@ -11,6 +11,7 @@ export { FlexibleImageGenerateNode } from './FlexibleImageGenerateNode';
 export { FlexibleImageTextNode } from './FlexibleImageTextNode';
 export { FlexibleImageUploadNode } from './FlexibleImageUploadNode';
 export { FlexibleJsonNode } from './FlexibleJsonNode';
+export { FlexiblePromptLoopNode } from './FlexiblePromptLoopNode';
 export { FlexibleSplitNode } from './FlexibleSplitNode';
 export { FlexibleTextNode } from './FlexibleTextNode';
 export { FlexibleWorkflowInputNode } from './FlexibleWorkflowInputNode';
@@ -52,6 +53,8 @@ export type {
   FlexibleInput,
   FlexibleJsonNodeData,
   FlexibleJsonPatch,
+  FlexiblePromptLoopNodeData,
+  FlexiblePromptLoopPatch,
   FlexibleSplitNodeData,
   FlexibleSplitPatch,
   FlexibleTextNodeData,

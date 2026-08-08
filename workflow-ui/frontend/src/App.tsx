@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
+import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, RefreshCw, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
 import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
   edgeOutputHandle,
+  DEFAULT_PROMPT_LOOP_FIXER_PROMPT,
+  DEFAULT_PROMPT_LOOP_JUDGE_PROMPT,
   hydrateNode,
   normalizeEdges,
   outputOf,
@@ -160,6 +162,27 @@ function buildNode(
         workflowName: '',
         output: '',
         iterations: 0,
+        status: '',
+        position,
+      };
+    case 'promptLoop':
+      return {
+        id,
+        kind,
+        name: 'Prompt Judge Loop',
+        order,
+        prompt: '',
+        judgePrompt: DEFAULT_PROMPT_LOOP_JUDGE_PROMPT,
+        fixerPrompt: DEFAULT_PROMPT_LOOP_FIXER_PROMPT,
+        model,
+        thinking: DEFAULT_THINKING_LEVEL,
+        threshold: 95,
+        maxRetries: 3,
+        score: '',
+        fixes: '[]',
+        approvedPrompt: '',
+        attempts: 0,
+        trace: '',
         status: '',
         position,
       };
@@ -423,11 +446,9 @@ export function App() {
   }
 
   const patchNode = useCallback((nodeId: string, patch: Record<string, unknown>) => {
-    setWorkflowNodes((current) => {
-      const next = current.map((node) => (node.id === nodeId ? { ...node, ...patch } as WorkflowNodeState : node));
-      nodesRef.current = next;
-      return next;
-    });
+    const next = nodesRef.current.map((node) => (node.id === nodeId ? { ...node, ...patch } as WorkflowNodeState : node));
+    nodesRef.current = next;
+    setWorkflowNodes(next);
   }, []);
 
   const uploadImageForNode = useCallback(async (nodeId: string, file: File) => {
@@ -487,19 +508,17 @@ export function App() {
   }, []);
 
   const hydrateNodeInputs = useCallback((nodeId: string): WorkflowNodeState | null => {
-    let updated: WorkflowNodeState | null = null;
-    setWorkflowNodes((current) => {
-      const byId = new Map(current.map((node) => [node.id, node]));
-      const next = current.map((node) => {
-        if (node.id !== nodeId) {
-          return node;
-        }
-        updated = hydrateNode(node, edgesRef.current, byId);
-        return updated;
-      });
-      nodesRef.current = next;
-      return next;
-    });
+    const current = nodesRef.current;
+    const target = current.find((node) => node.id === nodeId);
+    if (!target) {
+      return null;
+    }
+
+    const byId = new Map(current.map((node) => [node.id, node]));
+    const updated = hydrateNode(target, edgesRef.current, byId);
+    const next = current.map((node) => (node.id === nodeId ? updated : node));
+    nodesRef.current = next;
+    setWorkflowNodes(next);
     return updated;
   }, []);
 
@@ -513,7 +532,7 @@ export function App() {
     }
 
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach' || node.kind === 'promptLoop';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
@@ -529,6 +548,8 @@ export function App() {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
     } else if (node.kind === 'forEach') {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
+    } else if (node.kind === 'promptLoop') {
+      setDebug(`Step ${node.order}: ${node.name} is judging and fixing the prompt`);
     }
 
     try {
@@ -972,6 +993,21 @@ export function App() {
               onRun: runNode,
             },
           };
+        case 'promptLoop':
+          return {
+            type: 'flexiblePromptLoop',
+            width: 520,
+            height: 1180,
+            data: {
+              ...node,
+              ...shared,
+              prompt: linkedValue(node.id, 'prompt') ?? node.prompt,
+              models,
+              running: runningNodeId === node.id,
+              pendingSourceHandleId: pendingHandle,
+              onRun: runNode,
+            },
+          };
         case 'input':
           return { type: 'flexibleWorkflowInput', width: 360, height: 260, data: { ...node, ...shared } };
         case 'output':
@@ -1207,6 +1243,17 @@ export function App() {
             >
               <GitBranch size={16} />
               <span>If</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'promptLoop')}
+              onClick={() => addWorkflowNode('promptLoop')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <RefreshCw size={16} />
+              <span>Prompt judge loop</span>
             </button>
             <button
               className="drawer-item"

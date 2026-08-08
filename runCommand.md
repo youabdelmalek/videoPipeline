@@ -1,0 +1,2 @@
+cd .\workflow-ui\backend\    ;   python -m uvicorn app:app --reload                                                                                               
+cd .\workflow-ui\frontend\    ;  npm run dev                                                                                                                      
