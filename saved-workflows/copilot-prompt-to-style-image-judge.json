@@ -42,7 +42,7 @@
             "name": "Prompt Judge",
             "order": 3,
             "prompt": "You are the final prompt quality judge. Evaluate the candidate prompt below for an image generator.\n\nReturn ONLY valid JSON, with no Markdown or extra text, using exactly this shape:\n{\"score\": 0, \"prompt\": \"corrected final image-generation prompt\", \"fixes\": \"missing composition and art style to add\"}\n\nSet score to an integer from 0 to 100 based on the factual prompt for image generation, Score subject clarity, visual specificity, composition, lighting, and style direction. In prompt, return the corrected production-ready image prompt.\n\nCandidate prompt:\n${input1}",
-            "model": "gpt-oss:20b",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
             "thinking": "medium",
             "inputs": [
               {
