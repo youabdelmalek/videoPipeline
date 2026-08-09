@@ -163,7 +163,9 @@ export type ImageTextNodeState = {
   position: { x: number; y: number };
 };
 
-/** Runs a saved workflow once per item. */
+export type LoopRetryMode = 'result' | 'input';
+
+/** Runs a saved workflow per item, optionally retrying from a scored result. */
 export type ForEachNodeState = {
   id: string;
   kind: 'forEach';
@@ -172,7 +174,14 @@ export type ForEachNodeState = {
   items: string;
   workflowName: string;
   output: string;
+  threshold: number;
+  maxAttempts: number;
+  retryWith: LoopRetryMode;
+  score: string;
+  note: string;
   iterations: number;
+  attempts: number;
+  trace: string;
   status: string;
   position: { x: number; y: number };
 };
@@ -394,6 +403,23 @@ function valueToString(value: unknown): string {
   return JSON.stringify(value);
 }
 
+type LoopItem = {
+  value: string;
+  values: Record<string, string> | null;
+};
+
+function loopItemFromValue(value: unknown): LoopItem {
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    return {
+      value: valueToString(value),
+      values: Object.fromEntries(
+        Object.entries(value).map(([key, entry]) => [key, valueToString(entry)]),
+      ),
+    };
+  }
+  return { value: valueToString(value), values: null };
+}
+
 function jsonCandidateAt(text: string, start: number): string | null {
   const opening = text[start];
   if (opening !== '{' && opening !== '[') {
@@ -510,7 +536,7 @@ function visionModelOrDefault(model: string): string {
   return VISION_MODEL_NAMES.some((name) => name === model) ? model : DEFAULT_VISION_MODEL;
 }
 
-function parseLoopItems(input: string): { items: string[]; error: string | null } {
+function parseLoopItems(input: string): { items: LoopItem[]; error: string | null } {
   const text = input.trim();
   if (!text) {
     return { items: [], error: 'Items are empty' };
@@ -523,17 +549,23 @@ function parseLoopItems(input: string): { items: string[]; error: string | null 
     } catch (caught) {
       return { items: [], error: `Invalid items JSON: ${messageFromError(caught, 'Invalid JSON')}` };
     }
-    if (!Array.isArray(parsed)) {
-      return { items: [], error: 'Items must be a JSON array or line-separated text' };
+    if (Array.isArray(parsed)) {
+      return { items: parsed.map(loopItemFromValue), error: null };
     }
-    return { items: parsed.map(valueToString), error: null };
+    if (parsed !== null && typeof parsed === 'object') {
+      return { items: [loopItemFromValue(parsed)], error: null };
+    }
+    return { items: [], error: 'Items must be a JSON array/object or line-separated text' };
   }
 
   const lines = input
     .split(/\r?\n/g)
     .map((line) => line.trim())
     .filter(Boolean);
-  return { items: lines.length ? lines : [input], error: null };
+  return {
+    items: (lines.length ? lines : [input]).map((line) => ({ value: line, values: null })),
+    error: null,
+  };
 }
 
 function pickNamedOutput(outputs: Record<string, string>, preferredName: string): string {
@@ -544,6 +576,32 @@ function pickNamedOutput(outputs: Record<string, string>, preferredName: string)
     return outputs.result ?? '';
   }
   return Object.values(outputs)[0] ?? '';
+}
+
+function namedWorkflowOutput(outputs: Record<string, string>, name: string): string {
+  return outputs[name] ?? '';
+}
+
+function parseLoopScore(value: string): { score: number | null; error: string | null } {
+  const text = value.trim();
+  if (!text) {
+    return { score: null, error: null };
+  }
+
+  const direct = Number(text);
+  if (Number.isFinite(direct)) {
+    return { score: Math.min(100, Math.max(0, direct)), error: null };
+  }
+
+  const match = text.match(/\bscore\s*[:=]\s*(\d{1,3})(?:\s*\/\s*100)?\b/i);
+  if (!match) {
+    return { score: null, error: `Loop score is not numeric: ${text}` };
+  }
+  return { score: Math.min(100, Math.max(0, Number(match[1]))), error: null };
+}
+
+function formatLoopValues(values: string[]): string {
+  return values.length === 1 ? values[0] ?? '' : formatArray(values);
 }
 
 function sortedWorkflowInputs(snapshot: WorkflowSnapshot): InputNodeState[] {
@@ -615,6 +673,18 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
       return found?.value ?? '';
     }
     case 'forEach':
+      if (handle === 'score') {
+        return node.score;
+      }
+      if (handle === 'note') {
+        return node.note;
+      }
+      if (handle === 'attempts') {
+        return String(node.attempts);
+      }
+      if (handle === 'trace') {
+        return node.trace;
+      }
       return node.output;
     case 'promptLoop':
       if (handle === 'score') {
@@ -869,14 +939,28 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         return { patch: { status: error }, error, note: '' };
       }
 
-      const bodyInput = sortedWorkflowInputs(snapshot)[0];
+      const bodyInputs = sortedWorkflowInputs(snapshot);
+      const bodyInput = bodyInputs[0];
       if (!bodyInput) {
-        const error = `${node.workflowName} needs one Workflow input`;
+        const error = `${node.workflowName} needs at least one Workflow input`;
         return { patch: { status: error }, error, note: '' };
       }
 
       const bodyOutput = sortedWorkflowOutputs(snapshot)[0];
       const results: string[] = [];
+      const scores: string[] = [];
+      const notes: string[] = [];
+      const trace: string[] = [];
+      let totalAttempts = 0;
+      let fallbackItems = 0;
+
+      const thresholdValue = Number(node.threshold);
+      const threshold = Number.isFinite(thresholdValue) ? Math.min(100, Math.max(0, thresholdValue)) : 95;
+      const maxAttemptsValue = Number(node.maxAttempts);
+      const maxAttempts = Number.isFinite(maxAttemptsValue)
+        ? Math.min(10, Math.max(1, Math.round(maxAttemptsValue)))
+        : 3;
+      const retryWith = node.retryWith === 'input' ? 'input' : 'result';
 
       for (let index = 0; index < parsed.items.length; index += 1) {
         if (ctx.signal?.aborted) {
@@ -884,40 +968,137 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         }
 
         ctx.onProgress?.(`${node.name} - item ${index + 1}/${parsed.items.length}`);
-        try {
-          const outputs = await executeWorkflow({
-            nodes: snapshot.nodes,
-            edges: normalizeEdges(snapshot.edges),
-            inputValues: { [bodyInput.name]: parsed.items[index] },
-            library: ctx.library,
-            signal: ctx.signal,
-            onProgress: ctx.onProgress,
-            stack: [...stack, node.workflowName],
-          });
-          results.push(pickNamedOutput(outputs, bodyOutput?.name ?? ''));
-        } catch (caught) {
+        const item = parsed.items[index];
+        const originalValues = item.values ? { ...item.values } : { [bodyInput.name]: item.value };
+        const original = originalValues[bodyInput.name] ?? item.value;
+        if (!(bodyInput.name in originalValues)) {
+          originalValues[bodyInput.name] = original;
+        }
+        let candidateValues = { ...originalValues };
+        let resultValue = original;
+        let scoreValue = '';
+        let noteValue = '';
+        let passed = false;
+        let bestResult = original;
+        let bestScore = '';
+        let bestNote = '';
+        let bestScoreNumber = -Infinity;
+        let bestAttempt = 0;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
           if (ctx.signal?.aborted) {
-            throw caught;
+            throw new Error('Workflow aborted');
           }
-          const message = `Item ${index + 1}: ${messageFromError(caught, 'Iteration failed')}`;
-          return {
-            patch: {
-              output: formatArray(results),
-              iterations: index,
-              status: message,
-            },
-            error: message,
-            note: '',
-          };
+
+          totalAttempts += 1;
+          ctx.onProgress?.(`${node.name} - item ${index + 1}, pass ${attempt}/${maxAttempts}`);
+          let outputs: Record<string, string>;
+          try {
+            outputs = await executeWorkflow({
+              nodes: snapshot.nodes,
+              edges: normalizeEdges(snapshot.edges),
+              inputValues: candidateValues,
+              library: ctx.library,
+              signal: ctx.signal,
+              onProgress: ctx.onProgress,
+              stack: [...stack, node.workflowName],
+            });
+          } catch (caught) {
+            if (ctx.signal?.aborted) {
+              throw caught;
+            }
+            const message = `Item ${index + 1}: ${messageFromError(caught, 'Iteration failed')}`;
+            return {
+              patch: {
+                output: formatLoopValues(results),
+                score: formatLoopValues(scores),
+                note: formatLoopValues(notes),
+                trace: trace.join('\n'),
+                iterations: results.length,
+                attempts: totalAttempts,
+                status: message,
+              },
+              error: message,
+              note: '',
+            };
+          }
+
+          resultValue = pickNamedOutput(outputs, 'result') || pickNamedOutput(outputs, bodyOutput?.name ?? '');
+          noteValue = namedWorkflowOutput(outputs, 'note') || namedWorkflowOutput(outputs, 'feedback');
+          const rawScore = namedWorkflowOutput(outputs, 'score');
+          if (!rawScore.trim()) {
+            trace.push(`Item ${index + 1}, pass ${attempt}: no score`);
+            passed = true;
+            break;
+          }
+
+          const parsedScore = parseLoopScore(rawScore);
+          if (parsedScore.error || parsedScore.score === null) {
+            const message = `Item ${index + 1}: ${parsedScore.error ?? 'Loop score is empty'}`;
+            return {
+              patch: {
+                output: formatLoopValues([...results, resultValue]),
+                score: formatLoopValues([...scores, rawScore.trim()]),
+                note: formatLoopValues([...notes, noteValue]),
+                trace: trace.join('\n'),
+                iterations: results.length,
+                attempts: totalAttempts,
+                status: message,
+              },
+              error: message,
+              note: '',
+            };
+          }
+
+          scoreValue = String(parsedScore.score);
+          trace.push(`Item ${index + 1}, pass ${attempt}: ${scoreValue}/100${noteValue ? ` - ${noteValue}` : ''}`);
+          if (parsedScore.score > bestScoreNumber) {
+            bestResult = resultValue;
+            bestScore = scoreValue;
+            bestNote = noteValue;
+            bestScoreNumber = parsedScore.score;
+            bestAttempt = attempt;
+          }
+          if (parsedScore.score >= threshold) {
+            passed = true;
+            break;
+          }
+
+          if (attempt < maxAttempts) {
+            candidateValues = retryWith === 'result' && resultValue.trim()
+              ? { ...originalValues, [bodyInput.name]: resultValue }
+              : { ...originalValues };
+            trace.push(`Item ${index + 1}: retrying with ${retryWith === 'result' ? 'workflow result' : 'original input'}`);
+          }
+        }
+
+        if (bestAttempt > 0) {
+          resultValue = bestResult;
+          scoreValue = bestScore;
+          noteValue = bestNote;
+        }
+        results.push(resultValue);
+        scores.push(scoreValue);
+        notes.push(noteValue);
+        if (!passed) {
+          fallbackItems += 1;
+          trace.push(`Item ${index + 1}: threshold ${threshold}/100 not reached; selected best pass ${bestAttempt} at ${scoreValue || 'no score'}/100`);
         }
       }
 
-      const output = formatArray(results);
-      const status = `Ran ${parsed.items.length} item(s)`;
+      const output = formatLoopValues(results);
+      const score = formatLoopValues(scores);
+      const note = formatLoopValues(notes);
+      const fallbackStatus = fallbackItems ? `; selected best score for ${fallbackItems} item(s)` : '';
+      const status = `Ran ${parsed.items.length} item(s) in ${totalAttempts} pass(es)${fallbackStatus}`;
       return {
         patch: {
           output,
+          score,
+          note,
+          trace: trace.join('\n'),
           iterations: parsed.items.length,
+          attempts: totalAttempts,
           status,
         },
         error: null,
@@ -935,6 +1116,11 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       let approvedPrompt = candidate;
       let attempts = 0;
       const trace: string[] = [];
+      let bestScoreNumber = -Infinity;
+      let bestScore = '';
+      let bestFixes = fixes;
+      let bestPrompt = candidate;
+      let bestAttempt = 0;
 
       if (!candidate) {
         const error = 'Candidate prompt is required';
@@ -980,9 +1166,19 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         approvedPrompt = promptResult.output.trim() || candidate;
         fixes = fixesResult.output.trim() || '[]';
         trace.push(`Judge ${attempts}: ${score}/100`);
+        if (scoreNumber > bestScoreNumber) {
+          bestScoreNumber = scoreNumber;
+          bestScore = score;
+          bestFixes = fixes;
+          bestPrompt = approvedPrompt;
+          bestAttempt = attempts;
+        }
 
         if (scoreNumber > threshold) {
-          const status = `Approved ${score}/100 after ${attempts} judge pass(es)`;
+          score = bestScore;
+          fixes = bestFixes;
+          approvedPrompt = bestPrompt;
+          const status = `Approved ${score}/100 from judge pass ${bestAttempt} after ${attempts} judge pass(es)`;
           return {
             patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
             error: null,
@@ -1013,12 +1209,14 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         trace.push(`Fixer ${attempts}: applied extracted fixes`);
       }
 
-      const status = `Stopped at ${score}/100 after ${maxRetries} retry(ies)`;
-      const error = `Prompt score ${score} did not exceed ${threshold} after ${maxRetries} retry(ies)`;
+      score = bestScore || score;
+      fixes = bestFixes;
+      approvedPrompt = bestPrompt;
+      const status = `Selected best prompt ${score}/100 from judge pass ${bestAttempt} after ${maxRetries} retry(ies)`;
       return {
         patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
-        error,
-        note: '',
+        error: null,
+        note: `${node.name} ${status}`,
       };
     }
     case 'if': {

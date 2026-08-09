@@ -1,0 +1,208 @@
+{
+  "name": "Image generation and judge",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "image-prompt-input",
+            "kind": "input",
+            "name": "prompt",
+            "order": 1,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 120
+            }
+          },
+          {
+            "id": "image-reference-input",
+            "kind": "input",
+            "name": "referenceImage",
+            "order": 2,
+            "value": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260726_162626_459.png",
+            "position": {
+              "x": 80,
+              "y": 420
+            }
+          },
+          {
+            "id": "image-generator",
+            "kind": "imageGenerate",
+            "name": "Image generator",
+            "order": 3,
+            "prompt": "${prompt}",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "prompt",
+                "value": ""
+              }
+            ],
+            "referenceImage": "",
+            "seed": "",
+            "steps": 8,
+            "strength": 1,
+            "outputUrl": "",
+            "outputName": "",
+            "status": "",
+            "position": {
+              "x": 560,
+              "y": 160
+            }
+          },
+          {
+            "id": "image-judge",
+            "kind": "imageText",
+            "name": "Image judge",
+            "order": 4,
+            "prompt": "Context: Compare the generated image with the candidate image-generation prompt. Only visible, controllable image attributes count.\nRole: Act as a strict visual quality judge.\nTask: Score the image from 0 to 100 for prompt fidelity, subject clarity, composition, camera/framing, lighting, visible materials, and style consistency. Give one concise factual note that identifies the most important visible mismatch or says that no material mismatch remains.\nDesired output format: Return only valid JSON with exactly this shape: {\"score\": 0, \"note\": \"one concise factual visual note\"}.\n\nCandidate prompt:\n${prompt}",
+            "model": "gemma4:12b",
+            "thinking": "off",
+            "imageUrl": "",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "prompt",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "status": "",
+            "position": {
+              "x": 1080,
+              "y": 180
+            }
+          },
+          {
+            "id": "image-score",
+            "kind": "json",
+            "name": "Image score",
+            "order": 5,
+            "input": "",
+            "path": "score",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1520,
+              "y": 40
+            }
+          },
+          {
+            "id": "image-note",
+            "kind": "json",
+            "name": "Image judge note",
+            "order": 6,
+            "input": "",
+            "path": "note",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1520,
+              "y": 300
+            }
+          },
+          {
+            "id": "image-output",
+            "kind": "output",
+            "name": "result",
+            "order": 7,
+            "value": "",
+            "position": {
+              "x": 1960,
+              "y": 160
+            }
+          },
+          {
+            "id": "image-score-output",
+            "kind": "output",
+            "name": "score",
+            "order": 8,
+            "value": "",
+            "position": {
+              "x": 1960,
+              "y": 20
+            }
+          },
+          {
+            "id": "image-note-output",
+            "kind": "output",
+            "name": "note",
+            "order": 9,
+            "value": "",
+            "position": {
+              "x": 1960,
+              "y": 360
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "prompt-to-generator",
+            "source": "image-prompt-input",
+            "target": "image-generator",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "reference-to-generator",
+            "source": "image-reference-input",
+            "target": "image-generator",
+            "sourceHandle": "output",
+            "targetHandle": "reference"
+          },
+          {
+            "id": "prompt-to-judge",
+            "source": "image-prompt-input",
+            "target": "image-judge",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "image-to-judge",
+            "source": "image-generator",
+            "target": "image-judge",
+            "sourceHandle": "output",
+            "targetHandle": "image"
+          },
+          {
+            "id": "judge-to-score",
+            "source": "image-judge",
+            "target": "image-score",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-note",
+            "source": "image-judge",
+            "target": "image-note",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "generator-to-output",
+            "source": "image-generator",
+            "target": "image-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-to-output",
+            "source": "image-score",
+            "target": "image-score-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "note-to-output",
+            "source": "image-note",
+            "target": "image-note-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786179839380
+      }
+    }
+  }
+}

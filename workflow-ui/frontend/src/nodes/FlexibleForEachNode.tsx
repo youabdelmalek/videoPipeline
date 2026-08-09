@@ -3,6 +3,36 @@ import { Loader2, Play, Trash2 } from 'lucide-react';
 import type { FlexibleForEachNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
 
+function OutputBlock({
+  data,
+  label,
+  handle,
+  value,
+  placeholder,
+}: {
+  data: FlexibleForEachNodeData;
+  label: string;
+  handle: string;
+  value: string;
+  placeholder: string;
+}) {
+  return (
+    <div className="output-block foreach-output">
+      <div className="row-title">
+        <span>{label}</span>
+      </div>
+      <textarea className="output-box nodrag nopan" value={value} readOnly placeholder={placeholder} />
+      <Handle
+        className={data.pendingSourceNodeId === data.nodeId && data.pendingSourceHandleId === handle ? 'is-link-source' : ''}
+        type="source"
+        position={Position.Right}
+        id={handle}
+        onClick={() => data.onPickOutput(data.nodeId, handle)}
+      />
+    </div>
+  );
+}
+
 export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNodeData>>) {
   const [name, setName] = useDraftValue(data.name, (value) => data.onChange(data.nodeId, { name: value }));
   const [items, setItems] = useDraftValue(data.items, (value) => data.onChange(data.nodeId, { items: value }));
@@ -11,7 +41,7 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
     <section className="node flexible-node loop-node foreach-node">
       <div className="node-header">
         <div>
-          <div className="node-kicker">For each</div>
+          <div className="node-kicker">Reusable loop</div>
           <input
             className="node-title-input nodrag nopan"
             value={name}
@@ -41,7 +71,7 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
           />
         </label>
         <label>
-          Workflow
+          Body workflow
           <select
             className="nodrag nopan"
             value={data.workflowName}
@@ -58,6 +88,42 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
         </label>
       </div>
 
+      <div className="node-grid three">
+        <label>
+          Threshold
+          <input
+            className="nodrag nopan"
+            type="number"
+            min={0}
+            max={100}
+            value={data.threshold}
+            onChange={(event) => data.onChange(data.nodeId, { threshold: Number(event.target.value) || 0 })}
+          />
+        </label>
+        <label>
+          Max passes
+          <input
+            className="nodrag nopan"
+            type="number"
+            min={1}
+            max={10}
+            value={data.maxAttempts}
+            onChange={(event) => data.onChange(data.nodeId, { maxAttempts: Number(event.target.value) || 1 })}
+          />
+        </label>
+        <label>
+          Retry with
+          <select
+            className="nodrag nopan"
+            value={data.retryWith}
+            onChange={(event) => data.onChange(data.nodeId, { retryWith: event.target.value as 'result' | 'input' })}
+          >
+            <option value="result">Workflow result</option>
+            <option value="input">Original input</option>
+          </select>
+        </label>
+      </div>
+
       <div className="text-pass-block">
         <Handle
           className={data.pendingSourceNodeId ? 'is-link-target' : ''}
@@ -67,12 +133,12 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
           onClick={() => data.onPickInput(data.nodeId, 'items')}
         />
         <label>
-          Items
+          Input values
           <textarea
             className="output-box nodrag nopan"
             value={items}
             onChange={(event) => setItems(event.target.value)}
-            placeholder='["one", "two"] or one item per line'
+            placeholder='Link a value, JSON array/object, or one item per line'
           />
         </label>
       </div>
@@ -90,20 +156,20 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
         {data.status ? <small className="workflow-status">{data.status}</small> : null}
       </div>
 
-      <div className="output-block foreach-output">
+      <div className="prompt-loop-summary">
         <div className="row-title">
-          <span>Output list</span>
-          <span>{data.iterations} item(s)</span>
+          <span>Items</span>
+          <span>{data.iterations}</span>
+          <span>Passes</span>
+          <span>{data.attempts}</span>
         </div>
-        <textarea className="output-box nodrag nopan" value={data.output} readOnly placeholder="[]" />
-        <Handle
-          className={data.pendingSourceNodeId === data.nodeId && data.pendingSourceHandleId === 'output' ? 'is-link-source' : ''}
-          type="source"
-          position={Position.Right}
-          id="output"
-          onClick={() => data.onPickOutput(data.nodeId, 'output')}
-        />
       </div>
+
+      <OutputBlock data={data} label="Result" handle="output" value={data.output} placeholder="Workflow result" />
+      <OutputBlock data={data} label="Score (0-100)" handle="score" value={data.score} placeholder="Optional judge score" />
+      <OutputBlock data={data} label="Judge note" handle="note" value={data.note} placeholder="Optional judge note" />
+      <OutputBlock data={data} label="Pass count" handle="attempts" value={String(data.attempts)} placeholder="0" />
+      <OutputBlock data={data} label="Loop trace" handle="trace" value={data.trace} placeholder="Workflow passes" />
     </section>
   );
 }

@@ -1,0 +1,228 @@
+{
+  "name": "Prompt fixer and judge",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "prompt-input",
+            "kind": "input",
+            "name": "candidate",
+            "order": 1,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 240
+            }
+          },
+          {
+            "id": "prompt-judge",
+            "kind": "agent",
+            "name": "Prompt judge",
+            "order": 2,
+            "prompt": "Context: The candidate is an image-generation prompt. Only visible, controllable image attributes count.\nRole: Act as a strict prompt-quality judge.\nTask: Score the candidate from 0 to 100 for subject clarity, visible specificity, pose, composition, camera, lighting, materials, and style direction. Identify concrete missing, vague, redundant, or contradictory details. Return the candidate as a corrected prompt too, but keep the subject and intent unchanged.\nDesired output format: Return only valid JSON with exactly this shape: {\"score\": 0, \"note\": \"one concise factual judge note\", \"prompt\": \"corrected prompt\", \"fixes\": [\"actionable factual fix\"]}. The note must explain the most important visible issue or say that no material issue remains.\n\nCandidate prompt:\n${candidate}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "candidate",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 560,
+              "y": 80
+            }
+          },
+          {
+            "id": "prompt-score",
+            "kind": "json",
+            "name": "Score",
+            "order": 3,
+            "input": "",
+            "path": "score",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1030.3359883208311,
+              "y": -250.59232701672397
+            }
+          },
+          {
+            "id": "prompt-note",
+            "kind": "json",
+            "name": "Judge note",
+            "order": 4,
+            "input": "",
+            "path": "note",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1040,
+              "y": 240
+            }
+          },
+          {
+            "id": "prompt-fixes",
+            "kind": "json",
+            "name": "Fixes",
+            "order": 5,
+            "input": "",
+            "path": "fixes",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1038.5467440001214,
+              "y": 702.69375197975
+            }
+          },
+          {
+            "id": "prompt-fixer",
+            "kind": "agent",
+            "name": "Prompt fixer",
+            "order": 6,
+            "prompt": "Context: Improve an image-generation prompt without changing its subject, action, setting, composition, or intended style.\nRole: Act as a precise prompt-fixing agent.\nTask: Apply every relevant factual fix in the judge result, preserve useful visible details, resolve contradictions, remove vague quality language, and return one concise production-ready prompt.\nDesired output format: Return only the rewritten prompt as plain text, with no JSON, Markdown, labels, or commentary.\n\nCurrent candidate:\n${candidate}\n\nJudge result:\n${judge}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "candidate",
+                "value": ""
+              },
+              {
+                "id": "input2",
+                "name": "judge",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 1480,
+              "y": 37.734294541709474
+            }
+          },
+          {
+            "id": "result-output",
+            "kind": "output",
+            "name": "result",
+            "order": 7,
+            "value": "",
+            "position": {
+              "x": 1960,
+              "y": 160
+            }
+          },
+          {
+            "id": "score-output",
+            "kind": "output",
+            "name": "score",
+            "order": 8,
+            "value": "",
+            "position": {
+              "x": 1957.8080692286364,
+              "y": -108.83433243267044
+            }
+          },
+          {
+            "id": "note-output",
+            "kind": "output",
+            "name": "note",
+            "order": 9,
+            "value": "",
+            "position": {
+              "x": 1959.3956970545432,
+              "y": 505.7527483646544
+            }
+          },
+          {
+            "id": "fixes-output",
+            "kind": "output",
+            "name": "fixes",
+            "order": 10,
+            "value": "",
+            "position": {
+              "x": 1959.3956970545432,
+              "y": 795.8791394109087
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "candidate-to-judge",
+            "source": "prompt-input",
+            "target": "prompt-judge",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "candidate-to-fixer",
+            "source": "prompt-input",
+            "target": "prompt-fixer",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "judge-to-score",
+            "source": "prompt-judge",
+            "target": "prompt-score",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-note",
+            "source": "prompt-judge",
+            "target": "prompt-note",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-fixes",
+            "source": "prompt-judge",
+            "target": "prompt-fixes",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-fixer",
+            "source": "prompt-judge",
+            "target": "prompt-fixer",
+            "sourceHandle": "output",
+            "targetHandle": "input2"
+          },
+          {
+            "id": "fixer-to-result",
+            "source": "prompt-fixer",
+            "target": "result-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-to-output",
+            "source": "prompt-score",
+            "target": "score-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "note-to-output",
+            "source": "prompt-note",
+            "target": "note-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "fixes-to-output",
+            "source": "prompt-fixes",
+            "target": "fixes-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786187947483
+      }
+    }
+  }
+}

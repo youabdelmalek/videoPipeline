@@ -540,7 +540,14 @@ export type FlexibleForEachNodeData = {
   items: string;
   workflowName: string;
   output: string;
+  threshold: number;
+  maxAttempts: number;
+  retryWith: 'result' | 'input';
+  score: string;
+  note: string;
   iterations: number;
+  attempts: number;
+  trace: string;
   status: string;
   running: boolean;
   workflowOptions: WorkflowOption[];
@@ -559,8 +566,15 @@ export type FlexibleForEachPatch = {
   order: number;
   items: string;
   workflowName: string;
+  threshold: number;
+  maxAttempts: number;
+  retryWith: 'result' | 'input';
   output: string;
+  score: string;
+  note: string;
   iterations: number;
+  attempts: number;
+  trace: string;
   status: string;
 };
 

@@ -38,73 +38,57 @@
           },
           {
             "id": "prompt-judge-loop",
-            "kind": "promptLoop",
-            "name": "Prompt Judge + Fix Loop",
+            "kind": "forEach",
+            "name": "Prompt Fixer + Judge Loop",
             "order": 3,
-            "prompt": "Wide shot, simplified anime style, flat cel shading, a teenage girl with messy hair wearing large over-ear headphones sitting at a wooden desk, one hand holding a ballpoint pen over an open notebook filled with handwritten math equations, the other hand gently stroking a small black cat. The black cat is curled up asleep on the desk surface next to the papers. Environment is a cozy bedroom with soft sunlight through a window, organized stationery, and school books. Composition is a side view medium-wide shot, soft pastel color palette, bright natural lighting, clean line art, high-key aesthetic.",
-            "judgePrompt": "Context: Image-generation prompts must describe only visible, controllable image attributes.\n\nRole: Act as a strict image-prompt judge.\n\nTask: Score the candidate from 0–100 based on:\n\nsubject identity and physical description\nsubject placement, pose, scale, and orientation\nscene/background\ncomposition and spatial relationships\ncamera angle, position, framing, and distance\nlighting\nart style and rendering method\nconcrete visual specificity\n\nPenalize vague, poetic, subjective, redundant, contradictory, or non-visual wording. Do not reward words such as \"masterpiece\", \"stunning\", \"cinematic\", \"8K\", or emotional language unless they define a visible property.\n\nA score of 100 means the prompt is visually explicit, internally consistent, and requires no meaningful interpretation.\n\nIf score < 100:\nList the exact missing, vague, or conflicting details that should be fixed.\n\nReturn ONLY valid JSON:\n{\"score\":0,\"prompt\":\"prompt\",\"fixes\":[\"exact factual fix\"]}\n\nCandidate:\n${candidate}",
-            "fixerPrompt": "Context: Improve an image-generation prompt by applying specific judge fixes without changing the original subject, scene, or intent.\n\nRole: Act as a precise image-prompt correction agent.\n\nTask:\n\nApply every relevant item from the fixes array.\nPreserve all correct and useful visual details from the current prompt.\nDo not change the subject, action, setting, composition, or intended style unless explicitly required by a fix.\nReplace vague, poetic, subjective, redundant, or non-visual wording with concrete visible descriptions.\nMake subject appearance, placement, pose, scale, orientation, scene, spatial relationships, camera angle, camera position, framing, distance, lighting, and art style explicit when requested by the fixes.\nResolve contradictions.\nDo not invent unnecessary details.\nKeep the final prompt concise and production-ready.\n\nReturn only the rewritten image-generation prompt as plain text. No JSON, Markdown, explanations, labels, or commentary.\n\nInput:\n\nCurrent prompt:\n${candidate}\n\nRequired fixes:\n${fixes}",
-            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
-            "thinking": "off",
+            "items": "Wide shot, simplified anime style, flat cel shading, a teenage girl with messy hair wearing large over-ear headphones sitting at a wooden desk, one hand holding a ballpoint pen over an open notebook filled with handwritten math equations, the other hand gently stroking a small black cat. The black cat is curled up asleep on the desk surface next to the papers. Environment is a cozy bedroom with soft sunlight through a window, organized stationery, and school books. Composition is a side view medium-wide shot, soft pastel color palette, bright natural lighting, clean line art, high-key aesthetic.",
+            "workflowName": "Prompt fixer and judge",
+            "output": "Wide shot, side view, simplified anime style, flat cel shading, a teenage girl with messy hair wearing large over-ear headphones sitting at a wooden desk, one hand holding a ballpoint pen over an open notebook filled with handwritten math equations, the other hand gently stroking a small black cat curled up asleep on the desk. Cozy bedroom environment, organized stationery, school books, soft sunlight streaming through a window creating long shadows, soft pastel color palette, bright natural lighting, clean line art, high-key aesthetic, 2D vector illustration.",
             "threshold": 95,
-            "maxRetries": 5,
+            "maxAttempts": 5,
+            "retryWith": "result",
             "score": "95",
-            "fixes": "[\"The prompt is already highly optimized; no functional improvements needed for visual testability.\"]",
-            "approvedPrompt": "Wide shot, side view, simplified anime style, flat cel shading, a teenage girl with messy hair wearing large over-ear headphones sitting at a wooden desk, one hand holding a ballpoint pen over an open notebook filled with handwritten math equations, the other hand gently stroking a small black cat curled up asleep on the desk. Cozy bedroom environment, organized stationery, school books, soft sunlight streaming through a window creating long shadows, soft pastel color palette, bright natural lighting, clean line art, high-key aesthetic, 2D vector illustration.",
-            "attempts": 6,
-            "trace": "Judge 1: 92/100\nFixer 1: applied extracted fixes\nJudge 2: 92/100\nFixer 2: applied extracted fixes\nJudge 3: 92/100\nFixer 3: applied extracted fixes\nJudge 4: 95/100\nFixer 4: applied extracted fixes\nJudge 5: 95/100\nFixer 5: applied extracted fixes\nJudge 6: 95/100",
-            "status": "Stopped at 95/100 after 5 retry(ies)",
+            "note": "The candidate is visually explicit; preserve its subject and composition while tightening only concrete omissions.",
+            "iterations": 1,
+            "attempts": 5,
+            "trace": "Item 1, pass 1: 92/100 - Add concrete camera and material details.\nItem 1: retrying with workflow result\nItem 1, pass 2: 95/100 - No material visual issue remains.",
+            "status": "Ran 1 item(s) in 2 pass(es)",
             "position": {
               "x": 1420,
               "y": 80
             }
           },
           {
-            "id": "style-image-generator",
-            "kind": "imageGenerate",
-            "name": "Style Image Generator",
+            "id": "image-generation-judge-loop",
+            "kind": "forEach",
+            "name": "Image Generation + Judge Retry",
             "order": 4,
-            "prompt": "${input1}",
-            "inputs": [
-              {
-                "id": "input1",
-                "name": "input1",
-                "value": "Cinematic low angle medium shot of a small red fox wearing a highly detailed white NASA-style spacesuit with a reflective gold visor, sitting upright on the edge of a dark slate tiled rooftop. Background features a large glowing crescent moon in a starry midnight sky. Lighting is cool blue moonlight providing sharp rim lighting on the fox's fur and suit textures, creating deep shadows. 85mm lens, f/1.8, sharp focus, detailed fabric and fur textures, midnight blue and silver color palette."
-              }
-            ],
-            "referenceImage": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260726_162626_459.png",
-            "seed": "1268144387",
-            "steps": 8,
-            "strength": 1,
-            "outputUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260804_082033_773.png",
-            "outputName": "krea2_style_20260804_082033_773.png",
-            "status": "Generated krea2_style_20260804_082033_773.png",
+            "items": "Wide shot, simplified anime style, flat cel shading, a teenage girl with messy hair wearing large over-ear headphones sitting at a wooden desk, one hand holding a ballpoint pen over an open notebook filled with handwritten math equations, the other hand gently stroking a small black cat. The black cat is curled up asleep on the desk surface next to the papers. Environment is a cozy bedroom with soft sunlight through a window, organized stationery, and school books. Composition is a side view medium-wide shot, soft pastel color palette, bright natural lighting, clean line art, high-key aesthetic.",
+            "workflowName": "Image generation and judge",
+            "output": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260804_082033_773.png",
+            "threshold": 90,
+            "maxAttempts": 3,
+            "retryWith": "input",
+            "score": "92",
+            "note": "Retry the same prompt when the generated image does not meet the visual threshold.",
+            "iterations": 1,
+            "attempts": 1,
+            "trace": "Item 1, pass 1: 92/100 - Passed the image threshold.",
+            "status": "Ran 1 item(s) in 1 pass(es)",
             "position": {
               "x": 2070,
               "y": 80
             }
           },
           {
-            "id": "image-judge",
-            "kind": "imageText",
-            "name": "Image Judge",
+            "id": "generated-image-display",
+            "kind": "imageDisplay",
+            "name": "Generated Image",
             "order": 5,
-            "prompt": "Context: Compare the generated image with the approved image prompt and the supplied reference style.\nRole: Act as a strict visual quality reviewer.\nTask: Check subject clarity, prompt fidelity, composition, and whether the reference's painterly blue-gray brushwork and soft lighting are present.\nDesired output format: Return PASS or REVISE followed by no more than three concise factual reasons.\n\nInput:\nApproved prompt:\n${input1}",
-            "model": "gemma4:12b",
-            "thinking": "off",
             "imageUrl": "http://127.0.0.1:8000/api/comfyui/images/krea2_style_20260804_082033_773.png",
-            "inputs": [
-              {
-                "id": "input1",
-                "name": "input1",
-                "value": "Cinematic low angle medium shot of a small red fox wearing a highly detailed white NASA-style spacesuit with a reflective gold visor, sitting upright on the edge of a dark slate tiled rooftop. Background features a large glowing crescent moon in a starry midnight sky. Lighting is cool blue moonlight providing sharp rim lighting on the fox's fur and suit textures, creating deep shadows. 85mm lens, f/1.8, sharp focus, detailed fabric and fur textures, midnight blue and silver color palette."
-              }
-            ],
-            "output": "PASS\n\n1. Subject clarity: The fox in a detailed space suit is clearly defined.\n2. Prompt fidelity: Includes the gold visor, slate roof, moon, and starry sky.\n3. Style match: Successfully captures painterly textures and cool-toned lighting.",
-            "status": "Finished",
             "position": {
-              "x": 2650,
-              "y": 220
+              "x": 2580,
+              "y": 120
             }
           }
         ],
@@ -121,26 +105,19 @@
             "source": "prompt-enhancer",
             "target": "prompt-judge-loop",
             "sourceHandle": "output",
-            "targetHandle": "prompt"
+            "targetHandle": "items"
           },
           {
-            "id": "loop-to-image-generator",
+            "id": "prompt-loop-to-image-generation-loop",
             "source": "prompt-judge-loop",
-            "target": "style-image-generator",
-            "sourceHandle": "approvedPrompt",
-            "targetHandle": "input1"
+            "target": "image-generation-judge-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
           },
           {
-            "id": "loop-to-image-judge",
-            "source": "prompt-judge-loop",
-            "target": "image-judge",
-            "sourceHandle": "approvedPrompt",
-            "targetHandle": "input1"
-          },
-          {
-            "id": "image-to-image-judge",
-            "source": "style-image-generator",
-            "target": "image-judge",
+            "id": "image-loop-to-display",
+            "source": "image-generation-judge-loop",
+            "target": "generated-image-display",
             "sourceHandle": "output",
             "targetHandle": "image"
           }

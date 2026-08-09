@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, RefreshCw, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
+import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
 import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
@@ -156,12 +156,19 @@ function buildNode(
       return {
         id,
         kind,
-        name: `For Each ${order}`,
+        name: `Loop ${order}`,
         order,
         items: '[]',
         workflowName: '',
         output: '',
+        threshold: 95,
+        maxAttempts: 3,
+        retryWith: 'result',
+        score: '',
+        note: '',
         iterations: 0,
+        attempts: 0,
+        trace: '',
         status: '',
         position,
       };
@@ -207,6 +214,53 @@ function buildNode(
   }
 }
 
+function migrateLegacyPromptLoopSnapshot(
+  nodes: WorkflowNodeState[],
+  edges: Edge[],
+): { nodes: WorkflowNodeState[]; edges: Edge[] } {
+  const legacyIds = new Set(nodes.filter((node) => node.kind === 'promptLoop').map((node) => node.id));
+  if (!legacyIds.size) {
+    return { nodes, edges };
+  }
+
+  const migratedNodes = nodes.map((node) => {
+    if (node.kind !== 'promptLoop') {
+      return node;
+    }
+    return {
+      id: node.id,
+      kind: 'forEach' as const,
+      name: node.name.replace(/prompt judge loop/i, 'workflow loop'),
+      order: node.order,
+      items: node.prompt,
+      workflowName: 'Prompt fixer and judge',
+      output: node.approvedPrompt,
+      threshold: node.threshold,
+      maxAttempts: Math.max(1, node.maxRetries + 1),
+      retryWith: 'result' as const,
+      score: node.score,
+      note: '',
+      iterations: node.attempts ? 1 : 0,
+      attempts: node.attempts,
+      trace: node.trace,
+      status: node.status,
+      position: node.position,
+    };
+  });
+
+  const migratedEdges = edges.map((edge) => {
+    const targetHandle = edge.targetHandle ?? (typeof edge.data?.targetHandleId === 'string' ? edge.data.targetHandleId : '');
+    const sourceHandle = edge.sourceHandle ?? (typeof edge.data?.sourceHandleId === 'string' ? edge.data.sourceHandleId : 'output');
+    const nextTargetHandle = legacyIds.has(edge.target) && targetHandle === 'prompt' ? 'items' : targetHandle;
+    const nextSourceHandle = legacyIds.has(edge.source)
+      ? ({ approvedPrompt: 'output', fixes: 'note' }[sourceHandle] ?? sourceHandle)
+      : sourceHandle;
+    return { ...edge, targetHandle: nextTargetHandle, sourceHandle: nextSourceHandle };
+  });
+
+  return { nodes: migratedNodes, edges: migratedEdges };
+}
+
 function storageRead(): { nodes: WorkflowNodeState[]; edges: Edge[] } {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -214,7 +268,8 @@ function storageRead(): { nodes: WorkflowNodeState[]; edges: Edge[] } {
       return { nodes: STARTER_NODES, edges: [] };
     }
     const parsed = JSON.parse(raw) as { nodes?: WorkflowNodeState[]; edges?: Edge[] };
-    return { nodes: parsed.nodes?.length ? parsed.nodes : STARTER_NODES, edges: normalizeEdges(parsed.edges ?? []) };
+    const migrated = migrateLegacyPromptLoopSnapshot(parsed.nodes?.length ? parsed.nodes : STARTER_NODES, parsed.edges ?? []);
+    return { nodes: migrated.nodes, edges: normalizeEdges(migrated.edges) };
   } catch {
     return { nodes: STARTER_NODES, edges: [] };
   }
@@ -408,12 +463,13 @@ export function App() {
       return;
     }
 
-    const loadedEdges = normalizeEdges(snapshot.edges);
-    setWorkflowNodes(snapshot.nodes);
+    const migrated = migrateLegacyPromptLoopSnapshot(snapshot.nodes, snapshot.edges);
+    const loadedEdges = normalizeEdges(migrated.edges);
+    setWorkflowNodes(migrated.nodes);
     setEdges(loadedEdges);
-    nodesRef.current = snapshot.nodes;
+    nodesRef.current = migrated.nodes;
     edgesRef.current = loadedEdges;
-    writeCurrentSnapshot(snapshot.nodes, loadedEdges);
+    writeCurrentSnapshot(migrated.nodes, loadedEdges);
     setWorkflowName(selectedWorkflowName);
     setRunName(selectedRunName);
     setDebug(`Loaded ${selectedWorkflowName} / ${selectedRunName}`);
@@ -823,16 +879,21 @@ export function App() {
       if (node.id !== nodeId || node.kind !== 'forEach') {
         return node;
       }
+      const inputNames = subInputs.map((input) => input.name);
+      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate') ? 'input' : node.retryWith;
       const status = !workflowName
         ? ''
         : snapshot
           ? subInputs[0]
-            ? `Each item -> ${subInputs[0].name}; collects ${subOutputs[0]?.name ?? 'first output'}`
-            : 'Body workflow needs one Workflow input'
+            ? subInputs.length === 1
+              ? `Each item -> ${inputNames[0]}; collects ${subOutputs[0]?.name ?? 'first output'}`
+              : `${subInputs.length} inputs (${inputNames.join(', ')}); JSON objects map by name; collects ${subOutputs[0]?.name ?? 'first output'}`
+            : 'Body workflow needs at least one Workflow input'
           : 'Saved workflow not found';
       return {
         ...node,
         workflowName,
+        retryWith,
         status,
       };
     }));
@@ -982,10 +1043,19 @@ export function App() {
           return {
             type: 'flexibleForEach',
             width: 430,
-            height: 520,
+            height: 900,
             data: {
               ...node,
               ...shared,
+              items: linkedValue(node.id, 'items') ?? node.items,
+              threshold: node.threshold ?? 95,
+              maxAttempts: node.maxAttempts ?? 3,
+              retryWith: node.retryWith ?? 'result',
+              score: node.score ?? '',
+              note: node.note ?? '',
+              iterations: node.iterations ?? 0,
+              attempts: node.attempts ?? 0,
+              trace: node.trace ?? '',
               running: runningNodeId === node.id,
               pendingSourceHandleId: pendingHandle,
               workflowOptions,
@@ -1248,23 +1318,12 @@ export function App() {
               className="drawer-item"
               type="button"
               draggable
-              onDragStart={(event) => onDragStart(event, 'promptLoop')}
-              onClick={() => addWorkflowNode('promptLoop')}
-              title="Click to add, or drag onto the canvas"
-            >
-              <RefreshCw size={16} />
-              <span>Prompt judge loop</span>
-            </button>
-            <button
-              className="drawer-item"
-              type="button"
-              draggable
               onDragStart={(event) => onDragStart(event, 'forEach')}
               onClick={() => addWorkflowNode('forEach')}
               title="Click to add, or drag onto the canvas"
             >
               <Repeat size={16} />
-              <span>For each</span>
+              <span>Loop workflow</span>
             </button>
             <button
               className="drawer-item"
