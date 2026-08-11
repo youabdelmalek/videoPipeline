@@ -202,6 +202,91 @@ def krea_style_workflow(
     }
 
 
+def krea_identity_workflow(
+    image_name: str,
+    prompt: str,
+    seed: int,
+    steps: int,
+    strength: float,
+    aspect_ratio: AspectRatio = "1:1",
+) -> dict[str, Any]:
+    width, height = ASPECT_RATIO_DIMENSIONS[aspect_ratio]
+    return {
+        "73": {
+            "class_type": "UNETLoader",
+            "inputs": {"unet_name": "krea2_turbo_fp8_scaled.safetensors", "weight_dtype": "default"},
+        },
+        "74": {
+            "class_type": "CLIPLoader",
+            "inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "krea2", "device": "default"},
+        },
+        "75": {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_vae.safetensors"}},
+        "108": {
+            "class_type": "VAEEncode",
+            "inputs": {"pixels": ["168", 0], "vae": ["75", 0]},
+        },
+        "109": {
+            "class_type": "Krea2EditModelPatch",
+            "inputs": {
+                "ref_boost": 1,
+                "ref_boost_a": 1,
+                "fit_mode": "fit",
+                "model": ["165", 0],
+                "source_latent": ["108", 0],
+                "vae": ["75", 0],
+            },
+        },
+        "110": {
+            "class_type": "Krea2EditGroundedEncode",
+            "inputs": {
+                "prompt": prompt,
+                "grounding_px": 0,
+                "system_prompt": "",
+                "clip": ["74", 0],
+                "image": ["168", 0],
+            },
+        },
+        "112": {
+            "class_type": "KSampler",
+            "inputs": {
+                "seed": seed,
+                "steps": steps,
+                "cfg": 1,
+                "sampler_name": "euler",
+                "scheduler": "beta",
+                "denoise": 1,
+                "model": ["109", 0],
+                "positive": ["110", 0],
+                "negative": ["113", 0],
+                "latent_image": ["126", 0],
+            },
+        },
+        "113": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["110", 0]}},
+        "126": {
+            "class_type": "EmptySD3LatentImage",
+            "inputs": {"width": width, "height": height, "batch_size": 1},
+        },
+        "145": {
+            "class_type": "SaveImage",
+            "inputs": {"filename_prefix": "ComfyUI/Krea2Edit", "images": ["163", 0]},
+        },
+        "163": {"class_type": "VAEDecode", "inputs": {"samples": ["112", 0], "vae": ["75", 0]}},
+        "165": {
+            "class_type": "LoraLoaderModelOnly",
+            "inputs": {
+                "lora_name": "krea2_identity_edit_v1_2.safetensors",
+                "strength_model": strength,
+                "model": ["73", 0],
+            },
+        },
+        "168": {
+            "class_type": "LoadImage",
+            "inputs": {"image": image_name},
+            "_meta": {"title": "Load Image 1 (person / main subject)"},
+        },
+    }
+
+
 def queue_prompt(server: str, workflow: dict[str, Any]) -> str:
     payload = {"prompt": workflow, "client_id": safe_stem(f"workflow-ui-{timestamp()}")}
     response = comfy_request("POST", f"{server}/prompt", json=payload, timeout=60)
@@ -274,11 +359,16 @@ def generate_comfy_image(request: Request, body: GenerateComfyImageRequest) -> G
     server = COMFYUI_SERVER
     seed = body.seed if body.seed is not None else int(time.time() * 1000) % 2_147_483_647
     comfy_image_name = upload_to_comfy(server, reference_path)
-    workflow = krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
+    workflow = (
+        krea_identity_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
+        if body.workflow == "identity"
+        else krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
+    )
     prompt_id = queue_prompt(server, workflow)
     output_image = wait_for_output_image(server, prompt_id, body.timeout_seconds)
 
-    out_name = f"krea2_style_{timestamp()}.png"
+    prefix = "krea2_identity" if body.workflow == "identity" else "krea2_style"
+    out_name = f"{prefix}_{timestamp()}.png"
     out_path = ensure_input_dir() / out_name
     download_comfy_image(server, output_image, out_path)
     return GenerateComfyImageResponse(

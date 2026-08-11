@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
 AspectRatio = Literal["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]
+ImageGenerationWorkflow = Literal["style", "identity"]
 DEFAULT_MODEL = "VladimirGav/gemma4-26b-16GB-VRAM"
 DEFAULT_VISION_MODEL = "gemma4:12b"
 DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"
@@ -305,6 +306,7 @@ class UploadComfyImageResponse(BaseModel):
 class GenerateComfyImageRequest(BaseModel):
     prompt: str = Field(min_length=1)
     reference_image: str = Field(min_length=1)
+    workflow: ImageGenerationWorkflow = "style"
     aspect_ratio: AspectRatio = "1:1"
     seed: int | None = None
     steps: int = Field(default=8, ge=1, le=150)

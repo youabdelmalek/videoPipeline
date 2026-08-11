@@ -166,6 +166,7 @@ export type FlexibleImageDisplayPatch = {
 export type FlexibleImageGenerateNodeData = {
   nodeId: string;
   name: string;
+  kicker?: string;
   order: number;
   prompt: string;
   inputs: FlexibleInput[];
