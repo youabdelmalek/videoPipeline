@@ -20,32 +20,14 @@ class ModelCatalogEntry:
 
 MODEL_CATALOG: tuple[ModelCatalogEntry, ...] = (
     ModelCatalogEntry(
-        "vaultbox/qwen3.5-uncensored:9b",
-        "Qwen 3.5 Uncensored 9B",
+        "qwen3.6:27b",
+        "Qwen 3.6 27B",
         vision=True,
         thinking_levels=("off", "on"),
-    ),
-    ModelCatalogEntry("devstral-small-2:24b", "Devstral Small 2 24B", vision=True),
-    ModelCatalogEntry(
-        "gpt-oss:20b",
-        "GPT-OSS 20B",
-        thinking_levels=("off", "low", "medium", "high"),
     ),
     ModelCatalogEntry(
         "VladimirGav/gemma4-26b-16GB-VRAM",
-        "Gemma 4 26B 16GB (default)",
-        thinking_levels=("off", "on"),
-    ),
-    ModelCatalogEntry(
-        "gemma4:12b",
-        "Gemma 4 12B",
-        vision=True,
-        thinking_levels=("off", "on"),
-    ),
-    ModelCatalogEntry(
-        "qwen3.5:9b",
-        "Qwen 3.5 9B",
-        vision=True,
+        "Gemma 4 26B 16GB",
         thinking_levels=("off", "on"),
     ),
 )
