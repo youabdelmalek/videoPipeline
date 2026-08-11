@@ -46,6 +46,7 @@ export type UploadComfyImageResponse = {
 };
 
 export type ImageGenerationWorkflow = 'style' | 'identity' | 'text_to_image';
+export type VideoGenerationWorkflow = 'ref2va' | 'fl2v';
 
 export type GenerateComfyImageRequest = {
   prompt: string;
@@ -63,6 +64,30 @@ export type GenerateComfyImageResponse = {
   filename: string;
   reference_image: string;
   aspect_ratio: AspectRatio;
+  prompt_id: string;
+  seed: number;
+};
+
+export type GenerateComfyVideoRequest = {
+  prompt: string;
+  workflow: VideoGenerationWorkflow;
+  character_image?: string;
+  background_image?: string;
+  first_frame?: string;
+  last_frame?: string;
+  aspect_ratio?: AspectRatio;
+  duration_seconds?: number;
+  seed?: number | null;
+  steps?: number;
+  timeout_seconds?: number;
+};
+
+export type GenerateComfyVideoResponse = {
+  url: string;
+  filename: string;
+  workflow: VideoGenerationWorkflow;
+  aspect_ratio: AspectRatio;
+  duration_seconds: number;
   prompt_id: string;
   seed: number;
 };

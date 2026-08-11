@@ -8,7 +8,7 @@
  */
 
 import type { Edge } from '@xyflow/react';
-import { generateComfyImage, runFlexibleImageLlm, runFlexibleLlm } from '../api';
+import { generateComfyImage, generateComfyVideo, runFlexibleImageLlm, runFlexibleLlm } from '../api';
 import { DEFAULT_ASPECT_RATIO, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
 import type { AspectRatio } from '../constants';
 import type { ThinkingLevel } from '../api';
@@ -151,6 +151,25 @@ export type ImageGenerateNodeState = {
   position: { x: number; y: number };
 };
 
+export type VideoGenerateNodeState = {
+  id: string;
+  kind: 'videoGenerateRef2VA' | 'videoGenerateFL2V';
+  name: string;
+  order: number;
+  prompt: string;
+  inputs: FlexibleInput[];
+  image1: string;
+  image2: string;
+  aspectRatio: AspectRatio;
+  durationSeconds: number;
+  seed: string;
+  steps: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  position: { x: number; y: number };
+};
+
 export type ImageTextNodeState = {
   id: string;
   kind: 'imageText';
@@ -195,6 +214,7 @@ export type WorkflowNodeState =
   | ImageUploadNodeState
   | ImageDisplayNodeState
   | ImageGenerateNodeState
+  | VideoGenerateNodeState
   | ImageTextNodeState
   | IfNodeState
   | SplitNodeState
@@ -394,6 +414,15 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
         referenceImage: node.referenceImage,
         aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
       };
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V':
+      return {
+        ...inputValues(node.inputs),
+        image1: node.image1,
+        image2: node.image2,
+        aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
+        durationSeconds: node.durationSeconds,
+      };
     case 'imageText':
       return { ...inputValues(node.inputs), imageUrl: node.imageUrl };
     case 'json':
@@ -442,6 +471,17 @@ function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
         aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
         status: node.status,
       });
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V':
+      return logRecord({
+        outputUrl: node.outputUrl,
+        outputName: node.outputName,
+        seed: node.seed,
+        steps: node.steps,
+        aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
+        durationSeconds: node.durationSeconds,
+        status: node.status,
+      });
     case 'imageUpload':
       return logRecord({ outputUrl: node.outputUrl, outputName: node.outputName, status: node.status });
     case 'imageDisplay':
@@ -484,6 +524,9 @@ function configuredModel(node: WorkflowNodeState): string | null {
     case 'imageGenerate':
     case 'imageGenerateIdentity':
     case 'imageGenerateTextToImage':
+      return 'ComfyUI';
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V':
       return 'ComfyUI';
     default:
       return null;
@@ -807,6 +850,9 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
     case 'imageGenerateIdentity':
     case 'imageGenerateTextToImage':
       return node.outputUrl;
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V':
+      return node.outputUrl;
     case 'imageDisplay':
       return '';
     case 'if':
@@ -884,6 +930,21 @@ export function hydrateNode(
           return link ? { ...input, value: valueOf(link) } : input;
         }),
         referenceImage: referenceLink ? valueOf(referenceLink) : node.referenceImage,
+      };
+    }
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V': {
+      const inputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
+      const image1Link = incoming.find((edge) => edgeInputHandle(edge) === 'image1');
+      const image2Link = incoming.find((edge) => edgeInputHandle(edge) === 'image2');
+      return {
+        ...node,
+        inputs: inputs.map((input) => {
+          const link = incoming.find((edge) => edgeInputHandle(edge) === input.id);
+          return link ? { ...input, value: valueOf(link) } : input;
+        }),
+        image1: image1Link ? valueOf(image1Link) : node.image1,
+        image2: image2Link ? valueOf(image2Link) : node.image2,
       };
     }
     case 'imageText': {
@@ -1011,6 +1072,20 @@ async function runLoggedImageGeneration(
   }
 }
 
+async function runLoggedVideoGeneration(
+  ctx: StepContext,
+  request: Parameters<typeof generateComfyVideo>[0],
+): Promise<Awaited<ReturnType<typeof generateComfyVideo>>> {
+  try {
+    const response = await generateComfyVideo(request, ctx.signal);
+    ctx.onModelCall?.({ model: 'ComfyUI', prompt: request.prompt, response: JSON.stringify(response) });
+    return response;
+  } catch (caught) {
+    ctx.onModelCall?.({ model: 'ComfyUI', prompt: request.prompt, response: `ERROR: ${messageFromError(caught, 'Video generation failed')}` });
+    throw caught;
+  }
+}
+
 /**
  * Execute one already-hydrated node and return the state patch to apply.
  * `error` is set (with any partial patch) when the node failed.
@@ -1079,6 +1154,56 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
           seed: String(result.seed),
           steps,
           strength,
+          status: `Generated ${result.filename}`,
+        },
+        error: null,
+        note: `${node.name} generated ${result.filename}`,
+      };
+    }
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V': {
+      const prompt = interpolate(node.prompt, node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }]);
+      if (!prompt.trim()) {
+        const error = 'Prompt is required';
+        return { patch: { status: error }, error, note: '' };
+      }
+      if (!node.image1.trim() || !node.image2.trim()) {
+        const error = 'Link both input images';
+        return { patch: { status: error }, error, note: '' };
+      }
+
+      let seed: number | null = null;
+      const seedText = node.seed.trim();
+      if (seedText) {
+        seed = Math.trunc(Number(seedText));
+        if (!Number.isFinite(seed)) {
+          const error = 'Seed must be a number';
+          return { patch: { status: error }, error, note: '' };
+        }
+      }
+
+      const durationSeconds = Math.min(60, Math.max(0.1, Number(node.durationSeconds) || 5));
+      const steps = Math.min(150, Math.max(1, Math.round(Number(node.steps) || 25)));
+      const result = await runLoggedVideoGeneration(ctx, {
+        prompt,
+        workflow: node.kind === 'videoGenerateFL2V' ? 'fl2v' : 'ref2va',
+        ...(node.kind === 'videoGenerateFL2V'
+          ? { first_frame: node.image1, last_frame: node.image2 }
+          : { character_image: node.image1, background_image: node.image2 }),
+        aspect_ratio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
+        duration_seconds: durationSeconds,
+        seed,
+        steps,
+        timeout_seconds: 1800,
+      });
+      return {
+        patch: {
+          outputUrl: result.url,
+          outputName: result.filename,
+          aspectRatio: result.aspect_ratio,
+          durationSeconds: result.duration_seconds,
+          seed: String(result.seed),
+          steps,
           status: `Generated ${result.filename}`,
         },
         error: null,

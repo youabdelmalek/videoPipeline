@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
 AspectRatio = Literal["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]
 ImageGenerationWorkflow = Literal["style", "identity", "text_to_image"]
+VideoGenerationWorkflow = Literal["ref2va", "fl2v"]
 DEFAULT_MODEL = "gemma4:26b"
 DEFAULT_VISION_MODEL = "qwen3.6:27b"
 DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"
@@ -320,6 +321,30 @@ class GenerateComfyImageResponse(BaseModel):
     filename: str
     reference_image: str
     aspect_ratio: AspectRatio
+    prompt_id: str
+    seed: int
+
+
+class GenerateComfyVideoRequest(BaseModel):
+    prompt: str = Field(min_length=1)
+    workflow: VideoGenerationWorkflow = "ref2va"
+    character_image: str = ""
+    background_image: str = ""
+    first_frame: str = ""
+    last_frame: str = ""
+    aspect_ratio: AspectRatio = "16:9"
+    duration_seconds: float = Field(default=5.0, ge=0.1, le=60.0)
+    seed: int | None = None
+    steps: int = Field(default=25, ge=1, le=150)
+    timeout_seconds: int = Field(default=1800, ge=5, le=7200)
+
+
+class GenerateComfyVideoResponse(BaseModel):
+    url: str
+    filename: str
+    workflow: VideoGenerationWorkflow
+    aspect_ratio: AspectRatio
+    duration_seconds: float
     prompt_id: str
     seed: int
 

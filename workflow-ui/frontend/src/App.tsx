@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { ArrowLeft, Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
+import { ArrowLeft, Bot, Braces, Eye, FilePlus, Film, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { WorkflowLogPanel } from './components/WorkflowLogPanel';
 import { DEFAULT_ASPECT_RATIO, DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
@@ -152,6 +152,30 @@ function buildNode(
         seed: '',
         steps: 8,
         strength: 1,
+        outputUrl: '',
+        outputName: '',
+        status: '',
+        position,
+      };
+    case 'videoGenerateRef2VA':
+    case 'videoGenerateFL2V':
+      return {
+        id,
+        kind,
+        name: kind === 'videoGenerateRef2VA'
+          ? `Generate video Ref2VA ${order}`
+          : `Generate video FL2V ${order}`,
+        order,
+        prompt: kind === 'videoGenerateRef2VA'
+          ? 'Animate the character naturally in the background using ${input1}.'
+          : 'Animate a smooth transition from the first frame to the last frame using ${input1}.',
+        inputs: [{ id: 'input1', name: 'input1', value: '' }],
+        image1: '',
+        image2: '',
+        aspectRatio: kind === 'videoGenerateRef2VA' ? '16:9' : '1:1',
+        durationSeconds: kind === 'videoGenerateRef2VA' ? 5 : 2,
+        seed: '',
+        steps: 25,
         outputUrl: '',
         outputName: '',
         status: '',
@@ -585,7 +609,7 @@ export function App() {
 
   const patchInput = useCallback((nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
         return node;
       }
       return {
@@ -597,7 +621,7 @@ export function App() {
 
   const addInput = useCallback((nodeId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText')) {
         return node;
       }
       const inputs = node.inputs ?? [];
@@ -611,7 +635,7 @@ export function App() {
 
   const removeInput = useCallback((nodeId: string, inputId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText')) {
         return node;
       }
       return { ...node, inputs: (node.inputs ?? []).filter((input) => input.id !== inputId) };
@@ -661,14 +685,14 @@ export function App() {
 
     setRunningNodeId(node.id);
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
     }
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
-    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage') {
+    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V') {
       setDebug(`Step ${node.order}: ${node.name} is calling ComfyUI`);
     } else if (node.kind === 'imageText') {
       setDebug(`Step ${node.order}: ${node.name} is reading the image with ${node.model}`);
@@ -698,7 +722,7 @@ export function App() {
         setDebug(result.error);
         return false;
       }
-      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage') {
+      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V') {
         await refreshImages().catch(() => undefined);
       }
       setDebug(`Step ${node.order}: ${result.note}`);
@@ -965,7 +989,7 @@ export function App() {
         return node;
       }
       const inputNames = subInputs.map((input) => input.name);
-      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity' || bodyNode.kind === 'imageGenerateTextToImage') ? 'input' : node.retryWith;
+      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity' || bodyNode.kind === 'imageGenerateTextToImage' || bodyNode.kind === 'videoGenerateRef2VA' || bodyNode.kind === 'videoGenerateFL2V') ? 'input' : node.retryWith;
       const status = !workflowName
         ? ''
         : snapshot
@@ -1100,6 +1124,35 @@ export function App() {
                 value: linkedValue(node.id, input.id) ?? input.value,
               })),
               referenceImage: linkedValue(node.id, 'reference') ?? node.referenceImage,
+              running: runningNodeId === node.id,
+              pendingSourceHandleId: pendingHandle,
+              onInputChange: patchInput,
+              onAddInput: addInput,
+              onRemoveInput: removeInput,
+              onRun: runNode,
+            },
+          };
+        }
+        case 'videoGenerateRef2VA':
+        case 'videoGenerateFL2V': {
+          const videoInputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
+          const ref2va = node.kind === 'videoGenerateRef2VA';
+          return {
+            type: 'flexibleVideoGenerate',
+            width: 460,
+            height: 820 + videoInputs.length * 36,
+            data: {
+              ...node,
+              ...shared,
+              kicker: ref2va ? 'Generate video Ref2VA' : 'Generate video FL2V',
+              image1Label: ref2va ? 'Character image' : 'First frame',
+              image2Label: ref2va ? 'Background image' : 'Last frame',
+              inputs: videoInputs.map((input) => ({
+                ...input,
+                value: linkedValue(node.id, input.id) ?? input.value,
+              })),
+              image1: linkedValue(node.id, 'image1') ?? node.image1,
+              image2: linkedValue(node.id, 'image2') ?? node.image2,
               running: runningNodeId === node.id,
               pendingSourceHandleId: pendingHandle,
               onInputChange: patchInput,
@@ -1417,6 +1470,28 @@ export function App() {
             >
               <Sparkles size={16} />
               <span>Generate image Identity</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'videoGenerateRef2VA')}
+              onClick={() => addWorkflowNode('videoGenerateRef2VA')}
+              title="Character plus background to video"
+            >
+              <Film size={16} />
+              <span>Generate video Ref2VA</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'videoGenerateFL2V')}
+              onClick={() => addWorkflowNode('videoGenerateFL2V')}
+              title="First frame plus last frame to video"
+            >
+              <Film size={16} />
+              <span>Generate video FL2V</span>
             </button>
             <button
               className="drawer-item"

@@ -206,6 +206,52 @@ export type FlexibleImageGeneratePatch = {
   status: string;
 };
 
+export type FlexibleVideoGenerateNodeData = {
+  nodeId: string;
+  name: string;
+  kicker: string;
+  image1Label: string;
+  image2Label: string;
+  order: number;
+  prompt: string;
+  inputs: FlexibleInput[];
+  image1: string;
+  image2: string;
+  aspectRatio: AspectRatio;
+  durationSeconds: number;
+  seed: string;
+  steps: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+  running: boolean;
+  pendingSourceNodeId: string | null;
+  pendingSourceHandleId: string | null;
+  onChange: (nodeId: string, patch: Partial<FlexibleVideoGeneratePatch>) => void;
+  onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
+  onAddInput: (nodeId: string) => void;
+  onRemoveInput: (nodeId: string, inputId: string) => void;
+  onPickOutput: (nodeId: string, handleId: string) => void;
+  onPickInput: (nodeId: string, handleId: string) => void;
+  onRun: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
+};
+
+export type FlexibleVideoGeneratePatch = {
+  name: string;
+  order: number;
+  prompt: string;
+  image1: string;
+  image2: string;
+  aspectRatio: AspectRatio;
+  durationSeconds: number;
+  seed: string;
+  steps: number;
+  outputUrl: string;
+  outputName: string;
+  status: string;
+};
+
 export type FlexibleImageTextNodeData = {
   nodeId: string;
   name: string;
