@@ -1,6 +1,6 @@
 import type { ModelOption } from './api';
 
-export const DEFAULT_MODEL = 'VladimirGav/gemma4-26b-16GB-VRAM';
+export const DEFAULT_MODEL = 'gemma4:26b';
 export const DEFAULT_VISION_MODEL = 'qwen3.6:27b';
 export const DEFAULT_THINKING_LEVEL = 'off' as const;
 export const DEFAULT_ASPECT_RATIO = '1:1' as const;
@@ -16,6 +16,7 @@ export const ASPECT_RATIO_OPTIONS = [
 export type AspectRatio = (typeof ASPECT_RATIO_OPTIONS)[number]['value'];
 export const VISION_MODEL_NAMES = [
   'qwen3.6:27b',
+  'gemma4:26b',
 ] as const;
 
 /** Shown until `GET /api/models` answers. */
@@ -29,11 +30,11 @@ export const FALLBACK_MODELS: ModelOption[] = [
     thinking_levels: ['off', 'on'],
   },
   {
-    name: DEFAULT_MODEL,
-    label: 'Gemma 4 26B 16GB',
+    name: 'gemma4:26b',
+    label: 'Gemma 4 26B',
     size_bytes: 0,
     installed: true,
-    vision: false,
+    vision: true,
     thinking_levels: ['off', 'on'],
   },
 ];

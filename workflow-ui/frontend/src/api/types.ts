@@ -45,7 +45,7 @@ export type UploadComfyImageResponse = {
   image: ComfyImageInfo;
 };
 
-export type ImageGenerationWorkflow = 'style' | 'identity';
+export type ImageGenerationWorkflow = 'style' | 'identity' | 'text_to_image';
 
 export type GenerateComfyImageRequest = {
   prompt: string;

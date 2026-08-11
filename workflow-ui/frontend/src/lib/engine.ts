@@ -135,7 +135,7 @@ export type ImageDisplayNodeState = {
 
 export type ImageGenerateNodeState = {
   id: string;
-  kind: 'imageGenerate' | 'imageGenerateIdentity';
+  kind: 'imageGenerate' | 'imageGenerateIdentity' | 'imageGenerateTextToImage';
   name: string;
   order: number;
   prompt: string;
@@ -388,6 +388,7 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
       return inputValues(node.inputs);
     case 'imageGenerate':
     case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage':
       return {
         ...inputValues(node.inputs),
         referenceImage: node.referenceImage,
@@ -431,6 +432,7 @@ function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
       return { output: node.output };
     case 'imageGenerate':
     case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage':
       return logRecord({
         outputUrl: node.outputUrl,
         outputName: node.outputName,
@@ -481,6 +483,7 @@ function configuredModel(node: WorkflowNodeState): string | null {
       return node.model;
     case 'imageGenerate':
     case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage':
       return 'ComfyUI';
     default:
       return null;
@@ -802,6 +805,7 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
     case 'imageUpload':
     case 'imageGenerate':
     case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage':
       return node.outputUrl;
     case 'imageDisplay':
       return '';
@@ -869,7 +873,8 @@ export function hydrateNode(
       return link ? { ...node, imageUrl: valueOf(link) } : node;
     }
     case 'imageGenerate':
-    case 'imageGenerateIdentity': {
+    case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage': {
       const inputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
       const referenceLink = incoming.find((edge) => edgeInputHandle(edge) === 'reference');
       return {
@@ -1027,13 +1032,14 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
     case 'imageDisplay':
       return { patch: {}, error: null, note: `${node.name} displayed its image URL` };
     case 'imageGenerate':
-    case 'imageGenerateIdentity': {
+    case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage': {
       const prompt = interpolate(node.prompt, node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }]);
       if (!prompt.trim()) {
         const error = 'Prompt is required';
         return { patch: { status: error }, error, note: '' };
       }
-      if (!node.referenceImage.trim()) {
+      if (node.kind !== 'imageGenerateTextToImage' && !node.referenceImage.trim()) {
         const error = 'Link an image URL';
         return { patch: { status: error }, error, note: '' };
       }
@@ -1054,7 +1060,11 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       const result = await runLoggedImageGeneration(ctx, {
         prompt,
         reference_image: node.referenceImage,
-        workflow: node.kind === 'imageGenerateIdentity' ? 'identity' : 'style',
+        workflow: node.kind === 'imageGenerateIdentity'
+          ? 'identity'
+          : node.kind === 'imageGenerateTextToImage'
+            ? 'text_to_image'
+            : 'style',
         aspect_ratio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
         seed,
         steps,

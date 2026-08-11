@@ -56,6 +56,7 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
     data.referenceImage,
     (value) => data.onChange(data.nodeId, { referenceImage: value }),
   );
+  const requiresReference = data.requiresReference ?? true;
   const aspectRatio = data.aspectRatio ?? DEFAULT_ASPECT_RATIO;
   const updateNodeInternals = useUpdateNodeInternals();
   const sourceClass =
@@ -135,31 +136,33 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
         {data.inputs.map((input) => <ImagePromptInputRow key={input.id} data={data} input={input} />)}
       </div>
 
-      <div className="text-pass-block">
-        <Handle
-          className={data.pendingSourceNodeId ? 'is-link-target' : ''}
-          type="target"
-          position={Position.Left}
-          id="reference"
-          onClick={() => data.onPickInput(data.nodeId, 'reference')}
-        />
-        <label>
-          Reference URL
-          <textarea
-            className="output-box nodrag nopan"
-            value={referenceImage}
-            onChange={(event) => setReferenceImage(event.target.value)}
-            placeholder="Link the upload node here"
+      {requiresReference ? (
+        <div className="text-pass-block">
+          <Handle
+            className={data.pendingSourceNodeId ? 'is-link-target' : ''}
+            type="target"
+            position={Position.Left}
+            id="reference"
+            onClick={() => data.onPickInput(data.nodeId, 'reference')}
           />
-        </label>
-      </div>
+          <label>
+            Reference URL
+            <textarea
+              className="output-box nodrag nopan"
+              value={referenceImage}
+              onChange={(event) => setReferenceImage(event.target.value)}
+              placeholder="Link the upload node here"
+            />
+          </label>
+        </div>
+      ) : null}
 
       <div className="if-run-row">
         <button
           className="run-node-button nodrag nopan"
           type="button"
           onClick={() => data.onRun(data.nodeId)}
-          disabled={data.running || !prompt.trim() || !referenceImage.trim()}
+          disabled={data.running || !prompt.trim() || (requiresReference && !referenceImage.trim())}
         >
           {data.running ? <Loader2 className="spin" size={14} /> : <Play size={14} />}
           Generate

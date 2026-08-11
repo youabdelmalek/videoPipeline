@@ -167,6 +167,7 @@ export type FlexibleImageGenerateNodeData = {
   nodeId: string;
   name: string;
   kicker?: string;
+  requiresReference?: boolean;
   order: number;
   prompt: string;
   inputs: FlexibleInput[];

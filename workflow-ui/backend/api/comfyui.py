@@ -287,6 +287,55 @@ def krea_identity_workflow(
     }
 
 
+def krea_text_to_image_workflow(
+    prompt: str,
+    seed: int,
+    steps: int,
+    aspect_ratio: AspectRatio = "1:1",
+) -> dict[str, Any]:
+    width, height = ASPECT_RATIO_DIMENSIONS[aspect_ratio]
+    return {
+        "55": {
+            "class_type": "UNETLoader",
+            "inputs": {"unet_name": "krea2_turbo_fp8_scaled.safetensors", "weight_dtype": "default"},
+        },
+        "56": {
+            "class_type": "CLIPLoader",
+            "inputs": {"clip_name": "qwen3vl_4b_fp8_scaled.safetensors", "type": "krea2", "device": "default"},
+        },
+        "57": {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_vae.safetensors"}},
+        "51": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"text": prompt, "clip": ["56", 0]},
+        },
+        "58": {"class_type": "ConditioningZeroOut", "inputs": {"conditioning": ["51", 0]}},
+        "52": {
+            "class_type": "EmptyLatentImage",
+            "inputs": {"width": width, "height": height, "batch_size": 1},
+        },
+        "53": {
+            "class_type": "KSampler",
+            "inputs": {
+                "seed": seed,
+                "steps": steps,
+                "cfg": 1,
+                "sampler_name": "euler",
+                "scheduler": "simple",
+                "denoise": 1,
+                "model": ["55", 0],
+                "positive": ["51", 0],
+                "negative": ["58", 0],
+                "latent_image": ["52", 0],
+            },
+        },
+        "54": {"class_type": "VAEDecode", "inputs": {"samples": ["53", 0], "vae": ["57", 0]}},
+        "29": {
+            "class_type": "SaveImage",
+            "inputs": {"filename_prefix": "Krea2_turbo", "images": ["54", 0]},
+        },
+    }
+
+
 def queue_prompt(server: str, workflow: dict[str, Any]) -> str:
     payload = {"prompt": workflow, "client_id": safe_stem(f"workflow-ui-{timestamp()}")}
     response = comfy_request("POST", f"{server}/prompt", json=payload, timeout=60)
@@ -355,26 +404,34 @@ def generate_comfy_image(request: Request, body: GenerateComfyImageRequest) -> G
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
 
-    reference_path = resolve_image_path(body.reference_image)
     server = COMFYUI_SERVER
     seed = body.seed if body.seed is not None else int(time.time() * 1000) % 2_147_483_647
-    comfy_image_name = upload_to_comfy(server, reference_path)
-    workflow = (
-        krea_identity_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
-        if body.workflow == "identity"
-        else krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
-    )
+    reference_path: Path | None = None
+    comfy_image_name = ""
+    if body.workflow != "text_to_image":
+        reference_path = resolve_image_path(body.reference_image)
+        comfy_image_name = upload_to_comfy(server, reference_path)
+    if body.workflow == "identity":
+        workflow = krea_identity_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
+    elif body.workflow == "text_to_image":
+        workflow = krea_text_to_image_workflow(prompt, seed, body.steps, body.aspect_ratio)
+    else:
+        workflow = krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
     prompt_id = queue_prompt(server, workflow)
     output_image = wait_for_output_image(server, prompt_id, body.timeout_seconds)
 
-    prefix = "krea2_identity" if body.workflow == "identity" else "krea2_style"
+    prefix = {
+        "identity": "krea2_identity",
+        "text_to_image": "krea2_text_to_image",
+        "style": "krea2_style",
+    }[body.workflow]
     out_name = f"{prefix}_{timestamp()}.png"
     out_path = ensure_input_dir() / out_name
     download_comfy_image(server, output_image, out_path)
     return GenerateComfyImageResponse(
         url=image_url(request, out_name),
         filename=out_name,
-        reference_image=reference_path.name,
+        reference_image=reference_path.name if reference_path else "",
         aspect_ratio=body.aspect_ratio,
         prompt_id=prompt_id,
         seed=seed,

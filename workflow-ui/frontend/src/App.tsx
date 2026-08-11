@@ -135,10 +135,15 @@ function buildNode(
       };
     case 'imageGenerate':
     case 'imageGenerateIdentity':
+    case 'imageGenerateTextToImage':
       return {
         id,
         kind,
-        name: kind === 'imageGenerateIdentity' ? `Generate image Identity ${order}` : `Generate image Style Reference ${order}`,
+        name: kind === 'imageGenerateIdentity'
+          ? `Generate image Identity ${order}`
+          : kind === 'imageGenerateTextToImage'
+            ? `Generate image ${order}`
+            : `Generate image Style Reference ${order}`,
         order,
         prompt: 'Create an image of ${input1}',
         inputs: [{ id: 'input1', name: 'input1', value: '' }],
@@ -580,7 +585,7 @@ export function App() {
 
   const patchInput = useCallback((nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
         return node;
       }
       return {
@@ -592,7 +597,7 @@ export function App() {
 
   const addInput = useCallback((nodeId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText')) {
         return node;
       }
       const inputs = node.inputs ?? [];
@@ -606,7 +611,7 @@ export function App() {
 
   const removeInput = useCallback((nodeId: string, inputId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'imageText')) {
         return node;
       }
       return { ...node, inputs: (node.inputs ?? []).filter((input) => input.id !== inputId) };
@@ -656,14 +661,14 @@ export function App() {
 
     setRunningNodeId(node.id);
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
     }
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
-    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity') {
+    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage') {
       setDebug(`Step ${node.order}: ${node.name} is calling ComfyUI`);
     } else if (node.kind === 'imageText') {
       setDebug(`Step ${node.order}: ${node.name} is reading the image with ${node.model}`);
@@ -693,7 +698,7 @@ export function App() {
         setDebug(result.error);
         return false;
       }
-      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity') {
+      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage') {
         await refreshImages().catch(() => undefined);
       }
       setDebug(`Step ${node.order}: ${result.note}`);
@@ -960,7 +965,7 @@ export function App() {
         return node;
       }
       const inputNames = subInputs.map((input) => input.name);
-      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity') ? 'input' : node.retryWith;
+      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity' || bodyNode.kind === 'imageGenerateTextToImage') ? 'input' : node.retryWith;
       const status = !workflowName
         ? ''
         : snapshot
@@ -1074,16 +1079,22 @@ export function App() {
             },
           };
         case 'imageGenerate':
-        case 'imageGenerateIdentity': {
+        case 'imageGenerateIdentity':
+        case 'imageGenerateTextToImage': {
           const imageInputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
           return {
             type: 'flexibleImageGenerate',
             width: 440,
-            height: 690 + imageInputs.length * 36,
+            height: (node.kind === 'imageGenerateTextToImage' ? 590 : 690) + imageInputs.length * 36,
             data: {
               ...node,
               ...shared,
-              kicker: node.kind === 'imageGenerateIdentity' ? 'Generate image Identity' : 'Generate image Style Reference',
+              kicker: node.kind === 'imageGenerateIdentity'
+                ? 'Generate image Identity'
+                : node.kind === 'imageGenerateTextToImage'
+                  ? 'Generate image'
+                  : 'Generate image Style Reference',
+              requiresReference: node.kind !== 'imageGenerateTextToImage',
               inputs: imageInputs.map((input) => ({
                 ...input,
                 value: linkedValue(node.id, input.id) ?? input.value,
@@ -1384,6 +1395,17 @@ export function App() {
             >
               <Sparkles size={16} />
               <span>Generate image Style Reference</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'imageGenerateTextToImage')}
+              onClick={() => addWorkflowNode('imageGenerateTextToImage')}
+              title="Click to add, or drag onto the canvas"
+            >
+              <Sparkles size={16} />
+              <span>Generate image</span>
             </button>
             <button
               className="drawer-item"
