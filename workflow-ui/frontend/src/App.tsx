@@ -138,7 +138,7 @@ function buildNode(
       return {
         id,
         kind,
-        name: kind === 'imageGenerateIdentity' ? `Generate image Identity ${order}` : `Generate ${order}`,
+        name: kind === 'imageGenerateIdentity' ? `Generate image Identity ${order}` : `Generate image Style Reference ${order}`,
         order,
         prompt: 'Create an image of ${input1}',
         inputs: [{ id: 'input1', name: 'input1', value: '' }],
@@ -1083,7 +1083,7 @@ export function App() {
             data: {
               ...node,
               ...shared,
-              kicker: node.kind === 'imageGenerateIdentity' ? 'Generate image Identity' : 'Generate image',
+              kicker: node.kind === 'imageGenerateIdentity' ? 'Generate image Identity' : 'Generate image Style Reference',
               inputs: imageInputs.map((input) => ({
                 ...input,
                 value: linkedValue(node.id, input.id) ?? input.value,
@@ -1383,7 +1383,7 @@ export function App() {
               title="Click to add, or drag onto the canvas"
             >
               <Sparkles size={16} />
-              <span>Generate image</span>
+              <span>Generate image Style Reference</span>
             </button>
             <button
               className="drawer-item"

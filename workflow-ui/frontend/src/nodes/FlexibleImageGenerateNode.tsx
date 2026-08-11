@@ -69,7 +69,7 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
     <section className="node flexible-node image-generate-node">
       <div className="node-header">
         <div>
-          <div className="node-kicker">{data.kicker ?? 'Generate image'}</div>
+          <div className="node-kicker">{data.kicker ?? 'Generate image Style Reference'}</div>
           <input
             className="node-title-input nodrag nopan"
             value={name}
