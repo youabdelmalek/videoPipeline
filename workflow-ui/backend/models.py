@@ -4,6 +4,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
+AspectRatio = Literal["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]
 DEFAULT_MODEL = "VladimirGav/gemma4-26b-16GB-VRAM"
 DEFAULT_VISION_MODEL = "gemma4:12b"
 DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"
@@ -58,36 +59,23 @@ MIN_VIDEO_BEATS = 12
 MAX_VIDEO_BEATS = 16
 MAX_VIDEO_CARD_WORDS = 260
 MAX_TOTAL_VIDEO_WORDS = 3600
-
-# Kimi K3 is disabled (see services/kimi.py), so every pass runs on Ollama.
-# Kept as a plain string so this module stays free of service imports.
 BOARD_REWRITER_PROVIDER = "ollama"
-
-# Shot breakdown: one board video becomes a flexible 60-90 second shot list.
-# Counts and durations are judged by the LLM shot judge, not hard parser gates.
 TARGET_SHOTS = 16
 MIN_SHOTS = 14
 MAX_SHOTS = 20
 MIN_VIDEO_SECONDS = 60
 MAX_VIDEO_SECONDS = 90
-
-# The opening and closing windows that decide whether a short-form video is
-# watched and remembered. Both are written as high-impact shots.
 HIGH_IMPACT_SECONDS = 10
 HIGH_IMPACT_SHOTS = 2
 MAX_SHOT_FIELD_CHARS = 200
-#: Retries per video when the LLM shot judge requests a revision.
 MAX_SHOT_ATTEMPTS = 3
 MAX_BEST_OF_ATTEMPTS = 3
-#: A best-of run stops as soon as the judge scores above this, keeping the
-#: remaining attempts. Set it to 100 to always use the full attempt budget.
 EARLY_STOP_SCORE = 95
-
-# The shot rewriter is the second polish pass; same provider vocabulary as the board.
 SHOT_REWRITER_PROVIDER = "ollama"
 
 
 JobStatus = Literal["queued", "running", "done", "error"]
+
 
 @dataclass
 class Job:
@@ -115,47 +103,34 @@ class JudgeScenesRequest(BaseModel):
 
 
 class RewriteBoardRequest(BaseModel):
-    #: "kimi" is rejected while the provider is disabled; add it back here to re-enable.
     provider: Literal["ollama"] = BOARD_REWRITER_PROVIDER
-    #: Blank means "use that provider's default model".
     model: str = ""
 
 
 class DetailVideosRequest(BaseModel):
     model: str = DEFAULT_MODEL
-    #: Board videos to expand. Empty means every video on the board.
     video_indexes: list[int] = Field(default_factory=list)
 
 
 class RewriteShotsRequest(BaseModel):
-    #: "kimi" is rejected while the provider is disabled; add it back here to re-enable.
     provider: Literal["ollama"] = SHOT_REWRITER_PROVIDER
-    #: Blank means "use that provider's default model".
     model: str = ""
-    #: Detailed videos to polish. Empty means every video that has a shot list.
     video_indexes: list[int] = Field(default_factory=list)
 
 
 class BuildAssetCatalogRequest(BaseModel):
     model: str = DEFAULT_MODEL
-    #: Blank means run the full extractor -> judge -> detailer chain.
-    #: Set to one item id to regenerate only that item's description.
     item_id: str = ""
 
 
 class BuildJsonAssetsRequest(BaseModel):
     model: str = DEFAULT_MODEL
-    #: Blank means spec every catalog asset.
-    #: Set to one item id to regenerate only that asset's spec.
     item_id: str = ""
 
 
 class BuildJsonFramesRequest(BaseModel):
     model: str = DEFAULT_MODEL
-    #: Blank means every shot in the frame plan.
-    #: Set to one shot ref ("V01S03") to regenerate just that shot's prompt.
     shot_ref: str = ""
-
 
 class ModelOption(BaseModel):
     """One local model the UI may offer."""
@@ -190,8 +165,6 @@ class ShotCard(BaseModel):
 
 
 class DetailedVideo(BaseModel):
-    """One board video expanded into a shot list."""
-
     index: int
     title: str
     text: str
@@ -199,12 +172,8 @@ class DetailedVideo(BaseModel):
     total_seconds: int
 
 
-# JSON asset specs: every asset is drawn from several angles and in several
-# states, so a later image stage can render any shot without re-deciding a look.
 MIN_ASSET_ANGLES = 4
 MIN_ASSET_STATES = 2
-
-
 AssetTheme = Literal["background", "prop", "character"]
 
 
@@ -223,13 +192,8 @@ class AssetCatalogGroup(BaseModel):
     items: list[AssetCatalogItem]
 
 
-# Composable workflows: ports are the artifacts that move between stages, and a
-# workflow is a hand-linked graph of pasted inputs and stages.
 class PortCheck(BaseModel):
-    """Structural verification of one pasted input: does it parse, how many items."""
-
     ok: bool
-    #: Items found - videos, shots, specs - so the UI can show "8 videos".
     count: int = 0
     summary: str = ""
     errors: list[str] = Field(default_factory=list)
@@ -261,11 +225,8 @@ class ValidatePortRequest(BaseModel):
 
 class WorkflowNode(BaseModel):
     id: str
-    #: "input" for a pasted text box, "stage" for something that runs.
     kind: Literal["input", "stage"]
-    #: Set on input nodes: which port the pasted text is.
     port: str = ""
-    #: Set on stage nodes: which stage runs.
     stage: str = ""
     text: str = ""
     position: dict[str, float] = Field(default_factory=dict)
@@ -352,7 +313,6 @@ class ComfyImageListResponse(BaseModel):
 
 class UploadComfyImageRequest(BaseModel):
     filename: str = Field(min_length=1)
-    #: Browser uploads arrive as a data URL so FastAPI does not need multipart parsing.
     data_url: str = Field(min_length=1)
 
 
@@ -362,9 +322,8 @@ class UploadComfyImageResponse(BaseModel):
 
 class GenerateComfyImageRequest(BaseModel):
     prompt: str = Field(min_length=1)
-    #: A filename from the image input folder, or a URL returned by this API.
     reference_image: str = Field(min_length=1)
-    #: None means the backend chooses a fresh timestamp-derived seed.
+    aspect_ratio: AspectRatio = "1:1"
     seed: int | None = None
     steps: int = Field(default=8, ge=1, le=150)
     strength: float = Field(default=1.0, ge=0.0, le=2.0)
@@ -375,18 +334,12 @@ class GenerateComfyImageResponse(BaseModel):
     url: str
     filename: str
     reference_image: str
+    aspect_ratio: AspectRatio
     prompt_id: str
     seed: int
 
 
 class FrameDeltaDetail(BaseModel):
-    """What actually moves between the two frames, split by what is moving.
-
-    The frame writer fills these four separately so a later video stage is told
-    the performance, the staging, and the camera as distinct instructions rather
-    than one sentence that mixes them.
-    """
-
     emotion: str = ""
     character_movement: str = ""
     background_movement: str = ""
@@ -406,41 +359,31 @@ class FrameDeltaDetail(BaseModel):
 
 
 class FrameDelta(BaseModel):
-    """One shot's entry in the frame plan: where it starts, ends, and how."""
-
     ref: str
     title: str
     first_frame: str = ""
     last_frame: str = ""
-    #: One-line summary of the change; `detail` carries the breakdown.
     delta: str = ""
     detail: FrameDeltaDetail = Field(default_factory=FrameDeltaDetail)
-    #: What the describer and asset picker decided, kept for the UI and results.
     description: str = ""
     emotion: str = ""
     assets: dict[str, Any] = Field(default_factory=dict)
 
 
 class JsonFrameSpec(BaseModel):
-    """One `<shot_ref>_frame_prompt.json` file, as served to the UI."""
-
     ref: str
     title: str
     filename: str
     spec: dict[str, Any] = Field(default_factory=dict)
-    #: The shared cast, hoisted for the node's one-line summary.
     background: str = ""
     characters: list[str] = Field(default_factory=list)
 
 
 class JsonAssetSpec(BaseModel):
-    """One `<name>_asset_specification.json` file, as served to the UI."""
-
     id: str
     name: str
     theme: AssetTheme
     filename: str
-    #: The spec document itself, kept opaque so prompt changes need no migration.
     spec: dict[str, Any] = Field(default_factory=dict)
     angle_count: int = 0
     state_count: int = 0

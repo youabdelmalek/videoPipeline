@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { Loader2, Play, Plus, Trash2, X } from 'lucide-react';
+import { ASPECT_RATIO_OPTIONS, DEFAULT_ASPECT_RATIO, type AspectRatio } from '../constants';
 import type { FlexibleImageGenerateNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
 
@@ -56,6 +57,7 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
     (value) => data.onChange(data.nodeId, { referenceImage: value }),
   );
   const [seed, setSeed] = useDraftValue(data.seed, (value) => data.onChange(data.nodeId, { seed: value }));
+  const aspectRatio = data.aspectRatio ?? DEFAULT_ASPECT_RATIO;
   const updateNodeInternals = useUpdateNodeInternals();
   const sourceClass =
     data.pendingSourceNodeId === data.nodeId && data.pendingSourceHandleId === 'output' ? 'is-link-source' : '';
@@ -97,7 +99,21 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
         />
       </label>
 
-      <div className="node-grid three">
+      <div className="node-grid four">
+        <label>
+          Aspect ratio
+          <select
+            className="nodrag nopan"
+            value={aspectRatio}
+            onChange={(event) => data.onChange(data.nodeId, { aspectRatio: event.target.value as AspectRatio })}
+          >
+            {ASPECT_RATIO_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           Seed
           <input

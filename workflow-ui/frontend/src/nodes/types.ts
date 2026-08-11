@@ -1,193 +1,8 @@
 import type {
-  ArtifactEntry,
-  PortCheck,
-  PortInfo,
-  StageInfo,
-  AssetCatalogGroup,
-  BoardProvider,
-  DetailedVideo,
-  JsonAssetSpec,
-  JsonFrameSpec,
   ModelOption,
-  SceneCard,
-  ShotProvider,
   ThinkingLevel,
 } from '../api';
-import type { PickableVideo } from './VideoPicker';
-
-export type NodeDetail = {
-  kicker: string;
-  title: string;
-  body: string;
-  /**
-   * Shot lists to browse instead of `body`. When set, the detail panel renders a
-   * video picker and the full text of whichever videos are picked.
-   */
-  videos?: DetailedVideo[];
-};
-
-export type CollapsibleNodeData = {
-  nodeId: string;
-  collapsed: boolean;
-  onToggleCollapse: (nodeId: string) => void;
-  onOpenDetail: (detail: NodeDetail) => void;
-};
-
-export type PromptNodeData = CollapsibleNodeData & {
-  prompt: string;
-  model: string;
-  models: ModelOption[];
-  /** Set when Ollama could not be listed; shown under the picker. */
-  modelsNotice: string | null;
-  runSlug: string | null;
-  disabled: boolean;
-  onPromptChange: (value: string) => void;
-  onModelChange: (value: string) => void;
-  onGenerate: () => void;
-};
-
-export type SceneNodeData = CollapsibleNodeData & {
-  scene: SceneCard;
-  /** How many shots have been split from this video, or null if it has not run. */
-  shotCount: number | null;
-  disabled: boolean;
-  /** Runs the shot splitter for this one video. */
-  onSplitShots: () => void;
-};
-
-/** One row of the video list: a board video plus how far it has been taken. */
-export type VideoListRow = {
-  index: number;
-  title: string;
-  /** How many shots have been split from this video, or null if it has not run. */
-  shotCount: number | null;
-};
-
-export type VideoListNodeData = CollapsibleNodeData & {
-  videos: VideoListRow[];
-  promptText?: string;
-  /** Full board text, shown when the node's detail panel is opened. */
-  boardText: string;
-  /** True once the board rewriter has run. */
-  polished: boolean;
-  disabled: boolean;
-  onSplitVideo: (videoIndex: number) => void;
-  onSplitAll: () => void;
-  onRewriteBoard: () => void;
-};
-
-export type ShotsListNodeData = CollapsibleNodeData & {
-  videos: DetailedVideo[];
-  promptText?: string;
-  /** Every shot list joined, for the detail panel. */
-  shotsText: string;
-};
-
-export type AssetCatalogNodeData = CollapsibleNodeData & {
-  groups: AssetCatalogGroup[];
-  promptText?: string;
-  text: string | null;
-  judgeVerdict: string | null;
-  disabled: boolean;
-  onBuildCatalog: () => void;
-  onRegenerateAsset: (itemId: string) => void;
-};
-
-export type JsonAssetsNodeData = CollapsibleNodeData & {
-  specs: JsonAssetSpec[];
-  promptText?: string;
-  text: string | null;
-  judgeVerdict: string | null;
-  disabled: boolean;
-  onBuildJsonAssets: () => void;
-  onRegenerateJsonAsset: (itemId: string) => void;
-};
-
-export type JsonFramesNodeData = CollapsibleNodeData & {
-  frames: JsonFrameSpec[];
-  promptText?: string;
-  text: string | null;
-  judgeVerdict: string | null;
-  disabled: boolean;
-  onBuildJsonFrames: () => void;
-  onRegenerateJsonFrame: (shotRef: string) => void;
-};
-
-export type AggregateNodeData = CollapsibleNodeData & {
-  kicker?: string;
-  title: string;
-  inputText?: string;
-  text: string;
-  downloadable?: boolean;
-};
-
-export type JudgeNodeData = CollapsibleNodeData & {
-  text: string | null;
-  verdict: string | null;
-  disabled: boolean;
-  onJudge: () => void;
-};
-
-export type BoardRewriterNodeData = CollapsibleNodeData & {
-  text: string | null;
-  provider: BoardProvider;
-  disabled: boolean;
-  onProviderChange: (provider: BoardProvider) => void;
-  onRewrite: () => void;
-};
-
-/** Shared by the two shot nodes: pick videos, then run a job over them. */
-type VideoSelectionNodeData = CollapsibleNodeData & {
-  text: string | null;
-  videos: PickableVideo[];
-  selected: Set<number>;
-  disabled: boolean;
-  onToggleVideo: (index: number) => void;
-  onSelectVideos: (indexes: number[]) => void;
-};
-
-export type VideoDetailerNodeData = VideoSelectionNodeData & {
-  /** Which board the shots are being expanded from, for the node heading. */
-  sourceLabel: string;
-  detailed: DetailedVideo[];
-  onDetail: () => void;
-};
-
-export type ShotRewriterNodeData = VideoSelectionNodeData & {
-  provider: ShotProvider;
-  polished: DetailedVideo[];
-  onProviderChange: (provider: ShotProvider) => void;
-  onRewriteShots: () => void;
-};
-
-export type ArtifactNodeData = CollapsibleNodeData & {
-  slug: string | null;
-  artifacts: ArtifactEntry[];
-};
-
-
-// Composed-workflow nodes. These are not collapsible: they are editors, not
-// output panes, so they carry their own callbacks rather than CollapsibleNodeData.
-export type InputNodeData = {
-  nodeId: string;
-  port: string;
-  text: string;
-  ports: PortInfo[];
-  /** Latest structural check, or null while it is in flight. */
-  check: PortCheck | null;
-  onPortChange: (nodeId: string, port: string) => void;
-  onTextChange: (nodeId: string, text: string) => void;
-  onRemove: (nodeId: string) => void;
-};
-
-export type StageNodeData = {
-  nodeId: string;
-  stage: StageInfo;
-  /** Input ports nothing is linked to yet. */
-  unsatisfied: string[];
-  portLabel: (port: string) => string;
-  onRemove: (nodeId: string) => void;
-};
+import type { AspectRatio } from '../constants';
 
 export type FlexibleInput = {
   id: string;
@@ -224,52 +39,6 @@ export type FlexibleAgentPatch = {
   model: string;
   thinking: ThinkingLevel;
   output: string;
-};
-
-export type FlexiblePromptLoopNodeData = {
-  nodeId: string;
-  name: string;
-  order: number;
-  prompt: string;
-  judgePrompt: string;
-  fixerPrompt: string;
-  model: string;
-  thinking: ThinkingLevel;
-  models: ModelOption[];
-  threshold: number;
-  maxRetries: number;
-  score: string;
-  fixes: string;
-  approvedPrompt: string;
-  attempts: number;
-  trace: string;
-  status: string;
-  running: boolean;
-  pendingSourceNodeId: string | null;
-  pendingSourceHandleId: string | null;
-  onChange: (nodeId: string, patch: Partial<FlexiblePromptLoopPatch>) => void;
-  onPickOutput: (nodeId: string, handleId: string) => void;
-  onPickInput: (nodeId: string, handleId: string) => void;
-  onRun: (nodeId: string) => void;
-  onRemove: (nodeId: string) => void;
-};
-
-export type FlexiblePromptLoopPatch = {
-  name: string;
-  order: number;
-  prompt: string;
-  judgePrompt: string;
-  fixerPrompt: string;
-  model: string;
-  thinking: ThinkingLevel;
-  threshold: number;
-  maxRetries: number;
-  score: string;
-  fixes: string;
-  approvedPrompt: string;
-  attempts: number;
-  trace: string;
-  status: string;
 };
 
 export type FlexibleTextNodeData = {
@@ -401,6 +170,7 @@ export type FlexibleImageGenerateNodeData = {
   prompt: string;
   inputs: FlexibleInput[];
   referenceImage: string;
+  aspectRatio: AspectRatio;
   seed: string;
   steps: number;
   strength: number;
@@ -425,6 +195,7 @@ export type FlexibleImageGeneratePatch = {
   order: number;
   prompt: string;
   referenceImage: string;
+  aspectRatio: AspectRatio;
   seed: string;
   steps: number;
   strength: number;

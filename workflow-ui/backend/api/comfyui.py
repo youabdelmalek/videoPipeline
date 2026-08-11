@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse
 
 from backend.config import COMFYUI_SERVER, IMAGE_INPUT_DIR, workspace_path
 from backend.models import (
+    AspectRatio,
     ComfyImageInfo,
     ComfyImageListResponse,
     GenerateComfyImageRequest,
@@ -36,6 +37,15 @@ MIME_EXTENSIONS = {
     "image/bmp": ".bmp",
 }
 MAX_UPLOAD_BYTES = 40 * 1024 * 1024
+ASPECT_RATIO_DIMENSIONS: dict[AspectRatio, tuple[int, int]] = {
+    "1:1": (1024, 1024),
+    "4:3": (1024, 768),
+    "3:4": (768, 1024),
+    "16:9": (1152, 648),
+    "9:16": (648, 1152),
+    "3:2": (1152, 768),
+    "2:3": (768, 1152),
+}
 
 
 def ensure_input_dir() -> Path:
@@ -137,7 +147,15 @@ def upload_to_comfy(server: str, image_path: Path) -> str:
     return name
 
 
-def krea_style_workflow(image_name: str, prompt: str, seed: int, steps: int, strength: float) -> dict[str, Any]:
+def krea_style_workflow(
+    image_name: str,
+    prompt: str,
+    seed: int,
+    steps: int,
+    strength: float,
+    aspect_ratio: AspectRatio = "1:1",
+) -> dict[str, Any]:
+    width, height = ASPECT_RATIO_DIMENSIONS[aspect_ratio]
     return {
         "1": {
             "class_type": "UNETLoader",
@@ -163,7 +181,7 @@ def krea_style_workflow(image_name: str, prompt: str, seed: int, steps: int, str
             "inputs": {"clip": ["4", 0], "prompt": prompt, "vae": ["5", 0], "image1": ["6", 0]},
         },
         "8": {"class_type": "TextEncodeKrea2OstrisEdit", "inputs": {"clip": ["4", 0], "prompt": ""}},
-        "9": {"class_type": "EmptySD3LatentImage", "inputs": {"width": 1024, "height": 1024, "batch_size": 1}},
+        "9": {"class_type": "EmptySD3LatentImage", "inputs": {"width": width, "height": height, "batch_size": 1}},
         "10": {
             "class_type": "KSampler",
             "inputs": {
@@ -256,7 +274,7 @@ def generate_comfy_image(request: Request, body: GenerateComfyImageRequest) -> G
     server = COMFYUI_SERVER
     seed = body.seed if body.seed is not None else int(time.time() * 1000) % 2_147_483_647
     comfy_image_name = upload_to_comfy(server, reference_path)
-    workflow = krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength)
+    workflow = krea_style_workflow(comfy_image_name, prompt, seed, body.steps, body.strength, body.aspect_ratio)
     prompt_id = queue_prompt(server, workflow)
     output_image = wait_for_output_image(server, prompt_id, body.timeout_seconds)
 
@@ -267,6 +285,7 @@ def generate_comfy_image(request: Request, body: GenerateComfyImageRequest) -> G
         url=image_url(request, out_name),
         filename=out_name,
         reference_image=reference_path.name,
+        aspect_ratio=body.aspect_ratio,
         prompt_id=prompt_id,
         seed=seed,
     )

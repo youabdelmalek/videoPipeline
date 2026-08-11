@@ -3,6 +3,17 @@ import type { ModelOption } from './api';
 export const DEFAULT_MODEL = 'VladimirGav/gemma4-26b-16GB-VRAM';
 export const DEFAULT_VISION_MODEL = 'gemma4:12b';
 export const DEFAULT_THINKING_LEVEL = 'off' as const;
+export const DEFAULT_ASPECT_RATIO = '1:1' as const;
+export const ASPECT_RATIO_OPTIONS = [
+  { value: '1:1', label: '1:1 - Square' },
+  { value: '4:3', label: '4:3 - Landscape' },
+  { value: '3:4', label: '3:4 - Portrait' },
+  { value: '16:9', label: '16:9 - Widescreen' },
+  { value: '9:16', label: '9:16 - Vertical' },
+  { value: '3:2', label: '3:2 - Landscape' },
+  { value: '2:3', label: '2:3 - Portrait' },
+] as const;
+export type AspectRatio = (typeof ASPECT_RATIO_OPTIONS)[number]['value'];
 export const VISION_MODEL_NAMES = [
   'vaultbox/qwen3.5-uncensored:9b',
   'devstral-small-2:24b',
@@ -10,16 +21,7 @@ export const VISION_MODEL_NAMES = [
   'qwen3.5:9b',
 ] as const;
 
-/**
- * Every pass runs locally. Kimi K3 is disabled backend-side
- * (backend/services/kimi.py), so 'ollama' is the only accepted provider.
- */
-export const DEFAULT_BOARD_PROVIDER = 'ollama';
-
-/** The shot rewriter is optional and also local. */
-export const DEFAULT_SHOT_PROVIDER = 'ollama';
-
-/** Shown until `GET /api/models` answers; mirrors ALLOWED_MODELS in backend/models.py. */
+/** Shown until `GET /api/models` answers. */
 export const FALLBACK_MODELS: ModelOption[] = [
   {
     name: 'vaultbox/qwen3.5-uncensored:9b',
@@ -70,9 +72,3 @@ export const FALLBACK_MODELS: ModelOption[] = [
     thinking_levels: ['off', 'on'],
   },
 ];
-
-export const STARTER_PROMPT =
-  'The Mouse Crime Boss\nCats, foxes, and wolves obey an unseen mastermind controlling the city food supply. The reveal: the feared boss is a tiny mouse.';
-
-/** How often the UI re-checks a running job. */
-export const JOB_POLL_INTERVAL_MS = 1800;

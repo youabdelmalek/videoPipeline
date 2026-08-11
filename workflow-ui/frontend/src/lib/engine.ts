@@ -9,7 +9,8 @@
 
 import type { Edge } from '@xyflow/react';
 import { generateComfyImage, runFlexibleImageLlm, runFlexibleLlm } from '../api';
-import { DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
+import { DEFAULT_ASPECT_RATIO, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, VISION_MODEL_NAMES } from '../constants';
+import type { AspectRatio } from '../constants';
 import type { ThinkingLevel } from '../api';
 import type { FlexibleInput } from '../nodes';
 
@@ -140,6 +141,7 @@ export type ImageGenerateNodeState = {
   prompt: string;
   inputs: FlexibleInput[];
   referenceImage: string;
+  aspectRatio: AspectRatio;
   seed: string;
   steps: number;
   strength: number;
@@ -186,27 +188,6 @@ export type ForEachNodeState = {
   position: { x: number; y: number };
 };
 
-export type PromptLoopNodeState = {
-  id: string;
-  kind: 'promptLoop';
-  name: string;
-  order: number;
-  prompt: string;
-  judgePrompt: string;
-  fixerPrompt: string;
-  model: string;
-  thinking: ThinkingLevel;
-  threshold: number;
-  maxRetries: number;
-  score: string;
-  fixes: string;
-  approvedPrompt: string;
-  attempts: number;
-  trace: string;
-  status: string;
-  position: { x: number; y: number };
-};
-
 export type WorkflowNodeState =
   | AgentNodeState
   | TextNodeState
@@ -220,8 +201,7 @@ export type WorkflowNodeState =
   | InputNodeState
   | OutputNodeState
   | WorkflowRefNodeState
-  | ForEachNodeState
-  | PromptLoopNodeState;
+  | ForEachNodeState;
 
 export type NodeKind = WorkflowNodeState['kind'];
 
@@ -251,30 +231,6 @@ export type SavedWorkflow = {
 };
 
 export type WorkflowLibrary = Record<string, SavedWorkflow>;
-
-export const DEFAULT_PROMPT_LOOP_JUDGE_PROMPT = `Context: An image-generation prompt must be concrete, visually testable, and complete.
-Role: Act as a strict prompt-quality judge.
-Task: Score the candidate from 0 to 100 for subject clarity, visible specificity, composition, camera, lighting, and style direction. Return a corrected prompt and only concise factual fixes that would visibly improve the image.
-Desired output format: Return only valid JSON with this exact shape: {"score": 0, "prompt": "corrected prompt", "fixes": ["factual fix"]}.
-
-Input:
-Candidate prompt:
-\${candidate}`;
-
-export const DEFAULT_PROMPT_LOOP_FIXER_PROMPT = `Context: Improve an image-generation prompt without changing its subject or intent.
-Role: Act as a precise prompt-fixing agent.
-Task: Apply the judge's factual fixes, preserve useful details, remove vague quality language, and return one production-ready image prompt.
-Desired output format: Return only the rewritten prompt as plain text, with no JSON, Markdown, commentary, or preamble.
-
-Input:
-Current prompt:
-\${candidate}
-
-Judge suggestion:
-\${judgePrompt}
-
-Extracted fixes:
-\${fixes}`;
 
 /** Handle id of a workflow node's source dot for a named output. */
 export function workflowOutputHandle(name: string): string {
@@ -431,7 +387,11 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
     case 'agent':
       return inputValues(node.inputs);
     case 'imageGenerate':
-      return { ...inputValues(node.inputs), referenceImage: node.referenceImage };
+      return {
+        ...inputValues(node.inputs),
+        referenceImage: node.referenceImage,
+        aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
+      };
     case 'imageText':
       return { ...inputValues(node.inputs), imageUrl: node.imageUrl };
     case 'json':
@@ -454,14 +414,6 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
         maxAttempts: node.maxAttempts,
         retryWith: node.retryWith,
       });
-    case 'promptLoop':
-      return logRecord({
-        prompt: node.prompt,
-        judgePrompt: node.judgePrompt,
-        fixerPrompt: node.fixerPrompt,
-        threshold: node.threshold,
-        maxRetries: node.maxRetries,
-      });
     case 'text':
       return logRecord({ text: node.text });
     case 'input':
@@ -483,6 +435,7 @@ function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
         seed: node.seed,
         steps: node.steps,
         strength: node.strength,
+        aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
         status: node.status,
       });
     case 'imageUpload':
@@ -510,15 +463,6 @@ function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
         attempts: node.attempts,
         status: node.status,
       });
-    case 'promptLoop':
-      return logRecord({
-        score: node.score,
-        fixes: node.fixes,
-        approvedPrompt: node.approvedPrompt,
-        attempts: node.attempts,
-        trace: node.trace,
-        status: node.status,
-      });
     case 'text':
       return logRecord({ text: node.text });
     case 'input':
@@ -532,7 +476,6 @@ function configuredModel(node: WorkflowNodeState): string | null {
   switch (node.kind) {
     case 'agent':
     case 'imageText':
-    case 'promptLoop':
       return node.model;
     case 'imageGenerate':
       return 'ComfyUI';
@@ -889,20 +832,6 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
         return node.trace;
       }
       return node.output;
-    case 'promptLoop':
-      if (handle === 'score') {
-        return node.score;
-      }
-      if (handle === 'fixes') {
-        return node.fixes;
-      }
-      if (handle === 'attempts') {
-        return String(node.attempts);
-      }
-      if (handle === 'trace') {
-        return node.trace;
-      }
-      return node.approvedPrompt;
     case 'text':
       return node.hasOutput ? node.text : '';
   }
@@ -1000,10 +929,6 @@ export function hydrateNode(
         ...node,
         items: itemsLink ? valueOf(itemsLink) : node.items,
       };
-    }
-    case 'promptLoop': {
-      const promptLink = incoming.find((edge) => edgeInputHandle(edge) === 'prompt') ?? incoming[0];
-      return promptLink ? { ...node, prompt: valueOf(promptLink) } : node;
     }
     case 'output': {
       const link = incoming.find((edge) => edgeInputHandle(edge) === 'input') ?? incoming[0];
@@ -1123,6 +1048,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       const result = await runLoggedImageGeneration(ctx, {
         prompt,
         reference_image: node.referenceImage,
+        aspect_ratio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
         seed,
         steps,
         strength,
@@ -1132,6 +1058,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         patch: {
           outputUrl: result.url,
           outputName: result.filename,
+          aspectRatio: result.aspect_ratio,
           seed: String(result.seed),
           steps,
           strength,
@@ -1358,120 +1285,6 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
           attempts: totalAttempts,
           status,
         },
-        error: null,
-        note: `${node.name} ${status}`,
-      };
-    }
-    case 'promptLoop': {
-      const thresholdValue = Number(node.threshold);
-      const threshold = Number.isFinite(thresholdValue) ? Math.min(100, Math.max(0, thresholdValue)) : 95;
-      const retryValue = Number(node.maxRetries);
-      const maxRetries = Number.isFinite(retryValue) ? Math.min(10, Math.max(0, Math.round(retryValue))) : 3;
-      let candidate = node.prompt.trim();
-      let score = '';
-      let fixes = '[]';
-      let approvedPrompt = candidate;
-      let attempts = 0;
-      const trace: string[] = [];
-      let bestScoreNumber = -Infinity;
-      let bestScore = '';
-      let bestFixes = fixes;
-      let bestPrompt = candidate;
-      let bestAttempt = 0;
-
-      if (!candidate) {
-        const error = 'Candidate prompt is required';
-        return { patch: { status: error }, error, note: '' };
-      }
-
-      for (let retry = 0; retry <= maxRetries; retry += 1) {
-        if (ctx.signal?.aborted) {
-          throw new Error('Workflow aborted');
-        }
-
-        attempts = retry + 1;
-        ctx.onProgress?.(`${node.name} - judge ${attempts}/${maxRetries + 1}`);
-        const judgeOutput = await runLoggedLlm(
-          ctx,
-          interpolateText(node.judgePrompt, { candidate }),
-          node.model,
-          node.thinking ?? DEFAULT_THINKING_LEVEL,
-        );
-        const scoreResult = extractJsonPath(judgeOutput, 'score');
-        const promptResult = extractJsonPath(judgeOutput, 'prompt');
-        const fixesResult = extractJsonPath(judgeOutput, 'fixes');
-        if (scoreResult.error || promptResult.error || fixesResult.error) {
-          const error = `Judge JSON extraction failed: ${scoreResult.error ?? promptResult.error ?? fixesResult.error}`;
-          return {
-            patch: { score, fixes, approvedPrompt: candidate, attempts, trace: trace.join('\n'), status: error },
-            error,
-            note: '',
-          };
-        }
-
-        score = scoreResult.output.trim();
-        const scoreNumber = Number(score);
-        if (!Number.isFinite(scoreNumber)) {
-          const error = `Judge score is not numeric: ${score}`;
-          return {
-            patch: { score, fixes, approvedPrompt: candidate, attempts, trace: trace.join('\n'), status: error },
-            error,
-            note: '',
-          };
-        }
-
-        approvedPrompt = promptResult.output.trim() || candidate;
-        fixes = fixesResult.output.trim() || '[]';
-        trace.push(`Judge ${attempts}: ${score}/100`);
-        if (scoreNumber > bestScoreNumber) {
-          bestScoreNumber = scoreNumber;
-          bestScore = score;
-          bestFixes = fixes;
-          bestPrompt = approvedPrompt;
-          bestAttempt = attempts;
-        }
-
-        if (scoreNumber > threshold) {
-          score = bestScore;
-          fixes = bestFixes;
-          approvedPrompt = bestPrompt;
-          const status = `Approved ${score}/100 from judge pass ${bestAttempt} after ${attempts} judge pass(es)`;
-          return {
-            patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
-            error: null,
-            note: `${node.name} ${status}`,
-          };
-        }
-
-        if (retry >= maxRetries) {
-          break;
-        }
-
-        ctx.onProgress?.(`${node.name} - fixer after judge ${attempts}`);
-        const fixerOutput = await runLoggedLlm(
-          ctx,
-          interpolateText(node.fixerPrompt, { candidate, judgePrompt: approvedPrompt, fixes }),
-          node.model,
-          node.thinking ?? DEFAULT_THINKING_LEVEL,
-        );
-        candidate = fixerOutput.trim();
-        if (!candidate) {
-          const error = 'Fixer returned an empty prompt';
-          return {
-            patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status: error },
-            error,
-            note: '',
-          };
-        }
-        trace.push(`Fixer ${attempts}: applied extracted fixes`);
-      }
-
-      score = bestScore || score;
-      fixes = bestFixes;
-      approvedPrompt = bestPrompt;
-      const status = `Selected best prompt ${score}/100 from judge pass ${bestAttempt} after ${maxRetries} retry(ies)`;
-      return {
-        patch: { score, fixes, approvedPrompt, attempts, trace: trace.join('\n'), status },
         error: null,
         note: `${node.name} ${status}`,
       };

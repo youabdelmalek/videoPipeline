@@ -3,13 +3,11 @@ import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange
 import { ArrowLeft, Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { WorkflowLogPanel } from './components/WorkflowLogPanel';
-import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
+import { DEFAULT_ASPECT_RATIO, DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
 import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, saveWorkflowLog, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
   edgeOutputHandle,
-  DEFAULT_PROMPT_LOOP_FIXER_PROMPT,
-  DEFAULT_PROMPT_LOOP_JUDGE_PROMPT,
   hydrateNode,
   normalizeEdges,
   outputOf,
@@ -144,6 +142,7 @@ function buildNode(
         prompt: 'Create an image of ${input1}',
         inputs: [{ id: 'input1', name: 'input1', value: '' }],
         referenceImage: '',
+        aspectRatio: DEFAULT_ASPECT_RATIO,
         seed: '',
         steps: 8,
         strength: 1,
@@ -186,27 +185,6 @@ function buildNode(
         status: '',
         position,
       };
-    case 'promptLoop':
-      return {
-        id,
-        kind,
-        name: 'Prompt Judge Loop',
-        order,
-        prompt: '',
-        judgePrompt: DEFAULT_PROMPT_LOOP_JUDGE_PROMPT,
-        fixerPrompt: DEFAULT_PROMPT_LOOP_FIXER_PROMPT,
-        model,
-        thinking: DEFAULT_THINKING_LEVEL,
-        threshold: 95,
-        maxRetries: 3,
-        score: '',
-        fixes: '[]',
-        approvedPrompt: '',
-        attempts: 0,
-        trace: '',
-        status: '',
-        position,
-      };
     case 'input':
       return { id, kind, name: `input${order}`, order, value: '', position };
     case 'output':
@@ -228,53 +206,6 @@ function buildNode(
   }
 }
 
-function migrateLegacyPromptLoopSnapshot(
-  nodes: WorkflowNodeState[],
-  edges: Edge[],
-): { nodes: WorkflowNodeState[]; edges: Edge[] } {
-  const legacyIds = new Set(nodes.filter((node) => node.kind === 'promptLoop').map((node) => node.id));
-  if (!legacyIds.size) {
-    return { nodes, edges };
-  }
-
-  const migratedNodes = nodes.map((node) => {
-    if (node.kind !== 'promptLoop') {
-      return node;
-    }
-    return {
-      id: node.id,
-      kind: 'forEach' as const,
-      name: node.name.replace(/prompt judge loop/i, 'workflow loop'),
-      order: node.order,
-      items: node.prompt,
-      workflowName: 'Prompt fixer and judge',
-      output: node.approvedPrompt,
-      threshold: node.threshold,
-      maxAttempts: Math.max(1, node.maxRetries + 1),
-      retryWith: 'result' as const,
-      score: node.score,
-      note: '',
-      iterations: node.attempts ? 1 : 0,
-      attempts: node.attempts,
-      trace: node.trace,
-      status: node.status,
-      position: node.position,
-    };
-  });
-
-  const migratedEdges = edges.map((edge) => {
-    const targetHandle = edge.targetHandle ?? (typeof edge.data?.targetHandleId === 'string' ? edge.data.targetHandleId : '');
-    const sourceHandle = edge.sourceHandle ?? (typeof edge.data?.sourceHandleId === 'string' ? edge.data.sourceHandleId : 'output');
-    const nextTargetHandle = legacyIds.has(edge.target) && targetHandle === 'prompt' ? 'items' : targetHandle;
-    const nextSourceHandle = legacyIds.has(edge.source)
-      ? ({ approvedPrompt: 'output', fixes: 'note' }[sourceHandle] ?? sourceHandle)
-      : sourceHandle;
-    return { ...edge, targetHandle: nextTargetHandle, sourceHandle: nextSourceHandle };
-  });
-
-  return { nodes: migratedNodes, edges: migratedEdges };
-}
-
 function storageRead(): { nodes: WorkflowNodeState[]; edges: Edge[] } {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -282,8 +213,7 @@ function storageRead(): { nodes: WorkflowNodeState[]; edges: Edge[] } {
       return { nodes: STARTER_NODES, edges: [] };
     }
     const parsed = JSON.parse(raw) as { nodes?: WorkflowNodeState[]; edges?: Edge[] };
-    const migrated = migrateLegacyPromptLoopSnapshot(parsed.nodes?.length ? parsed.nodes : STARTER_NODES, parsed.edges ?? []);
-    return { nodes: migrated.nodes, edges: normalizeEdges(migrated.edges) };
+    return { nodes: parsed.nodes?.length ? parsed.nodes : STARTER_NODES, edges: normalizeEdges(parsed.edges ?? []) };
   } catch {
     return { nodes: STARTER_NODES, edges: [] };
   }
@@ -507,13 +437,12 @@ export function App() {
     nextLog: WorkflowLogEntry[] = workflowLog,
     nextLogOpen = logOpen,
   ) {
-    const migrated = migrateLegacyPromptLoopSnapshot(nextNodes, nextEdges);
-    const loadedEdges = normalizeEdges(migrated.edges);
-    setWorkflowNodes(migrated.nodes);
+    const loadedEdges = normalizeEdges(nextEdges);
+    setWorkflowNodes(nextNodes);
     setEdges(loadedEdges);
-    nodesRef.current = migrated.nodes;
+    nodesRef.current = nextNodes;
     edgesRef.current = loadedEdges;
-    writeCurrentSnapshot(migrated.nodes, loadedEdges);
+    writeCurrentSnapshot(nextNodes, loadedEdges);
     setNodeSizes({});
     setPendingLinkSource(null);
     setLinkMenu(null);
@@ -726,7 +655,7 @@ export function App() {
 
     setRunningNodeId(node.id);
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach' || node.kind === 'promptLoop';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
@@ -741,8 +670,6 @@ export function App() {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
     } else if (node.kind === 'forEach') {
       setDebug(`Step ${node.order}: ${node.name} is running ${node.workflowName}`);
-    } else if (node.kind === 'promptLoop') {
-      setDebug(`Step ${node.order}: ${node.name} is judging and fixing the prompt`);
     }
 
     try {
@@ -1213,21 +1140,6 @@ export function App() {
               workflowOptions,
               onPickWorkflow: pickBodyWorkflow,
               onOpenWorkflow: openReferencedWorkflow,
-              onRun: runNode,
-            },
-          };
-        case 'promptLoop':
-          return {
-            type: 'flexiblePromptLoop',
-            width: 520,
-            height: 1180,
-            data: {
-              ...node,
-              ...shared,
-              prompt: linkedValue(node.id, 'prompt') ?? node.prompt,
-              models,
-              running: runningNodeId === node.id,
-              pendingSourceHandleId: pendingHandle,
               onRun: runNode,
             },
           };
