@@ -56,7 +56,6 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
     data.referenceImage,
     (value) => data.onChange(data.nodeId, { referenceImage: value }),
   );
-  const [seed, setSeed] = useDraftValue(data.seed, (value) => data.onChange(data.nodeId, { seed: value }));
   const aspectRatio = data.aspectRatio ?? DEFAULT_ASPECT_RATIO;
   const updateNodeInternals = useUpdateNodeInternals();
   const sourceClass =
@@ -99,7 +98,7 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
         />
       </label>
 
-      <div className="node-grid four">
+      <div className="node-grid">
         <label>
           Aspect ratio
           <select
@@ -113,38 +112,6 @@ export function FlexibleImageGenerateNode({ data }: NodeProps<Node<FlexibleImage
               </option>
             ))}
           </select>
-        </label>
-        <label>
-          Seed
-          <input
-            className="nodrag nopan"
-            value={seed}
-            onChange={(event) => setSeed(event.target.value)}
-            placeholder="auto"
-          />
-        </label>
-        <label>
-          Steps
-          <input
-            className="nodrag nopan"
-            type="number"
-            min={1}
-            max={150}
-            value={data.steps}
-            onChange={(event) => data.onChange(data.nodeId, { steps: Number(event.target.value) || 8 })}
-          />
-        </label>
-        <label>
-          Strength
-          <input
-            className="nodrag nopan"
-            type="number"
-            min={0}
-            max={2}
-            step={0.05}
-            value={data.strength}
-            onChange={(event) => data.onChange(data.nodeId, { strength: Number(event.target.value) || 1 })}
-          />
         </label>
       </div>
 
