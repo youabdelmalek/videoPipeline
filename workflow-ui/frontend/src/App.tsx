@@ -724,12 +724,12 @@ export function App() {
       return false;
     }
 
+    setRunningNodeId(node.id);
     // API-backed nodes are slow and abortable; local transform nodes are instant.
     const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach' || node.kind === 'promptLoop';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
-      setRunningNodeId(node.id);
     }
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
@@ -776,8 +776,8 @@ export function App() {
       setDebug(message);
       return false;
     } finally {
+      setRunningNodeId(null);
       if (controller) {
-        setRunningNodeId(null);
         controllerRef.current = null;
       }
       if (!onLog) {
@@ -1259,6 +1259,7 @@ export function App() {
     return {
       id: node.id,
       type: spec.type,
+      className: runningNodeId === node.id ? 'is-running' : undefined,
       position: node.position,
       measured: nodeSizes[node.id],
       initialWidth: spec.width,
