@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
-import { Loader2, Play, Trash2 } from 'lucide-react';
+import { ExternalLink, Loader2, Play, Trash2 } from 'lucide-react';
 import type { FlexibleWorkflowNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
 
@@ -72,6 +72,18 @@ export function FlexibleWorkflowNode({ data }: NodeProps<Node<FlexibleWorkflowNo
           </select>
         </label>
       </div>
+
+      {data.workflowName ? (
+        <button
+          className="workflow-reference-link nodrag nopan"
+          type="button"
+          onClick={() => data.onOpenWorkflow(data.workflowName)}
+          title={`Open saved workflow ${data.workflowName}`}
+        >
+          <ExternalLink size={12} />
+          <span>Open {data.workflowName}</span>
+        </button>
+      ) : null}
 
       {data.inputs.length ? (
         <div className="input-editor">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
+import { ArrowLeft, Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { WorkflowLogPanel } from './components/WorkflowLogPanel';
 import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
@@ -21,6 +21,7 @@ import {
   type WorkflowLibrary,
   type WorkflowLogEntry,
   type WorkflowNodeState,
+  type WorkflowSnapshot,
 } from './lib/engine';
 import { messageFrom } from './lib/errors';
 import { useModels } from './hooks/useModels';
@@ -28,6 +29,16 @@ import type { FlexibleInput, WorkflowOption } from './nodes';
 
 type LinkSource = { nodeId: string; handleId: string };
 type LinkMenu = { edgeId: string; x: number; y: number };
+type WorkflowView = {
+  nodes: WorkflowNodeState[];
+  edges: Edge[];
+  workflowName: string;
+  runName: string;
+  selectedWorkflowName: string;
+  selectedRunName: string;
+  workflowLog: WorkflowLogEntry[];
+  logOpen: boolean;
+};
 
 const STORAGE_KEY = 'flexible-workflow-v1';
 const LIBRARY_STORAGE_KEY = 'flexible-workflow-library-v1';
@@ -300,6 +311,17 @@ function defaultRunName() {
   return `Run ${stamp}`;
 }
 
+function latestSavedRun(library: WorkflowLibrary, workflowName: string): { runName: string; snapshot: WorkflowSnapshot } | null {
+  const runs = Object.entries(library[workflowName]?.runs ?? {});
+  if (!runs.length) {
+    return null;
+  }
+  const [runName, snapshot] = runs.reduce((latest, current) => (
+    current[1].updatedAt > latest[1].updatedAt ? current : latest
+  ));
+  return { runName, snapshot };
+}
+
 export function App() {
   const initial = useMemo(storageRead, []);
   const initialLibrary = useMemo(libraryRead, []);
@@ -317,6 +339,7 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [workflowLog, setWorkflowLog] = useState<WorkflowLogEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);
+  const [workflowHistory, setWorkflowHistory] = useState<WorkflowView[]>([]);
   const [debug, setDebug] = useState('Ready');
   const [error, setError] = useState<string | null>(null);
   const [runningNodeId, setRunningNodeId] = useState<string | null>(null);
@@ -464,6 +487,7 @@ export function App() {
     setWorkflowNodes([]);
     setEdges([]);
     setWorkflowLog([]);
+    setWorkflowHistory([]);
     nodesRef.current = [];
     edgesRef.current = [];
     writeCurrentSnapshot([], []);
@@ -474,6 +498,35 @@ export function App() {
     setDebug('New workflow — drag nodes from the drawer to start');
   }
 
+  function showWorkflowView(
+    nextNodes: WorkflowNodeState[],
+    nextEdges: Edge[],
+    nextWorkflowName: string,
+    nextRunName: string,
+    status: string,
+    nextLog: WorkflowLogEntry[] = workflowLog,
+    nextLogOpen = logOpen,
+  ) {
+    const migrated = migrateLegacyPromptLoopSnapshot(nextNodes, nextEdges);
+    const loadedEdges = normalizeEdges(migrated.edges);
+    setWorkflowNodes(migrated.nodes);
+    setEdges(loadedEdges);
+    nodesRef.current = migrated.nodes;
+    edgesRef.current = loadedEdges;
+    writeCurrentSnapshot(migrated.nodes, loadedEdges);
+    setNodeSizes({});
+    setPendingLinkSource(null);
+    setLinkMenu(null);
+    setWorkflowName(nextWorkflowName);
+    setRunName(nextRunName);
+    setSelectedWorkflowName(nextWorkflowName);
+    setSelectedRunName(nextRunName);
+    setWorkflowLog(nextLog);
+    setLogOpen(nextLogOpen);
+    setDebug(status);
+    window.setTimeout(() => flowInstance?.fitView({ padding: 0.18, duration: 250 }), 50);
+  }
+
   function loadNamedRun() {
     setError(null);
     const snapshot = savedLibrary[selectedWorkflowName]?.runs[selectedRunName];
@@ -482,17 +535,71 @@ export function App() {
       return;
     }
 
-    const migrated = migrateLegacyPromptLoopSnapshot(snapshot.nodes, snapshot.edges);
-    const loadedEdges = normalizeEdges(migrated.edges);
-    setWorkflowNodes(migrated.nodes);
-    setEdges(loadedEdges);
-    nodesRef.current = migrated.nodes;
-    edgesRef.current = loadedEdges;
-    writeCurrentSnapshot(migrated.nodes, loadedEdges);
-    setWorkflowName(selectedWorkflowName);
-    setRunName(selectedRunName);
-    setDebug(`Loaded ${selectedWorkflowName} / ${selectedRunName}`);
-    window.setTimeout(() => flowInstance?.fitView({ padding: 0.18, duration: 250 }), 50);
+    setWorkflowHistory([]);
+    showWorkflowView(
+      snapshot.nodes,
+      snapshot.edges,
+      selectedWorkflowName,
+      selectedRunName,
+      `Loaded ${selectedWorkflowName} / ${selectedRunName}`,
+    );
+  }
+
+  const openReferencedWorkflow = useCallback((nextWorkflowName: string) => {
+    const cleanName = nextWorkflowName.trim();
+    if (!cleanName) {
+      return;
+    }
+    if (cleanName === workflowName.trim()) {
+      setError('A workflow cannot open itself');
+      return;
+    }
+    const saved = latestSavedRun(savedLibraryRef.current, cleanName);
+    if (!saved) {
+      setError(`Saved workflow not found: ${cleanName}`);
+      return;
+    }
+
+    setError(null);
+    setWorkflowHistory((current) => [
+      ...current,
+      {
+        nodes: nodesRef.current,
+        edges: edgesRef.current,
+        workflowName,
+        runName,
+        selectedWorkflowName,
+        selectedRunName,
+        workflowLog,
+        logOpen,
+      },
+    ]);
+    showWorkflowView(
+      saved.snapshot.nodes,
+      saved.snapshot.edges,
+      cleanName,
+      saved.runName,
+      `Opened ${cleanName} / ${saved.runName}`,
+      [],
+      false,
+    );
+  }, [logOpen, runName, selectedRunName, selectedWorkflowName, workflowLog, workflowName]);
+
+  function returnToParentWorkflow() {
+    const previous = workflowHistory[workflowHistory.length - 1];
+    if (!previous) {
+      return;
+    }
+    setWorkflowHistory((current) => current.slice(0, -1));
+    showWorkflowView(
+      previous.nodes,
+      previous.edges,
+      previous.workflowName,
+      previous.runName,
+      `Back to ${previous.workflowName || 'main workflow'}`,
+      previous.workflowLog,
+      previous.logOpen,
+    );
   }
 
   async function deleteSelectedWorkflow() {
@@ -1105,6 +1212,7 @@ export function App() {
               pendingSourceHandleId: pendingHandle,
               workflowOptions,
               onPickWorkflow: pickBodyWorkflow,
+              onOpenWorkflow: openReferencedWorkflow,
               onRun: runNode,
             },
           };
@@ -1140,6 +1248,7 @@ export function App() {
               workflowOptions,
               onInputChange: patchInput,
               onPickWorkflow: pickWorkflow,
+              onOpenWorkflow: openReferencedWorkflow,
               onRun: runNode,
             },
           };
@@ -1157,7 +1266,7 @@ export function App() {
       data: spec.data,
     };
     });
-  }, [workflowNodes, edges, nodeSizes, models, visionModels, runningNodeId, pendingLinkSource, workflowOptions, imageInputDir, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, uploadImageForNode, runNode, removeNode]);
+  }, [workflowNodes, edges, nodeSizes, models, visionModels, runningNodeId, pendingLinkSource, workflowOptions, imageInputDir, patchNode, patchInput, addInput, removeInput, pickOutput, pickInput, pickWorkflow, pickBodyWorkflow, openReferencedWorkflow, uploadImageForNode, runNode, removeNode]);
 
   // Highlight the link the context menu is open for.
   const flowEdges: Edge[] = useMemo(
@@ -1168,6 +1277,20 @@ export function App() {
   return (
     <main className="app-shell">
       <aside className="save-load-window">
+        {workflowHistory.length ? (
+          <div className="workflow-navigation-group">
+            <button
+              className="compact-action-button workflow-back-button"
+              type="button"
+              onClick={returnToParentWorkflow}
+              title={`Back to ${workflowHistory[workflowHistory.length - 1].workflowName || 'main workflow'}`}
+            >
+              <ArrowLeft size={12} />
+              <span>Back to {workflowHistory[workflowHistory.length - 1].workflowName || 'main workflow'}</span>
+            </button>
+            <small className="workflow-navigation-current">Viewing {workflowName}</small>
+          </div>
+        ) : null}
         <div className="save-load-group">
           <div className="node-kicker">New</div>
           <button className="compact-action-button" type="button" onClick={newWorkflow} title="Clear the canvas for a new workflow">

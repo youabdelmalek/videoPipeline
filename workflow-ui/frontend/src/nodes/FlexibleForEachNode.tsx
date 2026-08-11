@@ -1,5 +1,5 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
-import { Loader2, Play, Trash2 } from 'lucide-react';
+import { ExternalLink, Loader2, Play, Trash2 } from 'lucide-react';
 import type { FlexibleForEachNodeData } from './types';
 import { useDraftValue } from './useDraftValue';
 
@@ -87,6 +87,18 @@ export function FlexibleForEachNode({ data }: NodeProps<Node<FlexibleForEachNode
           </select>
         </label>
       </div>
+
+      {data.workflowName ? (
+        <button
+          className="workflow-reference-link nodrag nopan"
+          type="button"
+          onClick={() => data.onOpenWorkflow(data.workflowName)}
+          title={`Open body workflow ${data.workflowName}`}
+        >
+          <ExternalLink size={12} />
+          <span>Open body workflow: {data.workflowName}</span>
+        </button>
+      ) : null}
 
       <div className="node-grid three">
         <label>

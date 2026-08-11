@@ -90,6 +90,36 @@
   min-width: 0;
 }
 
+.workflow-navigation-group {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.workflow-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  min-width: 0;
+  text-align: left;
+}
+
+.workflow-back-button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflow-navigation-current {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .control-input {
   width: 100%;
   min-width: 0;

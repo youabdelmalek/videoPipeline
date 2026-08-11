@@ -521,6 +521,7 @@ export type FlexibleWorkflowNodeData = {
   onChange: (nodeId: string, patch: Partial<FlexibleWorkflowPatch>) => void;
   onInputChange: (nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => void;
   onPickWorkflow: (nodeId: string, workflowName: string) => void;
+  onOpenWorkflow: (workflowName: string) => void;
   onPickOutput: (nodeId: string, handleId: string) => void;
   onPickInput: (nodeId: string, handleId: string) => void;
   onRun: (nodeId: string) => void;
@@ -555,6 +556,7 @@ export type FlexibleForEachNodeData = {
   pendingSourceHandleId: string | null;
   onChange: (nodeId: string, patch: Partial<FlexibleForEachPatch>) => void;
   onPickWorkflow: (nodeId: string, workflowName: string) => void;
+  onOpenWorkflow: (workflowName: string) => void;
   onPickOutput: (nodeId: string, handleId: string) => void;
   onPickInput: (nodeId: string, handleId: string) => void;
   onRun: (nodeId: string) => void;
