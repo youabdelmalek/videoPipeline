@@ -1,0 +1,72 @@
+{
+  "name": "Cinematic one-minute shot loop",
+  "workflow": {
+    "runs": {
+      "archivist at sealed station": {
+        "nodes": [
+          {
+            "id": "story-input",
+            "kind": "input",
+            "name": "story",
+            "order": 1,
+            "value": "At blue hour, a night-shift archivist hears a child's music box playing inside a sealed train station. She follows the sound across the same deserted platform, discovers a tiny door opening beneath the timetable, and must decide whether to step through before the last platform lamp goes out.",
+            "position": {
+              "x": 80,
+              "y": 300
+            }
+          },
+          {
+            "id": "shot-loop",
+            "kind": "forEach",
+            "name": "Cinematic writer + judge loop",
+            "order": 2,
+            "items": "At blue hour, a night-shift archivist hears a child's music box playing inside a sealed train station. She follows the sound across the same deserted platform, discovers a tiny door opening beneath the timetable, and must decide whether to step through before the last platform lamp goes out.",
+            "workflowName": "Cinematic shot writer and judge",
+            "output": "",
+            "threshold": 95,
+            "maxAttempts": 4,
+            "retryWith": "result",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 730,
+              "y": 250
+            }
+          },
+          {
+            "id": "shots-output",
+            "kind": "output",
+            "name": "shots",
+            "order": 3,
+            "value": "",
+            "position": {
+              "x": 730,
+              "y": 850
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "story-to-loop",
+            "source": "story-input",
+            "target": "shot-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "loop-to-shots",
+            "source": "shot-loop",
+            "target": "shots-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786259903252
+      }
+    }
+  }
+}

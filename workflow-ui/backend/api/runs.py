@@ -26,11 +26,6 @@ from backend.models import (
     WorkflowResponse,
 )
 from backend.config import SAVED_WORKFLOWS_DIR
-from backend.runs import artifact_text, create_run, delete_run, load_run, run_summaries
-from backend.runs.paths import run_dir
-from backend.runs.ports import PORTS, check_port
-from backend.runs.workflow import load_workflow, save_workflow
-from backend.stages.registry import stage_infos
 
 router = APIRouter()
 
@@ -84,6 +79,9 @@ def delete_flexible_workflow(name: str) -> DeleteFlexibleWorkflowResponse:
 @router.get("/stages", response_model=StagesResponse)
 def get_stages() -> StagesResponse:
     """The stage and port contracts the canvas renders its handles from."""
+    from backend.stages.registry import stage_infos
+    from backend.runs.ports import PORTS
+
     return StagesResponse(
         stages=stage_infos(),
         ports=[PortInfo(id=port.id, label=port.label, hint=port.hint) for port in PORTS.values()],
@@ -93,11 +91,16 @@ def get_stages() -> StagesResponse:
 @router.post("/validate", response_model=PortCheck)
 def post_validate(request: ValidatePortRequest) -> PortCheck:
     """Structural check on pasted text. Writes nothing."""
+    from backend.runs.ports import check_port
+
     return check_port(request.port, request.text)
 
 
 @router.get("/runs/{slug}/workflow", response_model=WorkflowResponse)
 def get_workflow(slug: str) -> WorkflowResponse:
+    from backend.runs.paths import run_dir
+    from backend.runs.workflow import load_workflow
+
     path = run_dir(slug)
     if not path.exists():
         raise HTTPException(status_code=404, detail="Run not found")
@@ -106,6 +109,9 @@ def get_workflow(slug: str) -> WorkflowResponse:
 
 @router.put("/runs/{slug}/workflow", response_model=WorkflowResponse)
 def put_workflow(slug: str, workflow: WorkflowDefinition) -> WorkflowResponse:
+    from backend.runs.paths import run_dir
+    from backend.runs.workflow import save_workflow
+
     path = run_dir(slug)
     if not path.exists():
         raise HTTPException(status_code=404, detail="Run not found")
@@ -115,21 +121,29 @@ def put_workflow(slug: str, workflow: WorkflowDefinition) -> WorkflowResponse:
 
 @router.post("/runs", response_model=CreateRunResponse)
 def post_run(request: CreateRunRequest) -> CreateRunResponse:
+    from backend.runs import create_run
+
     return CreateRunResponse(run=create_run(request.prompt))
 
 
 @router.get("/runs", response_model=ListRunsResponse)
 def get_runs() -> ListRunsResponse:
+    from backend.runs import run_summaries
+
     return ListRunsResponse(runs=run_summaries())
 
 
 @router.get("/runs/{slug}", response_model=RunResponse)
 def get_run(slug: str) -> RunResponse:
+    from backend.runs import load_run
+
     return load_run(slug)
 
 
 @router.delete("/runs/{slug}", response_model=DeleteRunResponse)
 def remove_run(slug: str) -> DeleteRunResponse:
+    from backend.runs import delete_run
+
     if run_has_active_job(slug):
         raise HTTPException(status_code=409, detail="Cannot delete a run while its job is running")
     delete_run(slug)
@@ -138,4 +152,6 @@ def remove_run(slug: str) -> DeleteRunResponse:
 
 @router.get("/runs/{slug}/artifacts/{artifact_path:path}", response_class=PlainTextResponse)
 def get_artifact(slug: str, artifact_path: str) -> PlainTextResponse:
+    from backend.runs import artifact_text
+
     return PlainTextResponse(artifact_text(slug, artifact_path), media_type="text/markdown")

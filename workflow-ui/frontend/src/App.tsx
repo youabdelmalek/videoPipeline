@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type ReactFlowInstance } from '@xyflow/react';
-import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
+import { Bot, Braces, Eye, FilePlus, GitBranch, LogIn, LogOut, PanelRightClose, PanelRightOpen, Play, Repeat, Save, Scissors, ScrollText, Sparkles, Square, Trash2, Type, Upload, Workflow } from 'lucide-react';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
+import { WorkflowLogPanel } from './components/WorkflowLogPanel';
 import { DEFAULT_MODEL, DEFAULT_THINKING_LEVEL, DEFAULT_VISION_MODEL, FALLBACK_MODELS } from './constants';
-import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, uploadComfyImage } from './api';
+import { deleteFlexibleWorkflow, fetchComfyImages, fetchFlexibleWorkflowLibrary, saveFlexibleWorkflow, saveWorkflowLog, uploadComfyImage } from './api';
 import {
   edgeInputHandle,
   edgeOutputHandle,
@@ -13,10 +14,12 @@ import {
   normalizeEdges,
   outputOf,
   resolveWorkflowSnapshot,
-  stepNode,
+  executeNode,
+  formatWorkflowLog,
   workflowOutputHandle,
   type NodeKind,
   type WorkflowLibrary,
+  type WorkflowLogEntry,
   type WorkflowNodeState,
 } from './lib/engine';
 import { messageFrom } from './lib/errors';
@@ -312,6 +315,8 @@ export function App() {
   const [linkMenu, setLinkMenu] = useState<LinkMenu | null>(null);
   const [nodeSizes, setNodeSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [workflowLog, setWorkflowLog] = useState<WorkflowLogEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(false);
   const [debug, setDebug] = useState('Ready');
   const [error, setError] = useState<string | null>(null);
   const [runningNodeId, setRunningNodeId] = useState<string | null>(null);
@@ -400,6 +405,19 @@ export function App() {
     window.localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(next));
   }
 
+  const persistWorkflowLog = useCallback(async (entries: WorkflowLogEntry[]) => {
+    try {
+      const saved = await saveWorkflowLog(
+        workflowName.trim(),
+        runName.trim(),
+        formatWorkflowLog(entries, workflowName.trim(), runName.trim()),
+      );
+      setDebug(`Saved workflow log ${saved.filename}`);
+    } catch (caught) {
+      setDebug(`Could not save workflow log: ${messageFrom(caught, 'Unknown error')}`);
+    }
+  }, [runName, workflowName]);
+
   async function saveNamedRun() {
     setError(null);
     const cleanWorkflowName = workflowName.trim();
@@ -445,6 +463,7 @@ export function App() {
     setNodeSizes({});
     setWorkflowNodes([]);
     setEdges([]);
+    setWorkflowLog([]);
     nodesRef.current = [];
     edgesRef.current = [];
     writeCurrentSnapshot([], []);
@@ -578,9 +597,20 @@ export function App() {
     return updated;
   }, []);
 
-  const runNode = useCallback(async (nodeId: string): Promise<boolean> => {
+  const runNode = useCallback(async (
+    nodeId: string,
+    onLog?: (entry: WorkflowLogEntry) => void,
+  ): Promise<boolean> => {
     setError(null);
     abortRef.current = false;
+    const standaloneEntries: WorkflowLogEntry[] = [];
+    const logSink = onLog ?? ((entry: WorkflowLogEntry) => {
+      standaloneEntries.push(entry);
+      setWorkflowLog([...standaloneEntries]);
+    });
+    if (!onLog) {
+      setWorkflowLog([]);
+    }
     const hydrated = hydrateNodeInputs(nodeId);
     const node = hydrated ?? nodesRef.current.find((entry) => entry.id === nodeId);
     if (!node) {
@@ -609,11 +639,13 @@ export function App() {
     }
 
     try {
-      const result = await stepNode(node, {
+      const execution = await executeNode(node, {
         library: savedLibraryRef.current,
         signal: controller?.signal,
         onProgress: setDebug,
+        onLog: logSink,
       });
+      const result = execution.result;
       if (abortRef.current) {
         setDebug('Workflow aborted');
         return false;
@@ -641,24 +673,37 @@ export function App() {
         setRunningNodeId(null);
         controllerRef.current = null;
       }
+      if (!onLog) {
+        await persistWorkflowLog(standaloneEntries);
+      }
     }
-  }, [hydrateNodeInputs, patchNode, refreshImages]);
+  }, [hydrateNodeInputs, patchNode, persistWorkflowLog, refreshImages]);
 
   async function runAll() {
     setError(null);
     abortRef.current = false;
     const ordered = [...nodesRef.current].sort((a, b) => a.order - b.order);
-    for (const node of ordered) {
-      if (abortRef.current) {
-        setDebug('Workflow aborted');
-        return;
+    const entries: WorkflowLogEntry[] = [];
+    const onLog = (entry: WorkflowLogEntry) => {
+      entries.push(entry);
+      setWorkflowLog([...entries]);
+    };
+    setWorkflowLog([]);
+    try {
+      for (const node of ordered) {
+        if (abortRef.current) {
+          setDebug('Workflow aborted');
+          return;
+        }
+        const ok = await runNode(node.id, onLog);
+        if (!ok || abortRef.current) {
+          return;
+        }
       }
-      const ok = await runNode(node.id);
-      if (!ok || abortRef.current) {
-        return;
-      }
+      setDebug(`Workflow complete: ${ordered.length} nodes`);
+    } finally {
+      await persistWorkflowLog(entries);
     }
-    setDebug(`Workflow complete: ${ordered.length} nodes`);
   }
 
   function abortAll() {
@@ -1224,6 +1269,25 @@ export function App() {
           Abort
         </button>
       </aside>
+
+      <WorkflowLogPanel
+        entries={workflowLog}
+        workflowName={workflowName}
+        runName={runName}
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+      />
+      <button
+        type="button"
+        className="workflow-log-toggle"
+        onClick={() => setLogOpen((open) => !open)}
+        title={logOpen ? 'Hide workflow log' : 'Show workflow log'}
+        aria-label={logOpen ? 'Hide workflow log' : 'Show workflow log'}
+        aria-expanded={logOpen}
+      >
+        <ScrollText size={15} />
+        Log
+      </button>
 
       <aside className={`node-drawer ${drawerOpen ? 'is-open' : 'is-closed'}`}>
         <button

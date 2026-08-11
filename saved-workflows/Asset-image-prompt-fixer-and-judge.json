@@ -1,0 +1,193 @@
+{
+  "name": "Asset image prompt fixer and judge",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "candidate-input",
+            "kind": "input",
+            "name": "candidate",
+            "order": 1,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 120
+            }
+          },
+          {
+            "id": "source-input",
+            "kind": "input",
+            "name": "source",
+            "order": 2,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 420
+            }
+          },
+          {
+            "id": "asset-prompt-judge",
+            "kind": "agent",
+            "name": "Asset prompt judge",
+            "order": 3,
+            "prompt": "Act as a strict source-grounded image-prompt judge for production asset sheets. Compare the candidate prompt to the original asset entry. The candidate must create one single reference-sheet image for the same asset only. It must preserve the required view/panel structure, factual style, factual clothing or prop/background anchors, and factual visible details from the source. Do not require rendered text labels; distinct panels with clear views are enough. Do not reward invented specificity. Penalize and remove unsupported hair color, eye color, exact clothing pieces, body shape, materials, markings, signs, labels, mechanisms, decorations, or scene details not present in the source. If the source says a detail is unspecified, keep it unspecified or phrase the prompt so that detail is not emphasized; do not choose a specific value.\n\nReturn only valid JSON with exactly this shape:\n{\"score\":0,\"note\":\"one concise factual judge note\",\"prompt\":\"corrected production-ready image prompt\",\"fixes\":[\"specific repair\"]}\n\nScore 0-100. A passing score is 95 or higher only. Score below 70 for any invented identity, clothing, material, marking, label, or setting detail. Score below 80 if the prompt loses required panel/view structure. The corrected prompt must be a single plain-text image-generation prompt, not JSON or Markdown.\n\nORIGINAL ASSET ENTRY:\n${source}\n\nCANDIDATE PROMPT:\n${candidate}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "candidate",
+                "name": "candidate",
+                "value": ""
+              },
+              {
+                "id": "source",
+                "name": "source",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 560,
+              "y": 180
+            }
+          },
+          {
+            "id": "score-json",
+            "kind": "json",
+            "name": "Score JSON",
+            "order": 4,
+            "input": "",
+            "path": "score",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1040,
+              "y": 20
+            }
+          },
+          {
+            "id": "note-json",
+            "kind": "json",
+            "name": "Note JSON",
+            "order": 5,
+            "input": "",
+            "path": "note",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1040,
+              "y": 250
+            }
+          },
+          {
+            "id": "prompt-json",
+            "kind": "json",
+            "name": "Corrected prompt JSON",
+            "order": 6,
+            "input": "",
+            "path": "prompt",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1040,
+              "y": 480
+            }
+          },
+          {
+            "id": "result-output",
+            "kind": "output",
+            "name": "result",
+            "order": 7,
+            "value": "",
+            "position": {
+              "x": 1480,
+              "y": 180
+            }
+          },
+          {
+            "id": "score-output",
+            "kind": "output",
+            "name": "score",
+            "order": 8,
+            "value": "",
+            "position": {
+              "x": 1480,
+              "y": 20
+            }
+          },
+          {
+            "id": "note-output",
+            "kind": "output",
+            "name": "note",
+            "order": 9,
+            "value": "",
+            "position": {
+              "x": 1480,
+              "y": 360
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "candidate-to-judge",
+            "source": "candidate-input",
+            "target": "asset-prompt-judge",
+            "sourceHandle": "output",
+            "targetHandle": "candidate"
+          },
+          {
+            "id": "source-to-judge",
+            "source": "source-input",
+            "target": "asset-prompt-judge",
+            "sourceHandle": "output",
+            "targetHandle": "source"
+          },
+          {
+            "id": "judge-to-score",
+            "source": "asset-prompt-judge",
+            "target": "score-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-note",
+            "source": "asset-prompt-judge",
+            "target": "note-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-prompt",
+            "source": "asset-prompt-judge",
+            "target": "prompt-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "prompt-to-result",
+            "source": "prompt-json",
+            "target": "result-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-to-output",
+            "source": "score-json",
+            "target": "score-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "note-to-output",
+            "source": "note-json",
+            "target": "note-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786257943000
+      }
+    }
+  }
+}

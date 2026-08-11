@@ -1,0 +1,97 @@
+.workflow-log-toggle {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  z-index: 56;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--teal-dark);
+  background: var(--teal);
+  color: #fff8eb;
+  box-shadow: 0 10px 24px rgba(25, 23, 19, 0.2);
+}
+
+.workflow-log-toggle:hover:not(:disabled),
+.workflow-log-close:hover:not(:disabled) {
+  background: var(--teal-dark);
+}
+
+.workflow-log-drawer {
+  position: fixed;
+  left: 10px;
+  bottom: 52px;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  width: min(540px, calc(100vw - 20px));
+  height: min(70vh, 720px);
+  border: 1px solid rgba(45, 41, 34, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.97);
+  box-shadow: 0 18px 42px rgba(25, 23, 19, 0.24);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(100% + 64px));
+  transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.workflow-log-drawer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.workflow-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(74, 60, 42, 0.16);
+}
+
+.workflow-log-head strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.workflow-log-close {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #efe5d5;
+  color: var(--teal-dark);
+}
+
+.workflow-log-content {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  color: #3f382e;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .workflow-log-toggle {
+    left: 8px;
+    bottom: 8px;
+  }
+
+  .workflow-log-drawer {
+    left: 8px;
+    bottom: 50px;
+    width: calc(100vw - 16px);
+    height: min(64vh, 620px);
+  }
+}

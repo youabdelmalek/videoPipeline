@@ -43,6 +43,9 @@ def _configured_path(key: str, default: Path) -> Path:
 # Folder the flexible image node uses for style references and generated images.
 IMAGE_INPUT_DIR = _configured_path("WORKFLOW_IMAGE_INPUT_DIR", ROOT / "input")
 
+# Durable transcripts written by flexible workflow executions.
+LOGS_DIR = ROOT / "logs"
+
 # Local ComfyUI HTTP API used by the image generation node.
 COMFYUI_PORT = int(os.environ.get("COMFYUI_PORT", "9000"))
 COMFYUI_SERVER = f"http://127.0.0.1:{COMFYUI_PORT}"

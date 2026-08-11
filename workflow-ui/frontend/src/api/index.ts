@@ -24,6 +24,7 @@ export {
   runWorkflow,
   runFlexibleLlm,
   saveFlexibleWorkflow,
+  saveWorkflowLog,
   saveWorkflow,
   uploadComfyImage,
   validatePort,

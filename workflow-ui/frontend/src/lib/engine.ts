@@ -225,6 +225,21 @@ export type WorkflowNodeState =
 
 export type NodeKind = WorkflowNodeState['kind'];
 
+export type ModelCallLog = {
+  model: string;
+  prompt: string;
+  response: string;
+};
+
+export type WorkflowLogEntry = {
+  nodeName: string;
+  model: string | null;
+  inputs: Record<string, string>;
+  calls: ModelCallLog[];
+  outputs: Record<string, string>;
+  error: string | null;
+};
+
 export type WorkflowSnapshot = {
   nodes: WorkflowNodeState[];
   edges: Edge[];
@@ -401,6 +416,194 @@ function valueToString(value: unknown): string {
     return String(value);
   }
   return JSON.stringify(value);
+}
+
+function logRecord(values: Record<string, unknown>): Record<string, string> {
+  return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, valueToString(value)]));
+}
+
+function inputValues(inputs: FlexibleInput[]): Record<string, string> {
+  return Object.fromEntries(inputs.map((input) => [input.name, input.value]));
+}
+
+function nodeInputs(node: WorkflowNodeState): Record<string, string> {
+  switch (node.kind) {
+    case 'agent':
+      return inputValues(node.inputs);
+    case 'imageGenerate':
+      return { ...inputValues(node.inputs), referenceImage: node.referenceImage };
+    case 'imageText':
+      return { ...inputValues(node.inputs), imageUrl: node.imageUrl };
+    case 'json':
+      return logRecord({ input: node.input, path: node.path });
+    case 'if':
+      return logRecord({ input1: node.input1, input2: node.input2, condition: node.condition });
+    case 'split':
+      return logRecord({ input: node.input, delimiter: node.delimiter, count: node.count });
+    case 'imageUpload':
+      return logRecord({ outputUrl: node.outputUrl, outputName: node.outputName });
+    case 'imageDisplay':
+      return logRecord({ imageUrl: node.imageUrl });
+    case 'workflow':
+      return { ...inputValues(node.inputs), workflowName: node.workflowName };
+    case 'forEach':
+      return logRecord({
+        items: node.items,
+        workflowName: node.workflowName,
+        threshold: node.threshold,
+        maxAttempts: node.maxAttempts,
+        retryWith: node.retryWith,
+      });
+    case 'promptLoop':
+      return logRecord({
+        prompt: node.prompt,
+        judgePrompt: node.judgePrompt,
+        fixerPrompt: node.fixerPrompt,
+        threshold: node.threshold,
+        maxRetries: node.maxRetries,
+      });
+    case 'text':
+      return logRecord({ text: node.text });
+    case 'input':
+      return logRecord({ value: node.value });
+    case 'output':
+      return logRecord({ value: node.value });
+  }
+}
+
+function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
+  switch (node.kind) {
+    case 'agent':
+    case 'imageText':
+      return { output: node.output };
+    case 'imageGenerate':
+      return logRecord({
+        outputUrl: node.outputUrl,
+        outputName: node.outputName,
+        seed: node.seed,
+        steps: node.steps,
+        strength: node.strength,
+        status: node.status,
+      });
+    case 'imageUpload':
+      return logRecord({ outputUrl: node.outputUrl, outputName: node.outputName, status: node.status });
+    case 'imageDisplay':
+      return logRecord({ imageUrl: node.imageUrl });
+    case 'json':
+      return logRecord({ output: node.output, error: node.error });
+    case 'if':
+      return logRecord({ output1: node.output1, output2: node.output2, status: node.status });
+    case 'split':
+      return logRecord({ outputs: node.outputs });
+    case 'workflow':
+      return {
+        ...Object.fromEntries(node.outputs.map((output) => [output.name, output.value])),
+        status: node.status,
+      };
+    case 'forEach':
+      return logRecord({
+        output: node.output,
+        score: node.score,
+        note: node.note,
+        trace: node.trace,
+        iterations: node.iterations,
+        attempts: node.attempts,
+        status: node.status,
+      });
+    case 'promptLoop':
+      return logRecord({
+        score: node.score,
+        fixes: node.fixes,
+        approvedPrompt: node.approvedPrompt,
+        attempts: node.attempts,
+        trace: node.trace,
+        status: node.status,
+      });
+    case 'text':
+      return logRecord({ text: node.text });
+    case 'input':
+      return logRecord({ value: node.value });
+    case 'output':
+      return logRecord({ value: node.value });
+  }
+}
+
+function configuredModel(node: WorkflowNodeState): string | null {
+  switch (node.kind) {
+    case 'agent':
+    case 'imageText':
+    case 'promptLoop':
+      return node.model;
+    case 'imageGenerate':
+      return 'ComfyUI';
+    default:
+      return null;
+  }
+}
+
+export function createWorkflowLogEntry(
+  node: WorkflowNodeState,
+  finishedNode: WorkflowNodeState,
+  calls: ModelCallLog[],
+  error: string | null,
+): WorkflowLogEntry {
+  return {
+    nodeName: node.name,
+    model: calls[0]?.model ?? configuredModel(node),
+    inputs: nodeInputs(node),
+    calls,
+    outputs: nodeOutputs(finishedNode),
+    error,
+  };
+}
+
+function appendLogRecord(lines: string[], label: string, values: Record<string, string>): void {
+  lines.push(`${label}:`);
+  if (!Object.keys(values).length) {
+    lines.push('  (none)');
+    return;
+  }
+  for (const [key, value] of Object.entries(values)) {
+    const valueLines = value.split(/\r?\n/g);
+    lines.push(`  ${key}: ${valueLines[0] ?? ''}`);
+    lines.push(...valueLines.slice(1).map((line) => `    ${line}`));
+  }
+}
+
+function appendLogText(lines: string[], label: string, value: string): void {
+  const valueLines = value ? value.split(/\r?\n/g) : ['(none)'];
+  lines.push(`${label}:`, ...valueLines);
+}
+
+export function formatWorkflowLog(entries: WorkflowLogEntry[], workflowName: string, runName: string): string {
+  const lines = [
+    'WORKFLOW EXECUTION LOG',
+    `WORKFLOW: ${workflowName || '(unnamed)'}`,
+    `RUN: ${runName || '(unnamed)'}`,
+    `CREATED: ${new Date().toISOString()}`,
+  ];
+
+  entries.forEach((entry, index) => {
+    lines.push('', '='.repeat(88), `NODE ${index + 1}: ${entry.nodeName}`, `MODEL: ${entry.model ?? 'none'}`);
+    appendLogRecord(lines, 'INPUTS', entry.inputs);
+    if (!entry.calls.length) {
+      appendLogText(lines, 'PROMPT', '');
+      appendLogText(lines, 'RESPONSE', '');
+    } else {
+      entry.calls.forEach((call, callIndex) => {
+        lines.push(`MODEL CALL ${callIndex + 1}: ${call.model}`);
+        appendLogText(lines, `PROMPT ${callIndex + 1}`, call.prompt);
+        appendLogText(lines, `RESPONSE ${callIndex + 1}`, call.response);
+      });
+    }
+    appendLogRecord(lines, 'OUTPUTS', entry.outputs);
+    if (entry.error) {
+      appendLogText(lines, 'ERROR', entry.error);
+    }
+  });
+
+  lines.push('', '='.repeat(88), `NODES LOGGED: ${entries.length}`, '');
+  return `${lines.join('\n')}\n`;
 }
 
 type LoopItem = {
@@ -815,6 +1018,8 @@ export type StepContext = {
   library: WorkflowLibrary;
   signal?: AbortSignal;
   onProgress?: (message: string) => void;
+  onLog?: (entry: WorkflowLogEntry) => void;
+  onModelCall?: (call: ModelCallLog) => void;
   /** Workflow/run keys currently executing, to refuse self-reference. */
   stack?: string[];
 };
@@ -824,6 +1029,52 @@ export type StepResult = {
   error: string | null;
   note: string;
 };
+
+async function runLoggedLlm(
+  ctx: StepContext,
+  prompt: string,
+  model: string,
+  thinking: ThinkingLevel,
+): Promise<string> {
+  try {
+    const response = await runFlexibleLlm(prompt, model, ctx.signal, thinking);
+    ctx.onModelCall?.({ model, prompt, response });
+    return response;
+  } catch (caught) {
+    ctx.onModelCall?.({ model, prompt, response: `ERROR: ${messageFromError(caught, 'Model call failed')}` });
+    throw caught;
+  }
+}
+
+async function runLoggedImageLlm(
+  ctx: StepContext,
+  prompt: string,
+  imageUrl: string,
+  model: string,
+): Promise<string> {
+  try {
+    const response = await runFlexibleImageLlm(prompt, imageUrl, model, ctx.signal);
+    ctx.onModelCall?.({ model, prompt, response });
+    return response;
+  } catch (caught) {
+    ctx.onModelCall?.({ model, prompt, response: `ERROR: ${messageFromError(caught, 'Model call failed')}` });
+    throw caught;
+  }
+}
+
+async function runLoggedImageGeneration(
+  ctx: StepContext,
+  request: Parameters<typeof generateComfyImage>[0],
+): Promise<Awaited<ReturnType<typeof generateComfyImage>>> {
+  try {
+    const response = await generateComfyImage(request, ctx.signal);
+    ctx.onModelCall?.({ model: 'ComfyUI', prompt: request.prompt, response: JSON.stringify(response) });
+    return response;
+  } catch (caught) {
+    ctx.onModelCall?.({ model: 'ComfyUI', prompt: request.prompt, response: `ERROR: ${messageFromError(caught, 'Image generation failed')}` });
+    throw caught;
+  }
+}
 
 /**
  * Execute one already-hydrated node and return the state patch to apply.
@@ -869,17 +1120,14 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       const steps = Math.min(150, Math.max(1, Math.round(Number(node.steps) || 8)));
       const strengthValue = Number(node.strength);
       const strength = Number.isFinite(strengthValue) ? Math.min(2, Math.max(0, strengthValue)) : 1;
-      const result = await generateComfyImage(
-        {
-          prompt,
-          reference_image: node.referenceImage,
-          seed,
-          steps,
-          strength,
-          timeout_seconds: 900,
-        },
-        ctx.signal,
-      );
+      const result = await runLoggedImageGeneration(ctx, {
+        prompt,
+        reference_image: node.referenceImage,
+        seed,
+        steps,
+        strength,
+        timeout_seconds: 900,
+      });
       return {
         patch: {
           outputUrl: result.url,
@@ -904,7 +1152,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         return { patch: { status: error }, error, note: '' };
       }
       const model = visionModelOrDefault(node.model);
-      const output = await runFlexibleImageLlm(prompt, node.imageUrl, model, ctx.signal);
+      const output = await runLoggedImageLlm(ctx, prompt, node.imageUrl, model);
       return {
         patch: { output, model, status: 'Finished' },
         error: null,
@@ -974,6 +1222,14 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         if (!(bodyInput.name in originalValues)) {
           originalValues[bodyInput.name] = original;
         }
+        for (const input of bodyInputs) {
+          if (input.name === 'original_story' || input.name === 'source_story') {
+            const existing = originalValues[input.name];
+            if (existing === undefined || !String(existing).trim()) {
+              originalValues[input.name] = original;
+            }
+          }
+        }
         let candidateValues = { ...originalValues };
         let resultValue = original;
         let scoreValue = '';
@@ -1001,6 +1257,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
               library: ctx.library,
               signal: ctx.signal,
               onProgress: ctx.onProgress,
+              onLog: ctx.onLog,
               stack: [...stack, node.workflowName],
             });
           } catch (caught) {
@@ -1134,10 +1391,10 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
 
         attempts = retry + 1;
         ctx.onProgress?.(`${node.name} - judge ${attempts}/${maxRetries + 1}`);
-        const judgeOutput = await runFlexibleLlm(
+        const judgeOutput = await runLoggedLlm(
+          ctx,
           interpolateText(node.judgePrompt, { candidate }),
           node.model,
-          ctx.signal,
           node.thinking ?? DEFAULT_THINKING_LEVEL,
         );
         const scoreResult = extractJsonPath(judgeOutput, 'score');
@@ -1191,10 +1448,10 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         }
 
         ctx.onProgress?.(`${node.name} - fixer after judge ${attempts}`);
-        const fixerOutput = await runFlexibleLlm(
+        const fixerOutput = await runLoggedLlm(
+          ctx,
           interpolateText(node.fixerPrompt, { candidate, judgePrompt: approvedPrompt, fixes }),
           node.model,
-          ctx.signal,
           node.thinking ?? DEFAULT_THINKING_LEVEL,
         );
         candidate = fixerOutput.trim();
@@ -1238,10 +1495,10 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       return { patch: { output1, output2, status }, error: null, note: `${node.name} — ${status}` };
     }
     case 'agent': {
-      const output = await runFlexibleLlm(
+      const output = await runLoggedLlm(
+        ctx,
         interpolate(node.prompt, node.inputs),
         node.model,
-        ctx.signal,
         node.thinking ?? DEFAULT_THINKING_LEVEL,
       );
       return { patch: { output }, error: null, note: `${node.name} finished` };
@@ -1269,6 +1526,7 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
         library: ctx.library,
         signal: ctx.signal,
         onProgress: ctx.onProgress,
+        onLog: ctx.onLog,
         stack: [...stack, key],
       });
       const outputs = node.outputs.map((output) => ({ ...output, value: results[output.name] ?? '' }));
@@ -1280,6 +1538,27 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       }
       return { patch: { outputs, status: `Ran ${key}` }, error: null, note: `${node.name} ran ${key}` };
     }
+  }
+}
+
+export type NodeExecution = {
+  finished: WorkflowNodeState;
+  result: StepResult;
+};
+
+export async function executeNode(node: WorkflowNodeState, ctx: StepContext): Promise<NodeExecution> {
+  const calls: ModelCallLog[] = [];
+  try {
+    const result = await stepNode(node, {
+      ...ctx,
+      onModelCall: (call) => calls.push(call),
+    });
+    const finished = { ...node, ...result.patch } as WorkflowNodeState;
+    ctx.onLog?.(createWorkflowLogEntry(node, finished, calls, result.error));
+    return { finished, result };
+  } catch (caught) {
+    ctx.onLog?.(createWorkflowLogEntry(node, node, calls, messageFromError(caught, 'Node failed')));
+    throw caught;
   }
 }
 
@@ -1297,9 +1576,10 @@ export async function executeWorkflow(args: {
   library: WorkflowLibrary;
   signal?: AbortSignal;
   onProgress?: (message: string) => void;
+  onLog?: (entry: WorkflowLogEntry) => void;
   stack?: string[];
 }): Promise<Record<string, string>> {
-  const { nodes, edges, inputValues, library, signal, onProgress, stack = [] } = args;
+  const { nodes, edges, inputValues, library, signal, onProgress, onLog, stack = [] } = args;
   if (stack.length > 8) {
     throw new Error('Workflows are nested too deeply');
   }
@@ -1324,11 +1604,11 @@ export async function executeWorkflow(args: {
     const hydrated = hydrateNode(node, edges, byId);
     byId.set(node.id, hydrated);
     onProgress?.(`${label} — step ${hydrated.order}: ${hydrated.name}`);
-    const result = await stepNode(hydrated, { library, signal, onProgress, stack });
-    if (result.error) {
-      throw new Error(`${hydrated.name}: ${result.error}`);
+    const execution = await executeNode(hydrated, { library, signal, onProgress, onLog, stack });
+    if (execution.result.error) {
+      throw new Error(`${hydrated.name}: ${execution.result.error}`);
     }
-    const finished = { ...hydrated, ...result.patch } as WorkflowNodeState;
+    const finished = execution.finished;
     byId.set(finished.id, finished);
     if (finished.kind === 'output') {
       results[finished.name] = finished.value;

@@ -1,0 +1,356 @@
+{
+  "name": "Cinematic shot writer and judge",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "story-input",
+            "kind": "input",
+            "name": "story",
+            "order": 1,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 340
+            }
+          },
+          {
+            "id": "original-story-input",
+            "kind": "input",
+            "name": "original_story",
+            "order": 2,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 520
+            }
+          },
+          {
+            "id": "shot-writer",
+            "kind": "agent",
+            "name": "Cinematic shot writer",
+            "order": 3,
+            "prompt": "You are a screenplay-minded cinematographer and shot-list writer. You receive two inputs. ORIGINAL SOURCE STORY is the immutable real source and must remain the authority on every pass. CURRENT INPUT is either that same source on pass 1 or a previous draft on a retry. If CURRENT INPUT is already a shot sequence, repair or rewrite it against ORIGINAL SOURCE STORY; never treat the previous draft as the source. If ORIGINAL SOURCE STORY is empty, use CURRENT INPUT as the source.\n\nWrite one approximately one-minute cinematic sequence made of exactly 15 shots, each 3-5 seconds, total 55-65 seconds. Cover every concrete source beat in order, including source-required openings, home or exterior settings, style changes, transformations, entrances, discoveries, transitions, and final setting changes. Do not collapse the story into only one later location if the source includes earlier scenes or a transformation. Keep one causal story thread centered on the same protagonist, using as few locations as the source requires rather than forcing one continuous location. Do not blend separate stories, characters, worlds, seasons, or endings.\n\nThe sequence must have a readable beginning, escalation, choice or discovery, and final image. Use the same continuity bible throughout: protagonist identity and wardrobe, other visible characters, exact location/background anchors for each required setting, props, time of day, weather, lighting direction/color, screen direction, and any source-required style transition. State entrances explicitly when a character first appears.\n\nReturn only this plain-text structure:\nCONTINUITY BIBLE\n- Characters:\n- Location/background anchors:\n- Props:\n- Wardrobe:\n- Time/weather/light:\n- Screen direction:\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: [one visible action, including entrance if applicable]\nCamera: [shot size, camera angle, focal length in mm, and measurable movement with direction or distance]\nContinuity: [background, prop, light, and screen-direction anchor]\n\nRepeat the four labeled lines for SHOT 01 through SHOT 15. Keep every shot generation-ready: concrete visible actions, one dominant action per shot, factual camera language, no vague phrases such as cinematic camera, dynamic movement, or dramatic angle. Vary shot sizes and movement without losing source continuity. Every shot must advance the same immediate story.\n\nORIGINAL SOURCE STORY:\n${original_story}\n\nCURRENT INPUT OR PREVIOUS DRAFT:\n${story}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "story",
+                "name": "story",
+                "value": ""
+              },
+              {
+                "id": "original_story",
+                "name": "original_story",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 520,
+              "y": 320
+            }
+          },
+          {
+            "id": "shot-judge",
+            "kind": "agent",
+            "name": "Cinematic continuity judge",
+            "order": 4,
+            "prompt": "Act as a strict continuity and renderability judge for a one-minute shot list. Read the immutable source story and the candidate sequence. Check: one story thread only; full source coverage in order; no omitted major source beats such as opening setting, home/exterior setup, style transition, transformation, discovery, classroom or final setting; exactly 12-18 shots with a target of 15; every duration 3-5 seconds; total 55-65 seconds; continuity bible; stable continuity across every source-required setting, background, prop, wardrobe, time, weather, light, screen direction, and style transition; explicit character entrances and visible actions; every camera line has shot size, angle, focal length in millimeters, and measurable movement; factual renderable actions; varied but coherent shot grammar; a strong opening hook and a memorable final image.\n\nReturn only valid JSON with exactly this shape:\n{\"score\":0,\"note\":\"one concise factual judge note\",\"fixes\":[\"specific repair\"],\"pass\":false}\n\nScore 0-100. A passing score is 95 or higher only. Set pass to true only when score is 95 or higher; set pass to false for every score below 95. If the candidate omits any major source beat, judges only a previous draft, or collapses the story into one later setting while missing the opening/transformation/transition, score below 60 even if the shot list is internally coherent. Do not reward prose, poetic language, or a large world bible if the 15 shots do not form one minute of continuous source action. If the candidate mixes separate story ideas, score below 50 and say so. The fixes must be concrete enough for a writer to apply on the next pass.\n\nIMMUTABLE SOURCE STORY:\n${source}\n\nCANDIDATE SEQUENCE:\n${candidate}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "candidate",
+                "name": "candidate",
+                "value": ""
+              },
+              {
+                "id": "source",
+                "name": "source",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 1030,
+              "y": 170
+            }
+          },
+          {
+            "id": "judge-score",
+            "kind": "json",
+            "name": "Judge score",
+            "order": 5,
+            "input": "",
+            "path": "score",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1510,
+              "y": -50
+            }
+          },
+          {
+            "id": "judge-note",
+            "kind": "json",
+            "name": "Judge note",
+            "order": 6,
+            "input": "",
+            "path": "note",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1510,
+              "y": 210
+            }
+          },
+          {
+            "id": "judge-fixes",
+            "kind": "json",
+            "name": "Judge fixes",
+            "order": 7,
+            "input": "",
+            "path": "fixes",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1510,
+              "y": 470
+            }
+          },
+          {
+            "id": "score-gate",
+            "kind": "if",
+            "name": "Cinematic score gate",
+            "order": 8,
+            "input1": "",
+            "input2": "",
+            "condition": "${input1} >= 95",
+            "prompt": "REPAIR REQUIRED. This shot sequence scored ${input1}/100 and must reach 95/100 or higher before it passes. Rewrite the candidate below so it becomes one coherent 15-shot, 55-65 second sequence. Keep the source story, continuity, and exact shot format. The judge feedback is supplied to the repair agent separately.\n\nCANDIDATE:\n${input2}",
+            "output1": "",
+            "output2": "",
+            "status": "",
+            "position": {
+              "x": 2010,
+              "y": 180
+            }
+          },
+          {
+            "id": "shot-repair",
+            "kind": "agent",
+            "name": "Cinematic shot repairer",
+            "order": 9,
+            "prompt": "Repair a candidate cinematic shot sequence only when the repair request is non-empty. If the repair request is empty, return an empty string. Otherwise apply the judge report to the candidate while obeying ORIGINAL SOURCE STORY as the authority. Restore every missing source beat in order, including opening setting, home or exterior setup, style transition, transformation, discovery, classroom or final setting, and any other visible source event. Keep one causal story thread and stable continuity across the source-required settings, protagonist, props, wardrobe, light, screen direction, and style transition; repair shot count, timing, explicit entrances/actions, camera shot size/angle/focal length in millimeters, measurable movement, and the opening/final images. Return only the complete repaired sequence in the required CONTINUITY BIBLE and SEQUENCE format, with exactly 15 shots.\n\nORIGINAL SOURCE STORY:\n${source}\n\nREPAIR REQUEST:\n${request}\n\nJUDGE REPORT:\n${judge}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "request",
+                "name": "request",
+                "value": ""
+              },
+              {
+                "id": "judge",
+                "name": "judge",
+                "value": ""
+              },
+              {
+                "id": "source",
+                "name": "source",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 2520,
+              "y": 390
+            }
+          },
+          {
+            "id": "result-selector",
+            "kind": "agent",
+            "name": "Best candidate selector",
+            "order": 10,
+            "prompt": "Return exactly one complete cinematic shot sequence. If the approved candidate is non-empty, return it unchanged. Otherwise return the repaired candidate. Do not summarize, explain, or add labels beyond the candidate text.\n\nAPPROVED CANDIDATE:\n${approved}\n\nREPAIRED CANDIDATE:\n${repaired}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "approved",
+                "name": "approved",
+                "value": ""
+              },
+              {
+                "id": "repaired",
+                "name": "repaired",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 3040,
+              "y": 250
+            }
+          },
+          {
+            "id": "result-output",
+            "kind": "output",
+            "name": "result",
+            "order": 11,
+            "value": "",
+            "position": {
+              "x": 3550,
+              "y": 120
+            }
+          },
+          {
+            "id": "score-output",
+            "kind": "output",
+            "name": "score",
+            "order": 12,
+            "value": "",
+            "position": {
+              "x": 3550,
+              "y": 300
+            }
+          },
+          {
+            "id": "note-output",
+            "kind": "output",
+            "name": "note",
+            "order": 13,
+            "value": "",
+            "position": {
+              "x": 3550,
+              "y": 480
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "story-to-writer",
+            "source": "story-input",
+            "target": "shot-writer",
+            "sourceHandle": "output",
+            "targetHandle": "story"
+          },
+          {
+            "id": "original-story-to-writer",
+            "source": "original-story-input",
+            "target": "shot-writer",
+            "sourceHandle": "output",
+            "targetHandle": "original_story"
+          },
+          {
+            "id": "original-story-to-judge",
+            "source": "original-story-input",
+            "target": "shot-judge",
+            "sourceHandle": "output",
+            "targetHandle": "source"
+          },
+          {
+            "id": "writer-to-judge",
+            "source": "shot-writer",
+            "target": "shot-judge",
+            "sourceHandle": "output",
+            "targetHandle": "candidate"
+          },
+          {
+            "id": "judge-to-score",
+            "source": "shot-judge",
+            "target": "judge-score",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-note",
+            "source": "shot-judge",
+            "target": "judge-note",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "judge-to-fixes",
+            "source": "shot-judge",
+            "target": "judge-fixes",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-to-gate",
+            "source": "judge-score",
+            "target": "score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input1"
+          },
+          {
+            "id": "writer-to-gate",
+            "source": "shot-writer",
+            "target": "score-gate",
+            "sourceHandle": "output",
+            "targetHandle": "input2"
+          },
+          {
+            "id": "gate-to-repair",
+            "source": "score-gate",
+            "target": "shot-repair",
+            "sourceHandle": "output2",
+            "targetHandle": "request"
+          },
+          {
+            "id": "judge-to-repair",
+            "source": "shot-judge",
+            "target": "shot-repair",
+            "sourceHandle": "output",
+            "targetHandle": "judge"
+          },
+          {
+            "id": "original-story-to-repair",
+            "source": "original-story-input",
+            "target": "shot-repair",
+            "sourceHandle": "output",
+            "targetHandle": "source"
+          },
+          {
+            "id": "gate-to-selector",
+            "source": "score-gate",
+            "target": "result-selector",
+            "sourceHandle": "output1",
+            "targetHandle": "approved"
+          },
+          {
+            "id": "repair-to-selector",
+            "source": "shot-repair",
+            "target": "result-selector",
+            "sourceHandle": "output",
+            "targetHandle": "repaired"
+          },
+          {
+            "id": "selector-to-result",
+            "source": "result-selector",
+            "target": "result-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "score-to-output",
+            "source": "judge-score",
+            "target": "score-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "note-to-output",
+            "source": "judge-note",
+            "target": "note-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786259898545
+      }
+    }
+  }
+}

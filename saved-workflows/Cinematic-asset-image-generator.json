@@ -1,0 +1,448 @@
+{
+  "name": "Cinematic asset image generator",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "asset-prompts-input",
+            "kind": "input",
+            "name": "asset_prompts",
+            "order": 1,
+            "value": "",
+            "position": {
+              "x": 80,
+              "y": 360
+            }
+          },
+          {
+            "id": "split-characters-backgrounds",
+            "kind": "split",
+            "name": "Split characters from backgrounds",
+            "order": 2,
+            "input": "",
+            "delimiter": "\\n\\nBACKGROUNDS\\n",
+            "count": 2,
+            "outputs": [
+              "",
+              ""
+            ],
+            "position": {
+              "x": 520,
+              "y": 220
+            }
+          },
+          {
+            "id": "split-backgrounds-props",
+            "kind": "split",
+            "name": "Split backgrounds from props",
+            "order": 3,
+            "input": "",
+            "delimiter": "\\n\\nPROPS\\n",
+            "count": 2,
+            "outputs": [
+              "",
+              ""
+            ],
+            "position": {
+              "x": 930,
+              "y": 420
+            }
+          },
+          {
+            "id": "character-prompt-builder",
+            "kind": "agent",
+            "name": "Character image prompt builder",
+            "order": 4,
+            "prompt": "Convert the character asset prompt section into source-grounded image-generation prompt items. Return only valid JSON with exactly this shape: {\"prompts\":[{\"candidate\":\"prompt\",\"source\":\"original asset entry\"}]}. Create exactly one item per CHARACTER entry. The candidate must describe one single character-sheet image containing four distinct panels in one image: A-pose full body front view, full body side view, face close-up profile view, and face close-up side view. Text labels are optional; the view layout must be clear without relying on readable text. Preserve the asset's stated art style and factual details. Do not invent hair color, eye color, clothing details, markings, labels, materials, or decorative details that the asset section says are unspecified. Use clear production prompt language with composition, plain background, panel layout, lighting, and reference-sheet framing. Put the complete original CHARACTER entry in source so the judge can verify factuality. No Markdown, no commentary.\n\nCHARACTER SECTION:\n${section}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "section",
+                "name": "section",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 1360,
+              "y": -40
+            }
+          },
+          {
+            "id": "character-prompts-json",
+            "kind": "json",
+            "name": "Character prompts JSON",
+            "order": 5,
+            "input": "",
+            "path": "prompts",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1840,
+              "y": -40
+            }
+          },
+          {
+            "id": "character-prompt-loop",
+            "kind": "forEach",
+            "name": "Character prompt judge loop",
+            "order": 6,
+            "items": "",
+            "workflowName": "Asset image prompt fixer and judge",
+            "output": "",
+            "threshold": 95,
+            "maxAttempts": 3,
+            "retryWith": "result",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2280,
+              "y": -40
+            }
+          },
+          {
+            "id": "character-image-loop",
+            "kind": "forEach",
+            "name": "Character image generation loop",
+            "order": 7,
+            "items": "",
+            "workflowName": "Image generation and judge",
+            "output": "",
+            "threshold": 90,
+            "maxAttempts": 3,
+            "retryWith": "input",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2740,
+              "y": -40
+            }
+          },
+          {
+            "id": "character-images-output",
+            "kind": "output",
+            "name": "character_images",
+            "order": 8,
+            "value": "",
+            "position": {
+              "x": 3220,
+              "y": -40
+            }
+          },
+          {
+            "id": "background-prompt-builder",
+            "kind": "agent",
+            "name": "Background image prompt builder",
+            "order": 9,
+            "prompt": "Convert the background asset prompt section into source-grounded image-generation prompt items. Return only valid JSON with exactly this shape: {\"prompts\":[{\"candidate\":\"prompt\",\"source\":\"original asset entry\"}]}. Create exactly one item per BACKGROUND entry. The candidate must describe one single environment reference-sheet image containing multiple distinct panels in one image: wide establishing view, reverse or side view, close-up 01, and close-up 02. Text labels are optional; the view layout must be clear without relying on readable text. Preserve the asset's stated art style and factual anchors. Do not invent setting details, materials, signs, labels, or decoration not supported by the section. Use clear production prompt language with grid layout, lighting, camera framing, surfaces, and recognizable anchors. Put the complete original BACKGROUND entry in source so the judge can verify factuality. No Markdown, no commentary.\n\nBACKGROUND SECTION:\n${section}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "section",
+                "name": "section",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 1360,
+              "y": 720
+            }
+          },
+          {
+            "id": "background-prompts-json",
+            "kind": "json",
+            "name": "Background prompts JSON",
+            "order": 10,
+            "input": "",
+            "path": "prompts",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1840,
+              "y": 720
+            }
+          },
+          {
+            "id": "background-prompt-loop",
+            "kind": "forEach",
+            "name": "Background prompt judge loop",
+            "order": 11,
+            "items": "",
+            "workflowName": "Asset image prompt fixer and judge",
+            "output": "",
+            "threshold": 95,
+            "maxAttempts": 3,
+            "retryWith": "result",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2280,
+              "y": 720
+            }
+          },
+          {
+            "id": "background-image-loop",
+            "kind": "forEach",
+            "name": "Background image generation loop",
+            "order": 12,
+            "items": "",
+            "workflowName": "Image generation and judge",
+            "output": "",
+            "threshold": 90,
+            "maxAttempts": 3,
+            "retryWith": "input",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2740,
+              "y": 720
+            }
+          },
+          {
+            "id": "background-images-output",
+            "kind": "output",
+            "name": "background_images",
+            "order": 13,
+            "value": "",
+            "position": {
+              "x": 3220,
+              "y": 720
+            }
+          },
+          {
+            "id": "prop-prompt-builder",
+            "kind": "agent",
+            "name": "Prop image prompt builder",
+            "order": 14,
+            "prompt": "Convert the prop asset prompt section into source-grounded image-generation prompt items. Return only valid JSON with exactly this shape: {\"prompts\":[{\"candidate\":\"prompt\",\"source\":\"original asset entry\"}]}. Create exactly one item per PROP entry. The candidate must describe one single prop reference-sheet image containing multiple distinct panels in one image: front view, side or top view, scale or in-hand view, and close-up detail view. Text labels are optional; the view layout must be clear without relying on readable text. Preserve factual function, style, and supported visible details only. Do not invent labels, materials, markings, mechanisms, colors, or decorative details not supported by the section. Use clear production prompt language with clean studio background, panel layout, lighting, scale cue, and close-up details. Put the complete original PROP entry in source so the judge can verify factuality. No Markdown, no commentary.\n\nPROP SECTION:\n${section}",
+            "model": "VladimirGav/gemma4-26b-16GB-VRAM",
+            "thinking": "off",
+            "inputs": [
+              {
+                "id": "section",
+                "name": "section",
+                "value": ""
+              }
+            ],
+            "output": "",
+            "position": {
+              "x": 1360,
+              "y": 1480
+            }
+          },
+          {
+            "id": "prop-prompts-json",
+            "kind": "json",
+            "name": "Prop prompts JSON",
+            "order": 15,
+            "input": "",
+            "path": "prompts",
+            "output": "",
+            "error": null,
+            "position": {
+              "x": 1840,
+              "y": 1480
+            }
+          },
+          {
+            "id": "prop-prompt-loop",
+            "kind": "forEach",
+            "name": "Prop prompt judge loop",
+            "order": 16,
+            "items": "",
+            "workflowName": "Asset image prompt fixer and judge",
+            "output": "",
+            "threshold": 95,
+            "maxAttempts": 3,
+            "retryWith": "result",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2280,
+              "y": 1480
+            }
+          },
+          {
+            "id": "prop-image-loop",
+            "kind": "forEach",
+            "name": "Prop image generation loop",
+            "order": 17,
+            "items": "",
+            "workflowName": "Image generation and judge",
+            "output": "",
+            "threshold": 90,
+            "maxAttempts": 3,
+            "retryWith": "input",
+            "score": "",
+            "note": "",
+            "iterations": 0,
+            "attempts": 0,
+            "trace": "",
+            "status": "",
+            "position": {
+              "x": 2740,
+              "y": 1480
+            }
+          },
+          {
+            "id": "prop-images-output",
+            "kind": "output",
+            "name": "prop_images",
+            "order": 18,
+            "value": "",
+            "position": {
+              "x": 3220,
+              "y": 1480
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "asset-prompts-to-section-split",
+            "source": "asset-prompts-input",
+            "target": "split-characters-backgrounds",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "section-split-to-bg-prop-split",
+            "source": "split-characters-backgrounds",
+            "target": "split-backgrounds-props",
+            "sourceHandle": "output2",
+            "targetHandle": "input"
+          },
+          {
+            "id": "characters-to-builder",
+            "source": "split-characters-backgrounds",
+            "target": "character-prompt-builder",
+            "sourceHandle": "output1",
+            "targetHandle": "section"
+          },
+          {
+            "id": "character-builder-to-json",
+            "source": "character-prompt-builder",
+            "target": "character-prompts-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "character-json-to-prompt-loop",
+            "source": "character-prompts-json",
+            "target": "character-prompt-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "character-prompt-loop-to-image-loop",
+            "source": "character-prompt-loop",
+            "target": "character-image-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "character-images-to-output",
+            "source": "character-image-loop",
+            "target": "character-images-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "backgrounds-to-builder",
+            "source": "split-backgrounds-props",
+            "target": "background-prompt-builder",
+            "sourceHandle": "output1",
+            "targetHandle": "section"
+          },
+          {
+            "id": "background-builder-to-json",
+            "source": "background-prompt-builder",
+            "target": "background-prompts-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "background-json-to-prompt-loop",
+            "source": "background-prompts-json",
+            "target": "background-prompt-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "background-prompt-loop-to-image-loop",
+            "source": "background-prompt-loop",
+            "target": "background-image-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "background-images-to-output",
+            "source": "background-image-loop",
+            "target": "background-images-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "props-to-builder",
+            "source": "split-backgrounds-props",
+            "target": "prop-prompt-builder",
+            "sourceHandle": "output2",
+            "targetHandle": "section"
+          },
+          {
+            "id": "prop-builder-to-json",
+            "source": "prop-prompt-builder",
+            "target": "prop-prompts-json",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          },
+          {
+            "id": "prop-json-to-prompt-loop",
+            "source": "prop-prompts-json",
+            "target": "prop-prompt-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "prop-prompt-loop-to-image-loop",
+            "source": "prop-prompt-loop",
+            "target": "prop-image-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "prop-images-to-output",
+            "source": "prop-image-loop",
+            "target": "prop-images-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786257942000
+      }
+    }
+  }
+}

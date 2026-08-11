@@ -283,3 +283,14 @@ export async function saveFlexibleWorkflow(name: string, workflow: SavedWorkflow
 export async function deleteFlexibleWorkflow(name: string): Promise<{ deleted: string }> {
   return request<{ deleted: string }>(`/flexible-workflows/${encodeURIComponent(name)}`, { method: 'DELETE' });
 }
+
+export async function saveWorkflowLog(
+  workflowName: string,
+  runName: string,
+  content: string,
+): Promise<{ filename: string }> {
+  return request<{ filename: string }>('/logs', {
+    method: 'POST',
+    body: JSON.stringify({ workflow_name: workflowName, run_name: runName, content }),
+  });
+}

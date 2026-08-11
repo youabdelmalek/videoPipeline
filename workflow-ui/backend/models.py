@@ -300,6 +300,16 @@ class SaveFlexibleWorkflowRequest(BaseModel):
     workflow: dict[str, Any] = Field(default_factory=dict)
 
 
+class WorkflowLogRequest(BaseModel):
+    workflow_name: str = ""
+    run_name: str = ""
+    content: str = Field(min_length=1)
+
+
+class WorkflowLogResponse(BaseModel):
+    filename: str
+
+
 class DeleteFlexibleWorkflowResponse(BaseModel):
     deleted: str
 

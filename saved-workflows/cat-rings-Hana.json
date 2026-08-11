@@ -1,0 +1,72 @@
+{
+    "name":  "cat rings Hana",
+    "workflow":  {
+                     "runs":  {
+                                  "first pass":  {
+                                                     "nodes":  [
+                                                                   {
+                                                                       "id":  "story-input",
+                                                                       "kind":  "input",
+                                                                       "name":  "story",
+                                                                       "order":  1,
+                                                                       "value":  "the video starts with an anime shot. girl at home, studying in her room on her desk, pencil in her right hand in the air wiggling and her left hand on top of her black cat. the black cat is laying down on top of the desk beside the girls note book. the girl is happy smiling relaxed and cheerfully working. the second part of the video is the girl goes to school. pack her school bag and then goes out of the house. then she arrives at the school at the entrance of the school. then she goes into her class and sits on a her desk besides other people. then we focus on the girl she is a bit anxious unrelaxed. she misses her pet she doesn\u0027t have her pet to stroke to feel less anxious better. we get an alternative reality where we are back at the house when the girl is exiting the house. the black cat follows her to the exit, miaous and then transforms to a black ring on the girl hand with a rotating head (the head of the cat is a fidget spinner attached to the ring). the girl is next in the same school on her desk but has the cat ring on her hand. the ring has a rotating cat head that spins and the girls starts spinning it while paying attention to her school, the spinng action is seemless and makes her peacefull happy again like she has her cat with her. then the shot transforms to real people realistic shot with the girl wearing the cat ring and spinning it head like a fidget spinner the girl is happy and concentrated on her teacher.",
+                                                                       "position":  {
+                                                                                        "x":  80,
+                                                                                        "y":  300
+                                                                                    }
+                                                                   },
+                                                                   {
+                                                                       "id":  "shot-loop",
+                                                                       "kind":  "forEach",
+                                                                       "name":  "Cinematic writer + judge loop",
+                                                                       "order":  2,
+                                                                       "items":  "the video starts with an anime shot. girl at home, studying in her room on her desk, pencil in her right hand in the air wiggling and her left hand on top of her black cat. the black cat is laying down on top of the desk beside the girls note book. the girl is happy smiling relaxed and cheerfully working. the second part of the video is the girl goes to school. pack her school bag and then goes out of the house. then she arrives at the school at the entrance of the school. then she goes into her class and sits on a her desk besides other people. then we focus on the girl she is a bit anxious unrelaxed. she misses her pet she doesn\u0027t have her pet to stroke to feel less anxious better. we get an alternative reality where we are back at the house when the girl is exiting the house. the black cat follows her to the exit, miaous and then transforms to a ring on the girl ring, the girl is next in the same school on her desk but has the cat ring on her hand. the ring has a rotating cat head that spins and the girls starts spinning it while paying attention to her school, the spinng action is seemless and makes her peacefull happy again like she has her cat with her. then the shot transforms to real people realistic shot with the girl wearing the cat ring and spinning it head like a fidget spinner the girl is happy and concentrated on her teacher.",
+                                                                       "workflowName":  "Cinematic shot writer and judge",
+                                                                       "output":  "",
+                                                                       "threshold":  95,
+                                                                       "maxAttempts":  4,
+                                                                       "retryWith":  "result",
+                                                                       "score":  "",
+                                                                       "note":  "",
+                                                                       "iterations":  0,
+                                                                       "attempts":  0,
+                                                                       "trace":  "",
+                                                                       "status":  "",
+                                                                       "position":  {
+                                                                                        "x":  730,
+                                                                                        "y":  250
+                                                                                    }
+                                                                   },
+                                                                   {
+                                                                       "id":  "shots-output",
+                                                                       "kind":  "output",
+                                                                       "name":  "shots",
+                                                                       "order":  3,
+                                                                       "value":  "",
+                                                                       "position":  {
+                                                                                        "x":  730,
+                                                                                        "y":  850
+                                                                                    }
+                                                                   }
+                                                               ],
+                                                     "edges":  [
+                                                                   {
+                                                                       "id":  "story-to-loop",
+                                                                       "source":  "story-input",
+                                                                       "target":  "shot-loop",
+                                                                       "sourceHandle":  "output",
+                                                                       "targetHandle":  "items"
+                                                                   },
+                                                                   {
+                                                                       "id":  "loop-to-shots",
+                                                                       "source":  "shot-loop",
+                                                                       "target":  "shots-output",
+                                                                       "sourceHandle":  "output",
+                                                                       "targetHandle":  "input"
+                                                                   }
+                                                               ],
+                                                     "updatedAt":  1786266769417
+                                                 }
+                              }
+                 }
+}

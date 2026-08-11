@@ -33,43 +33,40 @@ from backend.models import (
     RunWorkflowRequest,
     StartJobResponse,
 )
-from backend.pipelines import (
-    run_asset_catalog_job,
-    run_board_rewrite_job,
-    run_detail_videos_job,
-    run_generate_job,
-    run_json_assets_job,
-    run_json_frames_job,
-    run_judge_job,
-    run_shot_rewrite_job,
-    run_workflow_job,
-)
-from backend.runs.paths import run_dir
 from backend.services.llm import llm_generate, llm_generate_with_images
 
 router = APIRouter()
 
 MAX_IMAGE_BYTES = 40 * 1024 * 1024
 
-_JOB_STAGES: dict[str, Callable[..., None]] = {
-    "scene_writer_judge": run_generate_job,
-    "scene_judge": run_judge_job,
-    "board_rewriter": run_board_rewrite_job,
-    "video_detailer": run_detail_videos_job,
-    "shot_rewriter": run_shot_rewrite_job,
-    "asset_catalog": run_asset_catalog_job,
-    "json_assets": run_json_assets_job,
-    "json_frames": run_json_frames_job,
-    "workflow": run_workflow_job,
+_JOB_STAGES: dict[str, str] = {
+    "scene_writer_judge": "backend.pipelines.generate:run_generate_job",
+    "scene_judge": "backend.pipelines.judge:run_judge_job",
+    "board_rewriter": "backend.pipelines.board_rewrite:run_board_rewrite_job",
+    "video_detailer": "backend.pipelines.detail_videos:run_detail_videos_job",
+    "shot_rewriter": "backend.pipelines.shot_rewrite:run_shot_rewrite_job",
+    "asset_catalog": "backend.pipelines.asset_catalog:run_asset_catalog_job",
+    "json_assets": "backend.pipelines.json_assets:run_json_assets_job",
+    "json_frames": "backend.pipelines.json_frames:run_json_frames_job",
+    "workflow": "backend.pipelines.workflow:run_workflow_job",
 }
+
+
+def _pipeline(stage: str) -> Callable[..., None]:
+    from importlib import import_module
+
+    module_path, _, attribute = _JOB_STAGES[stage].partition(":")
+    return getattr(import_module(module_path), attribute)
 
 
 def _start(stage: str, slug: str, *args: object) -> StartJobResponse:
     """Queue a stage. Extra args are forwarded to the pipeline function."""
+    from backend.runs.paths import run_dir
+
     if not run_dir(slug).exists():
         raise HTTPException(status_code=404, detail="Run not found")
     job = create_job(stage, slug)
-    submit(_JOB_STAGES[stage], job.id, slug, *args)
+    submit(_pipeline(stage), job.id, slug, *args)
     return StartJobResponse(job=job_response(job))
 
 

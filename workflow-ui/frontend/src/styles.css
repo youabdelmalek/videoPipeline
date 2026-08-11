@@ -7,6 +7,7 @@
 
 @import './styles/base.css';
 @import './styles/shell.css';
+@import './styles/workflow-log.css';
 @import './styles/panels.css';
 @import './styles/canvas.css';
 @import './styles/node-chrome.css';

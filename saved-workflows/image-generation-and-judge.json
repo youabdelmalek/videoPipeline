@@ -57,7 +57,7 @@
             "name": "Image judge",
             "order": 4,
             "prompt": "Context: Compare the generated image with the candidate image-generation prompt. Only visible, controllable image attributes count.\nRole: Act as a strict visual quality judge.\nTask: Score the image from 0 to 100 for prompt fidelity, subject clarity, composition, camera/framing, lighting, visible materials, and style consistency. Give one concise factual note that identifies the most important visible mismatch or says that no material mismatch remains.\nDesired output format: Return only valid JSON with exactly this shape: {\"score\": 0, \"note\": \"one concise factual visual note\"}.\n\nCandidate prompt:\n${prompt}",
-            "model": "gemma4:12b",
+            "model": "devstral-small-2:24b",
             "thinking": "off",
             "imageUrl": "",
             "inputs": [

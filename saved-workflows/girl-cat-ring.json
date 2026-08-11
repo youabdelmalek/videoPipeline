@@ -1,0 +1,72 @@
+{
+  "name": "girl cat ring",
+  "workflow": {
+    "runs": {
+      "Run 2026-08-09": {
+        "nodes": [
+          {
+            "id": "story-input",
+            "kind": "input",
+            "name": "story",
+            "order": 1,
+            "value": "the video starts with an anime shot. girl at home, studying in her room on her desk, pencil in her right hand in the air wiggling and her left hand on top of her black cat. the black cat is laying down on top of the desk beside the girls note book. the girl is happy smiling relaxed and cheerfully working. the second part of the video is the girl goes to school. pack her school bag and then goes out of the house. then she arrives at the school at the entrance of the school. then she goes into her class and sits on a her desk besides other people. then we focus on the girl she is a bit anxious unrelaxed. she misses her pet she doesn't have her pet to stroke to feel less anxious better. we get an alternative reality where we are back at the house when the girl is exiting the house. the black cat follows her to the exit, miaous and then transforms to a black ring on the girl hand with a rotating head (the head of the cat is a fidget spinner attached to the ring). the girl is next in the same school on her desk but has the cat ring on her hand. the ring has a rotating cat head that spins and the girls starts spinning it while paying attention to her school, the spinng action is seemless and makes her peacefull happy again like she has her cat with her. then the shot transforms to real people realistic shot with the girl wearing the cat ring and spinning it head like a fidget spinner the girl is happy and concentrated on her teacher.",
+            "position": {
+              "x": 286.0084165751581,
+              "y": 320.1686561681973
+            }
+          },
+          {
+            "id": "shot-loop",
+            "kind": "forEach",
+            "name": "Cinematic writer + judge loop",
+            "order": 2,
+            "items": "the video starts with an anime shot. girl at home, studying in her room on her desk, pencil in her right hand in the air wiggling and her left hand on top of her black cat. the black cat is laying down on top of the desk beside the girls note book. the girl is happy smiling relaxed and cheerfully working. the second part of the video is the girl goes to school. pack her school bag and then goes out of the house. then she arrives at the school at the entrance of the school. then she goes into her class and sits on a her desk besides other people. then we focus on the girl she is a bit anxious unrelaxed. she misses her pet she doesn't have her pet to stroke to feel less anxious better. we get an alternative reality where we are back at the house when the girl is exiting the house. the black cat follows her to the exit, miaous and then transforms to a black ring on the girl hand with a rotating head (the head of the cat is a fidget spinner attached to the ring). the girl is next in the same school on her desk but has the cat ring on her hand. the ring has a rotating cat head that spins and the girls starts spinning it while paying attention to her school, the spinng action is seemless and makes her peacefull happy again like she has her cat with her. then the shot transforms to real people realistic shot with the girl wearing the cat ring and spinning it head like a fidget spinner the girl is happy and concentrated on her teacher.",
+            "workflowName": "Cinematic shot writer and judge",
+            "output": "CONTINUITY BIBLE\n- Characters: Protagonist (Anime Girl, later Realistic Girl), Black Cat, Teacher (off-screen/background).\n- Location/background anchors: Anime Bedroom (desk with notebook), House Exit (doorway), School Entrance (gates), Classroom (desks/students), Realistic Classroom.\n- Props: Pencil, Notebook, School Bag, Black Ring with rotating cat-head fidget spinner.\n- Wardrobe: Anime Girl (casual home clothes), School Uniform (anime style), Realistic Girl (school uniform).\n- Time/weather/light: Morning, bright sunlight; Transition from anime to realistic lighting.\n- Screen direction: Left to right movement for exits/entrances.\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: Anime girl sits at her desk, wiggling a pencil in her right hand while her left hand strokes a black cat lying on the desk.\nCamera: Medium shot, eye level, 35mm, static.\nContinuity: Anime bedroom, notebook on desk, bright morning light.\n\nSHOT 02 | 4 sec | \nAction: The anime girl smiles broadly and laughs while looking down at the cat.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Anime bedroom, girl's happy expression, soft warm light.\n\nSHOT 03 | 4 sec | \nAction: The anime girl zips up her school bag on the desk.\nCamera: Medium close up, high angle, 35mm, tilt down.\nContinuity: Anime bedroom, notebook and pencil visible.\n\nSHOT 04 | 4 sec | \nAction: The anime girl walks through the house doorway toward the outside.\nCamera: Wide shot, low angle, 24mm, tracking left to right.\nContinuity: House interior/exit, morning light from door.\n\nSHOT 05 | 4 sec | \nAction: The anime girl arrives at the school gates and walks through the entrance.\nCamera: Wide shot, eye level, 35mm, pan following character.\nContinuity: School entrance, bright daylight.\n\nSHOT 06 | 4 sec | \nAction: The anime girl enters the classroom and sits down at a desk among other students.\nCamera: Medium shot, eye level, 35mm, dolly in.\nContinuity: Classroom, desks/students present.\n\nSHOT 07 | 4 sec | \nAction: The anime girl stares blankly at her desk, biting her lip with an anxious expression.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Classroom, student background.\n\nSHOT 08 | 4 sec | \nAction: In a flashback/alt-reality, the black cat trots toward the house exit, meowing.\nCamera: Medium shot, low angle, 35mm, tracking character.\nContinuity: House exit, bright morning light.\n\nSHOT 09 | 4 sec | \nAction: The black cat jumps toward the girl's hand and glows/transforms into a black ring.\nCamera: Extreme close up, eye level, 85mm, static.\nContinuity: Girl's hand at the exit, magical transformation effect.\n\nSHOT 10 | 4 sec | \nAction: The black ring with the cat-head fidget spinner settles onto the girl's finger.\nCamera: Close up, high angle, 50mm, static.\nContinuity: Girl's hand, ring features a rotating cat head.\n\nSHOT 11 | 4 sec | \nAction: Back in the classroom, the anime girl begins spinning the cat-head on her ring.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Classroom, anime style, ring is active.\n\nSHOT 12 | 4 sec | \nAction: The anime girl's expression shifts from anxious to peaceful and happy as she watches the spinner.\nCamera: Close up, eye level, 50mm, slight zoom in.\nContinuity: Classroom, anime girl, calm lighting.\n\nSHOT 13 | 4 sec | \nAction: The scene transforms into a realistic live-action shot; a real girl spins the black cat ring on her finger.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Realistic classroom, real human skin/hands, ring is physical prop.\n\nSHOT 14 | 4 sec | \nAction: The realistic girl looks up toward the teacher with a bright, concentrated smile.\nCamera: Medium close up, eye level, 35mm, static.\nContinuity: Realistic classroom, school uniform, natural daylight.\n\nSHOT 15 | 4 sec | \nAction: The realistic girl continues spinning the ring rhythmically while nodding at the teacher's lesson.\nCamera: Close up, eye level, 50mm, slight handheld shake.\nContinuity: Realistic classroom, cat ring spinning, happy expression.",
+            "threshold": 95,
+            "maxAttempts": 4,
+            "retryWith": "result",
+            "score": "96",
+            "note": "The sequence follows all source beats including the transformation and style transition, maintains a consistent 15-shot count, adheres to duration constraints (60s total), and provides full technical camera data for every shot. Continuity is stable across settings and styles.",
+            "iterations": 1,
+            "attempts": 1,
+            "trace": "Item 1, pass 1: 96/100 - The sequence follows all source beats including the transformation and style transition, maintains a consistent 15-shot count, adheres to duration constraints (60s total), and provides full technical camera data for every shot. Continuity is stable across settings and styles.",
+            "status": "Ran 1 item(s) in 1 pass(es)",
+            "position": {
+              "x": 730,
+              "y": 250
+            }
+          },
+          {
+            "id": "shots-output",
+            "kind": "output",
+            "name": "shots",
+            "order": 3,
+            "value": "CONTINUITY BIBLE\n- Characters: Protagonist (Anime Girl, later Realistic Girl), Black Cat, Teacher (off-screen/background).\n- Location/background anchors: Anime Bedroom (desk with notebook), House Exit (doorway), School Entrance (gates), Classroom (desks/students), Realistic Classroom.\n- Props: Pencil, Notebook, School Bag, Black Ring with rotating cat-head fidget spinner.\n- Wardrobe: Anime Girl (casual home clothes), School Uniform (anime style), Realistic Girl (school uniform).\n- Time/weather/light: Morning, bright sunlight; Transition from anime to realistic lighting.\n- Screen direction: Left to right movement for exits/entrances.\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: Anime girl sits at her desk, wiggling a pencil in her right hand while her left hand strokes a black cat lying on the desk.\nCamera: Medium shot, eye level, 35mm, static.\nContinuity: Anime bedroom, notebook on desk, bright morning light.\n\nSHOT 02 | 4 sec | \nAction: The anime girl smiles broadly and laughs while looking down at the cat.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Anime bedroom, girl's happy expression, soft warm light.\n\nSHOT 03 | 4 sec | \nAction: The anime girl zips up her school bag on the desk.\nCamera: Medium close up, high angle, 35mm, tilt down.\nContinuity: Anime bedroom, notebook and pencil visible.\n\nSHOT 04 | 4 sec | \nAction: The anime girl walks through the house doorway toward the outside.\nCamera: Wide shot, low angle, 24mm, tracking left to right.\nContinuity: House interior/exit, morning light from door.\n\nSHOT 05 | 4 sec | \nAction: The anime girl arrives at the school gates and walks through the entrance.\nCamera: Wide shot, eye level, 35mm, pan following character.\nContinuity: School entrance, bright daylight.\n\nSHOT 06 | 4 sec | \nAction: The anime girl enters the classroom and sits down at a desk among other students.\nCamera: Medium shot, eye level, 35mm, dolly in.\nContinuity: Classroom, desks/students present.\n\nSHOT 07 | 4 sec | \nAction: The anime girl stares blankly at her desk, biting her lip with an anxious expression.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Classroom, student background.\n\nSHOT 08 | 4 sec | \nAction: In a flashback/alt-reality, the black cat trots toward the house exit, meowing.\nCamera: Medium shot, low angle, 35mm, tracking character.\nContinuity: House exit, bright morning light.\n\nSHOT 09 | 4 sec | \nAction: The black cat jumps toward the girl's hand and glows/transforms into a black ring.\nCamera: Extreme close up, eye level, 85mm, static.\nContinuity: Girl's hand at the exit, magical transformation effect.\n\nSHOT 10 | 4 sec | \nAction: The black ring with the cat-head fidget spinner settles onto the girl's finger.\nCamera: Close up, high angle, 50mm, static.\nContinuity: Girl's hand, ring features a rotating cat head.\n\nSHOT 11 | 4 sec | \nAction: Back in the classroom, the anime girl begins spinning the cat-head on her ring.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Classroom, anime style, ring is active.\n\nSHOT 12 | 4 sec | \nAction: The anime girl's expression shifts from anxious to peaceful and happy as she watches the spinner.\nCamera: Close up, eye level, 50mm, slight zoom in.\nContinuity: Classroom, anime girl, calm lighting.\n\nSHOT 13 | 4 sec | \nAction: The scene transforms into a realistic live-action shot; a real girl spins the black cat ring on her finger.\nCamera: Close up, eye level, 50mm, static.\nContinuity: Realistic classroom, real human skin/hands, ring is physical prop.\n\nSHOT 14 | 4 sec | \nAction: The realistic girl looks up toward the teacher with a bright, concentrated smile.\nCamera: Medium close up, eye level, 35mm, static.\nContinuity: Realistic classroom, school uniform, natural daylight.\n\nSHOT 15 | 4 sec | \nAction: The realistic girl continues spinning the ring rhythmically while nodding at the teacher's lesson.\nCamera: Close up, eye level, 50mm, slight handheld shake.\nContinuity: Realistic classroom, cat ring spinning, happy expression.",
+            "position": {
+              "x": 1216.9568395557694,
+              "y": 521.4282726520203
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "story-to-loop",
+            "source": "story-input",
+            "target": "shot-loop",
+            "sourceHandle": "output",
+            "targetHandle": "items"
+          },
+          {
+            "id": "loop-to-shots",
+            "source": "shot-loop",
+            "target": "shots-output",
+            "sourceHandle": "output",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786273080310
+      }
+    }
+  }
+}

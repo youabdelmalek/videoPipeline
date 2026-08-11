@@ -1,0 +1,125 @@
+{
+  "name": "Cinematic story to shots and assets",
+  "workflow": {
+    "runs": {
+      "default": {
+        "nodes": [
+          {
+            "id": "idea-input",
+            "kind": "input",
+            "name": "idea",
+            "order": 1,
+            "value": "At sunrise, a young courier finds a glowing paper crane on her balcony, follows it through a quiet city, and discovers it is leading her to a hidden rooftop garden where her missing brother left one final message.",
+            "position": {
+              "x": 80,
+              "y": 320
+            }
+          },
+          {
+            "id": "shot-workflow",
+            "kind": "workflow",
+            "name": "Create shots",
+            "order": 2,
+            "workflowName": "Cinematic one-minute shot loop",
+            "inputs": [
+              {
+                "id": "story",
+                "name": "story",
+                "value": "At sunrise, a young courier finds a glowing paper crane on her balcony, follows it through a quiet city, and discovers it is leading her to a hidden rooftop garden where her missing brother left one final message."
+              }
+            ],
+            "outputs": [
+              {
+                "name": "shots",
+                "value": "CONTINUITY BIBLE\n- Characters: ELARA (Young courier, athletic build), BROTHER (Seen only in a stationary note/message)\n- Location/background anchors: Elara's balcony (stone railing, cityscape view); Quiet city streets (cobblestone, narrow alleys); Hidden rooftop garden (overgrown vines, wooden trellis, stone planters).\n- Props: Glowing paper crane (emits soft golden light), small weathered envelope.\n- Wardrobe: Elara wears a canvas messenger bag and a teal utility vest over a tan linen shirt.\n- Time/weather/light: Sunrise; clear sky; warm orange/gold directional light from the east.\n- Screen direction: Elara moves mostly left to right through the city streets.\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: ELARA enters the frame on her balcony, leaning over the stone railing to look at the horizon.\nCamera: Medium shot, eye level, 35mm, static.\nContinuity: Stone balcony railing, sunrise orange light from the right.\n\nSHOT 02 | 4 sec | TITLE\nAction: A small paper crane, glowing with golden light, flutters onto the stone railing in front of Elara.\nCamera: Close-up, low angle, 50mm, static.\nContinuity: Stone railing, golden glow from the crane, sunrise light.\n\nSHOT 03 | 4 sec | TITLE\nAction: Elara reaches out her hand to touch the glowing paper crane.\nCamera: Tight close-up, eye level, 85mm, slight push-in.\nContinuity: Teal utility vest sleeve, golden glow on skin, sunrise light.\n\nSHOT 04 | 3 sec | TITLE\nAction: The paper crane lifts into the air and flies toward the city street below.\nCamera: Medium shot, high angle, 35mm, tilt down following the crane.\nContinuity: Balcony edge, city skyline in background, sunrise light.\n\nSHOT 05 | 4 sec | TITLE\nAction: Elara steps off her balcony onto a narrow stone staircase, following the glowing trail.\nCamera: Full shot, low angle, 24mm, tracking shot moving backward as she descends.\nContinuity: Stone stairs, teal utility vest, sunrise light from right.\n\nSHOT 06 | 4 sec | TITLE\nAction: Elara walks down a narrow cobblestone alleyway, eyes fixed on the glowing crane ahead.\nCamera: Medium shot, eye level, 50mm, tracking side profile (left to right).\nContinuity: Cobblestone street, narrow walls, sunrise light hitting buildings.\n\nSHOT 07 | 4 sec | TITLE\nAction: The paper crane zips around a corner of a brick building, leaving a faint golden trail.\nCamera: Close-up, low angle, 35mm, pan right following the movement.\nContinuity: Brick wall texture, golden light trail, sunrise light.\n\nSHOT 08 | 4 sec | TITLE\nAction: Elara stops at a street intersection and looks up toward a high rooftop.\nCamera: Medium shot, low angle, 35mm, static.\nContinuity: Cobblestone ground, messenger bag strap, sunrise light from behind.\n\nSHOT 09 | 4 sec | TITLE\nAction: The paper crane ascends vertically toward a lush, green rooftop terrace.\nCamera: Long shot, low angle, 24mm, tilt up following the crane.\nContinuity: Brick buildings, distant greenery on roof, sunrise light.\n\nSHOT 10 | 3 sec | TITLE\nAction: Elara climbs a wooden ladder leaning against the side of the rooftop garden.\nCamera: Medium shot, eye level, 35mm, tracking shot moving up with her.\nContinuity: Wooden ladder, teal utility vest, morning sun.\n\nSHOT 11 | 4 sec | TITLE\nAction: Elara steps onto the rooftop garden, surrounded by overgrown vines and stone planters.\nCamera: Full shot, eye level, 35mm, tracking shot moving forward.\nContinuity: Overgrown vines, wooden trellis, sunrise light from right.\n\nSHOT 12 | 4 sec | TITLE\nAction: The paper crane lands on a small wooden table in the center of the garden.\nCamera: Close-up, high angle, 50mm, static.\nContinuity: Wooden table, stone planters, golden glow.\n\nSHOT 13 | 5 sec | TITLE\nAction: Elara approaches the table and picks up a weathered envelope resting next to the crane.\nCamera: Medium shot, eye level, 35mm, slow push-in.\nContinuity: Wooden table, teal vest, sunrise light.\n\nSHOT 14 | 5 sec | TITLE\nAction: Elara opens the envelope to reveal a handwritten note from her brother.\nCamera: Extreme close-up, top-down angle, 85mm, static.\nContinuity: Weathered paper, handwritten text, golden glow from crane nearby.\n\nSHOT 15 | 4 sec | TITLE\nAction: Elara clutches the note to her chest, looking out over the sunrise city skyline.\nCamera: Medium shot, side profile, 50mm, slow pull-back.\nContinuity: Rooftop garden, messenger bag, bright orange sunrise light."
+              }
+            ],
+            "status": "Ran Cinematic one-minute shot loop",
+            "position": {
+              "x": 560,
+              "y": 260
+            }
+          },
+          {
+            "id": "asset-workflow",
+            "kind": "workflow",
+            "name": "Create asset prompt list",
+            "order": 3,
+            "workflowName": "Cinematic asset prompt extractor",
+            "inputs": [
+              {
+                "id": "shots",
+                "name": "shots",
+                "value": "CONTINUITY BIBLE\n- Characters: ELARA (Young courier, athletic build), BROTHER (Seen only in a stationary note/message)\n- Location/background anchors: Elara's balcony (stone railing, cityscape view); Quiet city streets (cobblestone, narrow alleys); Hidden rooftop garden (overgrown vines, wooden trellis, stone planters).\n- Props: Glowing paper crane (emits soft golden light), small weathered envelope.\n- Wardrobe: Elara wears a canvas messenger bag and a teal utility vest over a tan linen shirt.\n- Time/weather/light: Sunrise; clear sky; warm orange/gold directional light from the east.\n- Screen direction: Elara moves mostly left to right through the city streets.\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: ELARA enters the frame on her balcony, leaning over the stone railing to look at the horizon.\nCamera: Medium shot, eye level, 35mm, static.\nContinuity: Stone balcony railing, sunrise orange light from the right.\n\nSHOT 02 | 4 sec | TITLE\nAction: A small paper crane, glowing with golden light, flutters onto the stone railing in front of Elara.\nCamera: Close-up, low angle, 50mm, static.\nContinuity: Stone railing, golden glow from the crane, sunrise light.\n\nSHOT 03 | 4 sec | TITLE\nAction: Elara reaches out her hand to touch the glowing paper crane.\nCamera: Tight close-up, eye level, 85mm, slight push-in.\nContinuity: Teal utility vest sleeve, golden glow on skin, sunrise light.\n\nSHOT 04 | 3 sec | TITLE\nAction: The paper crane lifts into the air and flies toward the city street below.\nCamera: Medium shot, high angle, 35mm, tilt down following the crane.\nContinuity: Balcony edge, city skyline in background, sunrise light.\n\nSHOT 05 | 4 sec | TITLE\nAction: Elara steps off her balcony onto a narrow stone staircase, following the glowing trail.\nCamera: Full shot, low angle, 24mm, tracking shot moving backward as she descends.\nContinuity: Stone stairs, teal utility vest, sunrise light from right.\n\nSHOT 06 | 4 sec | TITLE\nAction: Elara walks down a narrow cobblestone alleyway, eyes fixed on the glowing crane ahead.\nCamera: Medium shot, eye level, 50mm, tracking side profile (left to right).\nContinuity: Cobblestone street, narrow walls, sunrise light hitting buildings.\n\nSHOT 07 | 4 sec | TITLE\nAction: The paper crane zips around a corner of a brick building, leaving a faint golden trail.\nCamera: Close-up, low angle, 35mm, pan right following the movement.\nContinuity: Brick wall texture, golden light trail, sunrise light.\n\nSHOT 08 | 4 sec | TITLE\nAction: Elara stops at a street intersection and looks up toward a high rooftop.\nCamera: Medium shot, low angle, 35mm, static.\nContinuity: Cobblestone ground, messenger bag strap, sunrise light from behind.\n\nSHOT 09 | 4 sec | TITLE\nAction: The paper crane ascends vertically toward a lush, green rooftop terrace.\nCamera: Long shot, low angle, 24mm, tilt up following the crane.\nContinuity: Brick buildings, distant greenery on roof, sunrise light.\n\nSHOT 10 | 3 sec | TITLE\nAction: Elara climbs a wooden ladder leaning against the side of the rooftop garden.\nCamera: Medium shot, eye level, 35mm, tracking shot moving up with her.\nContinuity: Wooden ladder, teal utility vest, morning sun.\n\nSHOT 11 | 4 sec | TITLE\nAction: Elara steps onto the rooftop garden, surrounded by overgrown vines and stone planters.\nCamera: Full shot, eye level, 35mm, tracking shot moving forward.\nContinuity: Overgrown vines, wooden trellis, sunrise light from right.\n\nSHOT 12 | 4 sec | TITLE\nAction: The paper crane lands on a small wooden table in the center of the garden.\nCamera: Close-up, high angle, 50mm, static.\nContinuity: Wooden table, stone planters, golden glow.\n\nSHOT 13 | 5 sec | TITLE\nAction: Elara approaches the table and picks up a weathered envelope resting next to the crane.\nCamera: Medium shot, eye level, 35mm, slow push-in.\nContinuity: Wooden table, teal vest, sunrise light.\n\nSHOT 14 | 5 sec | TITLE\nAction: Elara opens the envelope to reveal a handwritten note from her brother.\nCamera: Extreme close-up, top-down angle, 85mm, static.\nContinuity: Weathered paper, handwritten text, golden glow from crane nearby.\n\nSHOT 15 | 4 sec | TITLE\nAction: Elara clutches the note to her chest, looking out over the sunrise city skyline.\nCamera: Medium shot, side profile, 50mm, slow pull-back.\nContinuity: Rooftop garden, messenger bag, bright orange sunrise light."
+              }
+            ],
+            "outputs": [
+              {
+                "name": "asset_prompts",
+                "value": "ASSET PROMPT LIST\n\nCHARACTERS\nCHARACTER 01 - ELARA - realistic/live-action\n- A-POSE FULL BODY FRONT VIEW: A young woman with an athletic build, wearing a tan linen shirt, a teal utility vest, and a canvas messenger bag. Realistic style, unspecified hair color, unspecified eye color.\n- FULL BODY SIDE VIEW: A young woman with an athletic build, wearing a tan linen shirt, a teal utility vest, and a canvas messenger bag. Realistic style, unspecified hair color, unspecified eye color.\n- FACE CLOSE-UP PROFILE VIEW: Close-up profile of a young woman's face. Realistic style, unspecified hair color, unspecified eye color.\n- FACE CLOSE-UP SIDE VIEW: Close-up side view of a young woman's face. Realistic style, unspecified hair color, unspecified eye color.\n\nBACKGROUNDS\nBACKGROUND 01 - Elara's Balcony - realistic/live-action\n- WIDE ESTABLISHING VIEW: A stone balcony overlooking a cityscape during sunrise with warm orange and gold directional light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of a stone balcony railing looking out toward a city skyline at sunrise. Realistic style.\n- CLOSE-UP 01: Close-up of a weathered stone balcony railing, bathed in warm sunrise light. Realistic style.\n- CLOSE-UP 02: Close-up of the edge of a stone balcony overlooking a distant cityscape during sunrise. Realistic style.\n\nBACKGROUND 02 - Quiet City Streets - realistic/live-action\n- WIDE ESTABLISHING VIEW: Narrow cobblestone city streets and alleys with brick buildings under a clear sunrise sky with warm orange light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of narrow cobblestone alleyways between brick walls during sunrise. Realistic style.\n- CLOSE-UP 01: Close-up texture of cobblestone ground in a narrow street, lit by morning sun. Realistic style.\n- CLOSE-UP 02: Close-up of a textured brick building wall in a narrow alleyway at sunrise. Realistic style.\n\nBACKGROUND 03 - Hidden Rooftop Garden - realistic/live-action\n- WIDE ESTABLISHING VIEW: A lush rooftop garden featuring overgrown vines, a wooden trellis, and stone planters under sunrise light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of a rooftop terrace with greenery, wooden structures, and stone planters at sunrise. Realistic style.\n- CLOSE-UP 01: Close-up of thick overgrown vines climbing a wooden trellis in a garden. Realistic style.\n- CLOSE-UP 02: Close-up of weathered stone planters filled with plants in a rooftop garden. Realistic style.\n\nPROPS\nPROP 01 - Glowing Paper Crane - realistic/live-action\n- FRONT VIEW: A small paper crane emitting a soft golden light. Realistic style.\n- SIDE OR TOP VIEW: Side view of a small paper crane glowing with gold light. Realistic style.\n- SCALE OR IN-HAND VIEW: A small glowing paper crane resting on a wooden table surface. Realistic style.\n- CLOSE-UP DETAIL VIEW: Close-up of the paper texture of a crane emitting a soft, warm golden glow. Realistic style.\n\nPROP 02 - Weathered Envelope - realistic/live-action\n- FRONT VIEW: A small weathered envelope made of paper. Realistic style.\n- SIDE OR TOP VIEW: Top view of a small weathered envelope resting on a wooden surface. Realistic style.\n- SCALE OR IN-HAND VIEW: A small weathered envelope being held by a hand. Realistic style.\n- CLOSE-UP DETAIL VIEW: Close-up of the texture of weathered paper and the edges of an envelope. Realistic style.\n\nPROP 03 - Handwritten Note - realistic/live-action\n- FRONT VIEW: A handwritten note on paper. Realistic style.\n- SIDE OR TOP VIEW: Top-down view of a piece of paper with handwritten text. Realistic style.\n- SCALE OR IN-HAND VIEW: A person holding an open piece of paper containing a handwritten message. Realistic style.\n- CLOSE-UP DETAIL VIEW: Extreme close-up of handwritten ink text on weathered paper. Realistic style."
+              }
+            ],
+            "status": "Ran Cinematic asset prompt extractor",
+            "position": {
+              "x": 1128.7194610664055,
+              "y": 567.473932063538
+            }
+          },
+          {
+            "id": "shots-output",
+            "kind": "output",
+            "name": "shots",
+            "order": 4,
+            "value": "CONTINUITY BIBLE\n- Characters: ELARA (Young courier, athletic build), BROTHER (Seen only in a stationary note/message)\n- Location/background anchors: Elara's balcony (stone railing, cityscape view); Quiet city streets (cobblestone, narrow alleys); Hidden rooftop garden (overgrown vines, wooden trellis, stone planters).\n- Props: Glowing paper crane (emits soft golden light), small weathered envelope.\n- Wardrobe: Elara wears a canvas messenger bag and a teal utility vest over a tan linen shirt.\n- Time/weather/light: Sunrise; clear sky; warm orange/gold directional light from the east.\n- Screen direction: Elara moves mostly left to right through the city streets.\n\nSEQUENCE\nSHOT 01 | 4 sec | TITLE\nAction: ELARA enters the frame on her balcony, leaning over the stone railing to look at the horizon.\nCamera: Medium shot, eye level, 35mm, static.\nContinuity: Stone balcony railing, sunrise orange light from the right.\n\nSHOT 02 | 4 sec | TITLE\nAction: A small paper crane, glowing with golden light, flutters onto the stone railing in front of Elara.\nCamera: Close-up, low angle, 50mm, static.\nContinuity: Stone railing, golden glow from the crane, sunrise light.\n\nSHOT 03 | 4 sec | TITLE\nAction: Elara reaches out her hand to touch the glowing paper crane.\nCamera: Tight close-up, eye level, 85mm, slight push-in.\nContinuity: Teal utility vest sleeve, golden glow on skin, sunrise light.\n\nSHOT 04 | 3 sec | TITLE\nAction: The paper crane lifts into the air and flies toward the city street below.\nCamera: Medium shot, high angle, 35mm, tilt down following the crane.\nContinuity: Balcony edge, city skyline in background, sunrise light.\n\nSHOT 05 | 4 sec | TITLE\nAction: Elara steps off her balcony onto a narrow stone staircase, following the glowing trail.\nCamera: Full shot, low angle, 24mm, tracking shot moving backward as she descends.\nContinuity: Stone stairs, teal utility vest, sunrise light from right.\n\nSHOT 06 | 4 sec | TITLE\nAction: Elara walks down a narrow cobblestone alleyway, eyes fixed on the glowing crane ahead.\nCamera: Medium shot, eye level, 50mm, tracking side profile (left to right).\nContinuity: Cobblestone street, narrow walls, sunrise light hitting buildings.\n\nSHOT 07 | 4 sec | TITLE\nAction: The paper crane zips around a corner of a brick building, leaving a faint golden trail.\nCamera: Close-up, low angle, 35mm, pan right following the movement.\nContinuity: Brick wall texture, golden light trail, sunrise light.\n\nSHOT 08 | 4 sec | TITLE\nAction: Elara stops at a street intersection and looks up toward a high rooftop.\nCamera: Medium shot, low angle, 35mm, static.\nContinuity: Cobblestone ground, messenger bag strap, sunrise light from behind.\n\nSHOT 09 | 4 sec | TITLE\nAction: The paper crane ascends vertically toward a lush, green rooftop terrace.\nCamera: Long shot, low angle, 24mm, tilt up following the crane.\nContinuity: Brick buildings, distant greenery on roof, sunrise light.\n\nSHOT 10 | 3 sec | TITLE\nAction: Elara climbs a wooden ladder leaning against the side of the rooftop garden.\nCamera: Medium shot, eye level, 35mm, tracking shot moving up with her.\nContinuity: Wooden ladder, teal utility vest, morning sun.\n\nSHOT 11 | 4 sec | TITLE\nAction: Elara steps onto the rooftop garden, surrounded by overgrown vines and stone planters.\nCamera: Full shot, eye level, 35mm, tracking shot moving forward.\nContinuity: Overgrown vines, wooden trellis, sunrise light from right.\n\nSHOT 12 | 4 sec | TITLE\nAction: The paper crane lands on a small wooden table in the center of the garden.\nCamera: Close-up, high angle, 50mm, static.\nContinuity: Wooden table, stone planters, golden glow.\n\nSHOT 13 | 5 sec | TITLE\nAction: Elara approaches the table and picks up a weathered envelope resting next to the crane.\nCamera: Medium shot, eye level, 35mm, slow push-in.\nContinuity: Wooden table, teal vest, sunrise light.\n\nSHOT 14 | 5 sec | TITLE\nAction: Elara opens the envelope to reveal a handwritten note from her brother.\nCamera: Extreme close-up, top-down angle, 85mm, static.\nContinuity: Weathered paper, handwritten text, golden glow from crane nearby.\n\nSHOT 15 | 4 sec | TITLE\nAction: Elara clutches the note to her chest, looking out over the sunrise city skyline.\nCamera: Medium shot, side profile, 50mm, slow pull-back.\nContinuity: Rooftop garden, messenger bag, bright orange sunrise light.",
+            "position": {
+              "x": 1600,
+              "y": 160
+            }
+          },
+          {
+            "id": "asset-prompts-output",
+            "kind": "output",
+            "name": "asset_prompts",
+            "order": 5,
+            "value": "ASSET PROMPT LIST\n\nCHARACTERS\nCHARACTER 01 - ELARA - realistic/live-action\n- A-POSE FULL BODY FRONT VIEW: A young woman with an athletic build, wearing a tan linen shirt, a teal utility vest, and a canvas messenger bag. Realistic style, unspecified hair color, unspecified eye color.\n- FULL BODY SIDE VIEW: A young woman with an athletic build, wearing a tan linen shirt, a teal utility vest, and a canvas messenger bag. Realistic style, unspecified hair color, unspecified eye color.\n- FACE CLOSE-UP PROFILE VIEW: Close-up profile of a young woman's face. Realistic style, unspecified hair color, unspecified eye color.\n- FACE CLOSE-UP SIDE VIEW: Close-up side view of a young woman's face. Realistic style, unspecified hair color, unspecified eye color.\n\nBACKGROUNDS\nBACKGROUND 01 - Elara's Balcony - realistic/live-action\n- WIDE ESTABLISHING VIEW: A stone balcony overlooking a cityscape during sunrise with warm orange and gold directional light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of a stone balcony railing looking out toward a city skyline at sunrise. Realistic style.\n- CLOSE-UP 01: Close-up of a weathered stone balcony railing, bathed in warm sunrise light. Realistic style.\n- CLOSE-UP 02: Close-up of the edge of a stone balcony overlooking a distant cityscape during sunrise. Realistic style.\n\nBACKGROUND 02 - Quiet City Streets - realistic/live-action\n- WIDE ESTABLISHING VIEW: Narrow cobblestone city streets and alleys with brick buildings under a clear sunrise sky with warm orange light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of narrow cobblestone alleyways between brick walls during sunrise. Realistic style.\n- CLOSE-UP 01: Close-up texture of cobblestone ground in a narrow street, lit by morning sun. Realistic style.\n- CLOSE-UP 02: Close-up of a textured brick building wall in a narrow alleyway at sunrise. Realistic style.\n\nBACKGROUND 03 - Hidden Rooftop Garden - realistic/live-action\n- WIDE ESTABLISHING VIEW: A lush rooftop garden featuring overgrown vines, a wooden trellis, and stone planters under sunrise light. Realistic style.\n- REVERSE OR SIDE VIEW: Side view of a rooftop terrace with greenery, wooden structures, and stone planters at sunrise. Realistic style.\n- CLOSE-UP 01: Close-up of thick overgrown vines climbing a wooden trellis in a garden. Realistic style.\n- CLOSE-UP 02: Close-up of weathered stone planters filled with plants in a rooftop garden. Realistic style.\n\nPROPS\nPROP 01 - Glowing Paper Crane - realistic/live-action\n- FRONT VIEW: A small paper crane emitting a soft golden light. Realistic style.\n- SIDE OR TOP VIEW: Side view of a small paper crane glowing with gold light. Realistic style.\n- SCALE OR IN-HAND VIEW: A small glowing paper crane resting on a wooden table surface. Realistic style.\n- CLOSE-UP DETAIL VIEW: Close-up of the paper texture of a crane emitting a soft, warm golden glow. Realistic style.\n\nPROP 02 - Weathered Envelope - realistic/live-action\n- FRONT VIEW: A small weathered envelope made of paper. Realistic style.\n- SIDE OR TOP VIEW: Top view of a small weathered envelope resting on a wooden surface. Realistic style.\n- SCALE OR IN-HAND VIEW: A small weathered envelope being held by a hand. Realistic style.\n- CLOSE-UP DETAIL VIEW: Close-up of the texture of weathered paper and the edges of an envelope. Realistic style.\n\nPROP 03 - Handwritten Note - realistic/live-action\n- FRONT VIEW: A handwritten note on paper. Realistic style.\n- SIDE OR TOP VIEW: Top-down view of a piece of paper with handwritten text. Realistic style.\n- SCALE OR IN-HAND VIEW: A person holding an open piece of paper containing a handwritten message. Realistic style.\n- CLOSE-UP DETAIL VIEW: Extreme close-up of handwritten ink text on weathered paper. Realistic style.",
+            "position": {
+              "x": 1600,
+              "y": 456.9224471249047
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "idea-to-shot-workflow",
+            "source": "idea-input",
+            "target": "shot-workflow",
+            "sourceHandle": "output",
+            "targetHandle": "story"
+          },
+          {
+            "id": "shots-to-asset-workflow",
+            "source": "shot-workflow",
+            "target": "asset-workflow",
+            "sourceHandle": "out-shots",
+            "targetHandle": "shots"
+          },
+          {
+            "id": "shots-to-output",
+            "source": "shot-workflow",
+            "target": "shots-output",
+            "sourceHandle": "out-shots",
+            "targetHandle": "input"
+          },
+          {
+            "id": "asset-prompts-to-output",
+            "source": "asset-workflow",
+            "target": "asset-prompts-output",
+            "sourceHandle": "out-asset_prompts",
+            "targetHandle": "input"
+          }
+        ],
+        "updatedAt": 1786273234293
+      }
+    }
+  }
+}
