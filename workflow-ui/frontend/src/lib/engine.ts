@@ -416,13 +416,13 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
       };
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
-      return {
+      return logRecord({
         ...inputValues(node.inputs),
         image1: node.image1,
         image2: node.image2,
         aspectRatio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,
         durationSeconds: node.durationSeconds,
-      };
+      });
     case 'imageText':
       return { ...inputValues(node.inputs), imageUrl: node.imageUrl };
     case 'json':

@@ -52,12 +52,12 @@ ASPECT_RATIO_DIMENSIONS: dict[AspectRatio, tuple[int, int]] = {
 }
 VIDEO_ASPECT_RATIO_LABELS: dict[AspectRatio, str] = {
     "1:1": "1:1 (Square)",
-    "4:3": "4:3 (Landscape)",
-    "3:4": "3:4 (Portrait)",
+    "4:3": "4:3 (Standard)",
+    "3:4": "3:4 (Portrait Standard)",
     "16:9": "16:9 (Widescreen)",
-    "9:16": "9:16 (Vertical)",
-    "3:2": "3:2 (Landscape)",
-    "2:3": "2:3 (Portrait)",
+    "9:16": "9:16 (Portrait Widescreen)",
+    "3:2": "3:2 (Photo)",
+    "2:3": "2:3 (Portrait Photo)",
 }
 
 
