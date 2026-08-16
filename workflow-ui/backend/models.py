@@ -7,8 +7,8 @@ ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
 AspectRatio = Literal["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]
 ImageGenerationWorkflow = Literal["style", "identity", "text_to_image"]
 VideoGenerationWorkflow = Literal["ref2va", "fl2v", "ref2va_fast", "fl2v_fast"]
-DEFAULT_MODEL = "gemma4:26b"
-DEFAULT_VISION_MODEL = "qwen3.6:27b"
+DEFAULT_MODEL = "qwen3.8:27b"
+DEFAULT_VISION_MODEL = "qwen3.8:27b"
 DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"
 
 
@@ -24,18 +24,6 @@ MODEL_CATALOG: tuple[ModelCatalogEntry, ...] = (
     ModelCatalogEntry(
         "qwen3.8:27b",
         "Qwen 3.8 27B",
-        vision=True,
-        thinking_levels=("off", "on"),
-    ),
-    ModelCatalogEntry(
-        "qwen3.6:27b",
-        "Qwen 3.6 27B",
-        vision=True,
-        thinking_levels=("off", "on"),
-    ),
-    ModelCatalogEntry(
-        "gemma4:26b",
-        "Gemma 4 26B",
         vision=True,
         thinking_levels=("off", "on"),
     ),
