@@ -15,12 +15,21 @@ export const ASPECT_RATIO_OPTIONS = [
 ] as const;
 export type AspectRatio = (typeof ASPECT_RATIO_OPTIONS)[number]['value'];
 export const VISION_MODEL_NAMES = [
+  'qwen3.8:27b',
   'qwen3.6:27b',
   'gemma4:26b',
 ] as const;
 
 /** Shown until `GET /api/models` answers. */
 export const FALLBACK_MODELS: ModelOption[] = [
+  {
+    name: 'qwen3.8:27b',
+    label: 'Qwen 3.8 27B',
+    size_bytes: 0,
+    installed: true,
+    vision: true,
+    thinking_levels: ['off', 'on'],
+  },
   {
     name: 'qwen3.6:27b',
     label: 'Qwen 3.6 27B',

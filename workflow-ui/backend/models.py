@@ -22,6 +22,12 @@ class ModelCatalogEntry:
 
 MODEL_CATALOG: tuple[ModelCatalogEntry, ...] = (
     ModelCatalogEntry(
+        "qwen3.8:27b",
+        "Qwen 3.8 27B",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
+    ModelCatalogEntry(
         "qwen3.6:27b",
         "Qwen 3.6 27B",
         vision=True,
