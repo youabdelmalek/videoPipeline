@@ -46,7 +46,7 @@ export type UploadComfyImageResponse = {
 };
 
 export type ImageGenerationWorkflow = 'style' | 'identity' | 'text_to_image';
-export type VideoGenerationWorkflow = 'ref2va' | 'fl2v';
+export type VideoGenerationWorkflow = 'ref2va' | 'fl2v' | 'ref2va_fast' | 'fl2v_fast';
 
 export type GenerateComfyImageRequest = {
   prompt: string;

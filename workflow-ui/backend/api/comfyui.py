@@ -629,6 +629,86 @@ def minimax_fl2v_workflow(
     }
 
 
+def minimax_fast_workflow(
+    workflow: dict[str, Any],
+    *,
+    unet_node: str,
+    sampler_node: str,
+    scheduler_node: str,
+    guider_node: str,
+    lora_name: str,
+) -> dict[str, Any]:
+    fast_model = ["159", 0]
+    workflow["159"] = {
+        "class_type": "LoraLoaderModelOnly",
+        "inputs": {
+            "lora_name": lora_name,
+            "strength_model": 0.75,
+            "model": [unet_node, 0],
+        },
+    }
+    workflow[sampler_node]["inputs"]["sampler_name"] = "er_sde"
+    workflow[scheduler_node]["inputs"].update({
+        "scheduler": "beta",
+        "steps": 4,
+        "model": fast_model,
+    })
+    workflow[guider_node]["inputs"]["model"] = fast_model
+    return workflow
+
+
+def minimax_ref2va_fast_workflow(
+    character_image_name: str,
+    background_image_name: str,
+    prompt: str,
+    duration_seconds: float,
+    seed: int,
+    aspect_ratio: AspectRatio = "16:9",
+) -> dict[str, Any]:
+    return minimax_fast_workflow(
+        minimax_ref2va_workflow(
+            character_image_name,
+            background_image_name,
+            prompt,
+            duration_seconds,
+            seed,
+            4,
+            aspect_ratio,
+        ),
+        unet_node="141",
+        sampler_node="123",
+        scheduler_node="124",
+        guider_node="126",
+        lora_name="minimax_h3_ref2v_lightx2v_turbo_4step_v0.1_resized_avg_rank_20_bf16.safetensors",
+    )
+
+
+def minimax_fl2v_fast_workflow(
+    first_frame_image_name: str,
+    last_frame_image_name: str,
+    prompt: str,
+    duration_seconds: float,
+    seed: int,
+    aspect_ratio: AspectRatio = "1:1",
+) -> dict[str, Any]:
+    return minimax_fast_workflow(
+        minimax_fl2v_workflow(
+            first_frame_image_name,
+            last_frame_image_name,
+            prompt,
+            duration_seconds,
+            seed,
+            4,
+            aspect_ratio,
+        ),
+        unet_node="139",
+        sampler_node="130",
+        scheduler_node="131",
+        guider_node="133",
+        lora_name="minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors",
+    )
+
+
 def queue_prompt(server: str, workflow: dict[str, Any]) -> str:
     payload = {"prompt": workflow, "client_id": safe_stem(f"workflow-ui-{timestamp()}")}
     response = comfy_request("POST", f"{server}/prompt", json=payload, timeout=60)
@@ -668,19 +748,23 @@ def wait_for_output_video(server: str, prompt_id: str, timeout_seconds: int) -> 
         job = history.get(prompt_id)
         if job:
             for node in job.get("outputs", {}).values():
-                for key in ("videos", "gifs", "video"):
+                for key in ("videos", "gifs", "video", "images"):
                     entries = node.get(key, [])
                     if isinstance(entries, dict):
                         entries = [entries]
                     if not isinstance(entries, list):
                         continue
                     for media in entries:
-                        if isinstance(media, dict) and media.get("filename"):
-                            return {
-                                "filename": str(media.get("filename", "")),
-                                "subfolder": str(media.get("subfolder", "")),
-                                "type": str(media.get("type", "")),
-                            }
+                        filename = media.get("filename") if isinstance(media, dict) else None
+                        if not isinstance(filename, str) or not filename:
+                            continue
+                        if key == "images" and Path(filename).suffix.lower() not in VIDEO_EXTENSIONS:
+                            continue
+                        return {
+                            "filename": filename,
+                            "subfolder": str(media.get("subfolder", "")),
+                            "type": str(media.get("type", "")),
+                        }
             raise HTTPException(status_code=502, detail="ComfyUI finished without a video output")
         time.sleep(1)
     raise HTTPException(status_code=504, detail="Timed out waiting for ComfyUI")
@@ -774,7 +858,7 @@ def generate_comfy_video(request: Request, body: GenerateComfyVideoRequest) -> G
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
 
-    if body.workflow == "ref2va":
+    if body.workflow in {"ref2va", "ref2va_fast"}:
         character_path = resolve_image_path(body.character_image)
         background_path = resolve_image_path(body.background_image)
     else:
@@ -795,7 +879,7 @@ def generate_comfy_video(request: Request, body: GenerateComfyVideoRequest) -> G
             body.steps,
             body.aspect_ratio,
         )
-    else:
+    elif body.workflow == "fl2v":
         workflow = minimax_fl2v_workflow(
             first_image_name,
             second_image_name,
@@ -803,6 +887,24 @@ def generate_comfy_video(request: Request, body: GenerateComfyVideoRequest) -> G
             body.duration_seconds,
             seed,
             body.steps,
+            body.aspect_ratio,
+        )
+    elif body.workflow == "ref2va_fast":
+        workflow = minimax_ref2va_fast_workflow(
+            first_image_name,
+            second_image_name,
+            prompt,
+            body.duration_seconds,
+            seed,
+            body.aspect_ratio,
+        )
+    else:
+        workflow = minimax_fl2v_fast_workflow(
+            first_image_name,
+            second_image_name,
+            prompt,
+            body.duration_seconds,
+            seed,
             body.aspect_ratio,
         )
 

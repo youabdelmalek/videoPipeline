@@ -153,7 +153,7 @@ export type ImageGenerateNodeState = {
 
 export type VideoGenerateNodeState = {
   id: string;
-  kind: 'videoGenerateRef2VA' | 'videoGenerateFL2V';
+  kind: 'videoGenerateRef2VA' | 'videoGenerateFL2V' | 'videoGenerateRef2VAFast' | 'videoGenerateFL2VFast';
   name: string;
   order: number;
   prompt: string;
@@ -416,6 +416,8 @@ function nodeInputs(node: WorkflowNodeState): Record<string, string> {
       };
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast':
       return logRecord({
         ...inputValues(node.inputs),
         image1: node.image1,
@@ -473,6 +475,8 @@ function nodeOutputs(node: WorkflowNodeState): Record<string, string> {
       });
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast':
       return logRecord({
         outputUrl: node.outputUrl,
         outputName: node.outputName,
@@ -527,6 +531,8 @@ function configuredModel(node: WorkflowNodeState): string | null {
       return 'ComfyUI';
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast':
       return 'ComfyUI';
     default:
       return null;
@@ -852,6 +858,8 @@ export function outputOf(node: WorkflowNodeState | undefined, handle?: string): 
       return node.outputUrl;
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast':
       return node.outputUrl;
     case 'imageDisplay':
       return '';
@@ -933,7 +941,9 @@ export function hydrateNode(
       };
     }
     case 'videoGenerateRef2VA':
-    case 'videoGenerateFL2V': {
+    case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast': {
       const inputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
       const image1Link = incoming.find((edge) => edgeInputHandle(edge) === 'image1');
       const image2Link = incoming.find((edge) => edgeInputHandle(edge) === 'image2');
@@ -1161,7 +1171,9 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       };
     }
     case 'videoGenerateRef2VA':
-    case 'videoGenerateFL2V': {
+    case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast': {
       const prompt = interpolate(node.prompt, node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }]);
       if (!prompt.trim()) {
         const error = 'Prompt is required';
@@ -1183,11 +1195,13 @@ export async function stepNode(node: WorkflowNodeState, ctx: StepContext): Promi
       }
 
       const durationSeconds = Math.min(60, Math.max(0.1, Number(node.durationSeconds) || 5));
-      const steps = Math.min(150, Math.max(1, Math.round(Number(node.steps) || 25)));
+      const fast = node.kind === 'videoGenerateRef2VAFast' || node.kind === 'videoGenerateFL2VFast';
+      const ref2va = node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateRef2VAFast';
+      const steps = fast ? 4 : Math.min(150, Math.max(1, Math.round(Number(node.steps) || 25)));
       const result = await runLoggedVideoGeneration(ctx, {
         prompt,
-        workflow: node.kind === 'videoGenerateFL2V' ? 'fl2v' : 'ref2va',
-        ...(node.kind === 'videoGenerateFL2V'
+        workflow: fast ? (ref2va ? 'ref2va_fast' : 'fl2v_fast') : (ref2va ? 'ref2va' : 'fl2v'),
+        ...(!ref2va
           ? { first_frame: node.image1, last_frame: node.image2 }
           : { character_image: node.image1, background_image: node.image2 }),
         aspect_ratio: node.aspectRatio ?? DEFAULT_ASPECT_RATIO,

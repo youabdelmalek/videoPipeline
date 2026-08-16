@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 ThinkingLevel = Literal["off", "on", "low", "medium", "high"]
 AspectRatio = Literal["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3"]
 ImageGenerationWorkflow = Literal["style", "identity", "text_to_image"]
-VideoGenerationWorkflow = Literal["ref2va", "fl2v"]
+VideoGenerationWorkflow = Literal["ref2va", "fl2v", "ref2va_fast", "fl2v_fast"]
 DEFAULT_MODEL = "gemma4:26b"
 DEFAULT_VISION_MODEL = "qwen3.6:27b"
 DEFAULT_THINKING_LEVEL: ThinkingLevel = "off"

@@ -5,33 +5,6 @@
       "Run 2026-08-13": {
         "nodes": [
           {
-            "id": "videoGenerateRef2VA-1786621416473-8791",
-            "kind": "videoGenerateRef2VA",
-            "name": "Generate video Ref2VA 4",
-            "order": 4,
-            "prompt": "the cats are walking slowly to the camera each at their own pace while sometimes turning their heads and getting distracted",
-            "inputs": [
-              {
-                "id": "input1",
-                "name": "input1",
-                "value": ""
-              }
-            ],
-            "image1": "http://127.0.0.1:8000/api/comfyui/images/ChatGPT-Image-11-ao-t-2026-09_21_12-1_20260813_124436_734.png",
-            "image2": "http://127.0.0.1:8000/api/comfyui/images/ChatGPT-Image-11-ao-t-2026-09_21_12-1_20260813_124449_988.png",
-            "aspectRatio": "9:16",
-            "durationSeconds": 5,
-            "seed": "",
-            "steps": 25,
-            "outputUrl": "",
-            "outputName": "",
-            "status": "",
-            "position": {
-              "x": 707.1595330739301,
-              "y": 272.373540856031
-            }
-          },
-          {
             "id": "imageUpload-1786621439473-5256",
             "kind": "imageUpload",
             "name": "Upload 2",
@@ -56,25 +29,52 @@
               "x": 95.19960156862061,
               "y": 411.09635456913975
             }
+          },
+          {
+            "id": "videoGenerateRef2VAFast-1786691700502-4449",
+            "kind": "videoGenerateRef2VAFast",
+            "name": "Generate video Ref2VA Fast 4",
+            "order": 4,
+            "prompt": "the cats are walking towards the camera getting distracted sometimes looking to the left and right",
+            "inputs": [
+              {
+                "id": "input1",
+                "name": "input1",
+                "value": ""
+              }
+            ],
+            "image1": "http://127.0.0.1:8000/api/comfyui/images/ChatGPT-Image-11-ao-t-2026-09_21_12-1_20260813_124436_734.png",
+            "image2": "http://127.0.0.1:8000/api/comfyui/images/ChatGPT-Image-11-ao-t-2026-09_21_12-1_20260813_124449_988.png",
+            "aspectRatio": "9:16",
+            "durationSeconds": 3,
+            "seed": "",
+            "steps": 4,
+            "outputUrl": "",
+            "outputName": "",
+            "status": "",
+            "position": {
+              "x": 896.6665677426101,
+              "y": 369.039829326773
+            }
           }
         ],
         "edges": [
           {
-            "id": "imageUpload-1786621445815-1625->videoGenerateRef2VA-1786621416473-8791:image1",
-            "source": "imageUpload-1786621445815-1625",
-            "target": "videoGenerateRef2VA-1786621416473-8791",
-            "sourceHandle": "output",
-            "targetHandle": "image1"
-          },
-          {
-            "id": "imageUpload-1786621439473-5256->videoGenerateRef2VA-1786621416473-8791:image2",
+            "id": "imageUpload-1786621439473-5256->videoGenerateRef2VAFast-1786691700502-4449:image2",
             "source": "imageUpload-1786621439473-5256",
-            "target": "videoGenerateRef2VA-1786621416473-8791",
+            "target": "videoGenerateRef2VAFast-1786691700502-4449",
             "sourceHandle": "output",
             "targetHandle": "image2"
+          },
+          {
+            "id": "imageUpload-1786621445815-1625->videoGenerateRef2VAFast-1786691700502-4449:image1",
+            "source": "imageUpload-1786621445815-1625",
+            "target": "videoGenerateRef2VAFast-1786691700502-4449",
+            "sourceHandle": "output",
+            "targetHandle": "image1"
           }
         ],
-        "updatedAt": 1786622024887
+        "updatedAt": 1786692021634
       }
     }
   }

@@ -159,28 +159,33 @@ function buildNode(
       };
     case 'videoGenerateRef2VA':
     case 'videoGenerateFL2V':
+    case 'videoGenerateRef2VAFast':
+    case 'videoGenerateFL2VFast': {
+      const ref2va = kind === 'videoGenerateRef2VA' || kind === 'videoGenerateRef2VAFast';
+      const fast = kind === 'videoGenerateRef2VAFast' || kind === 'videoGenerateFL2VFast';
       return {
         id,
         kind,
-        name: kind === 'videoGenerateRef2VA'
-          ? `Generate video Ref2VA ${order}`
-          : `Generate video FL2V ${order}`,
+        name: ref2va
+          ? `Generate video Ref2VA${fast ? ' Fast' : ''} ${order}`
+          : `Generate video FL2V${fast ? ' Fast' : ''} ${order}`,
         order,
-        prompt: kind === 'videoGenerateRef2VA'
+        prompt: ref2va
           ? 'Animate the character naturally in the background using ${input1}.'
           : 'Animate a smooth transition from the first frame to the last frame using ${input1}.',
         inputs: [{ id: 'input1', name: 'input1', value: '' }],
         image1: '',
         image2: '',
-        aspectRatio: kind === 'videoGenerateRef2VA' ? '16:9' : '1:1',
-        durationSeconds: kind === 'videoGenerateRef2VA' ? 5 : 2,
+        aspectRatio: ref2va ? '16:9' : '1:1',
+        durationSeconds: ref2va ? 5 : 2,
         seed: '',
-        steps: 25,
+        steps: fast ? 4 : 25,
         outputUrl: '',
         outputName: '',
         status: '',
         position,
       };
+    }
     case 'imageText':
       return {
         id,
@@ -609,7 +614,7 @@ export function App() {
 
   const patchInput = useCallback((nodeId: string, inputId: string, patch: Partial<FlexibleInput>) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'videoGenerateRef2VAFast' && node.kind !== 'videoGenerateFL2VFast' && node.kind !== 'imageText' && node.kind !== 'workflow')) {
         return node;
       }
       return {
@@ -621,7 +626,7 @@ export function App() {
 
   const addInput = useCallback((nodeId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'videoGenerateRef2VAFast' && node.kind !== 'videoGenerateFL2VFast' && node.kind !== 'imageText')) {
         return node;
       }
       const inputs = node.inputs ?? [];
@@ -635,7 +640,7 @@ export function App() {
 
   const removeInput = useCallback((nodeId: string, inputId: string) => {
     setWorkflowNodes((current) => current.map((node) => {
-      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'imageText')) {
+      if (node.id !== nodeId || (node.kind !== 'agent' && node.kind !== 'imageGenerate' && node.kind !== 'imageGenerateIdentity' && node.kind !== 'imageGenerateTextToImage' && node.kind !== 'videoGenerateRef2VA' && node.kind !== 'videoGenerateFL2V' && node.kind !== 'videoGenerateRef2VAFast' && node.kind !== 'videoGenerateFL2VFast' && node.kind !== 'imageText')) {
         return node;
       }
       return { ...node, inputs: (node.inputs ?? []).filter((input) => input.id !== inputId) };
@@ -685,14 +690,14 @@ export function App() {
 
     setRunningNodeId(node.id);
     // API-backed nodes are slow and abortable; local transform nodes are instant.
-    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
+    const slow = node.kind === 'agent' || node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V' || node.kind === 'videoGenerateRef2VAFast' || node.kind === 'videoGenerateFL2VFast' || node.kind === 'imageText' || node.kind === 'workflow' || node.kind === 'forEach';
     const controller = slow ? new AbortController() : null;
     if (controller) {
       controllerRef.current = controller;
     }
     if (node.kind === 'agent') {
       setDebug(`Step ${node.order}: ${node.name} is calling ${node.model}`);
-    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V') {
+    } else if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V' || node.kind === 'videoGenerateRef2VAFast' || node.kind === 'videoGenerateFL2VFast') {
       setDebug(`Step ${node.order}: ${node.name} is calling ComfyUI`);
     } else if (node.kind === 'imageText') {
       setDebug(`Step ${node.order}: ${node.name} is reading the image with ${node.model}`);
@@ -722,7 +727,7 @@ export function App() {
         setDebug(result.error);
         return false;
       }
-      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V') {
+      if (node.kind === 'imageGenerate' || node.kind === 'imageGenerateIdentity' || node.kind === 'imageGenerateTextToImage' || node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateFL2V' || node.kind === 'videoGenerateRef2VAFast' || node.kind === 'videoGenerateFL2VFast') {
         await refreshImages().catch(() => undefined);
       }
       setDebug(`Step ${node.order}: ${result.note}`);
@@ -989,7 +994,7 @@ export function App() {
         return node;
       }
       const inputNames = subInputs.map((input) => input.name);
-      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity' || bodyNode.kind === 'imageGenerateTextToImage' || bodyNode.kind === 'videoGenerateRef2VA' || bodyNode.kind === 'videoGenerateFL2V') ? 'input' : node.retryWith;
+      const retryWith = snapshot?.nodes.some((bodyNode) => bodyNode.kind === 'imageGenerate' || bodyNode.kind === 'imageGenerateIdentity' || bodyNode.kind === 'imageGenerateTextToImage' || bodyNode.kind === 'videoGenerateRef2VA' || bodyNode.kind === 'videoGenerateFL2V' || bodyNode.kind === 'videoGenerateRef2VAFast' || bodyNode.kind === 'videoGenerateFL2VFast') ? 'input' : node.retryWith;
       const status = !workflowName
         ? ''
         : snapshot
@@ -1134,9 +1139,12 @@ export function App() {
           };
         }
         case 'videoGenerateRef2VA':
-        case 'videoGenerateFL2V': {
+        case 'videoGenerateFL2V':
+        case 'videoGenerateRef2VAFast':
+        case 'videoGenerateFL2VFast': {
           const videoInputs = node.inputs?.length ? node.inputs : [{ id: 'input1', name: 'input1', value: '' }];
-          const ref2va = node.kind === 'videoGenerateRef2VA';
+          const ref2va = node.kind === 'videoGenerateRef2VA' || node.kind === 'videoGenerateRef2VAFast';
+          const fast = node.kind === 'videoGenerateRef2VAFast' || node.kind === 'videoGenerateFL2VFast';
           return {
             type: 'flexibleVideoGenerate',
             width: 460,
@@ -1144,7 +1152,9 @@ export function App() {
             data: {
               ...node,
               ...shared,
-              kicker: ref2va ? 'Generate video Ref2VA' : 'Generate video FL2V',
+              kicker: ref2va
+                ? `Generate video Ref2VA${fast ? ' Fast' : ''}`
+                : `Generate video FL2V${fast ? ' Fast' : ''}`,
               image1Label: ref2va ? 'Character image' : 'First frame',
               image2Label: ref2va ? 'Background image' : 'Last frame',
               inputs: videoInputs.map((input) => ({
@@ -1492,6 +1502,28 @@ export function App() {
             >
               <Film size={16} />
               <span>Generate video FL2V</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'videoGenerateRef2VAFast')}
+              onClick={() => addWorkflowNode('videoGenerateRef2VAFast')}
+              title="Character plus background to video with the 4-step LoRA"
+            >
+              <Film size={16} />
+              <span>Generate video Ref2VA Fast</span>
+            </button>
+            <button
+              className="drawer-item"
+              type="button"
+              draggable
+              onDragStart={(event) => onDragStart(event, 'videoGenerateFL2VFast')}
+              onClick={() => addWorkflowNode('videoGenerateFL2VFast')}
+              title="First frame plus last frame to video with the 4-step LoRA"
+            >
+              <Film size={16} />
+              <span>Generate video FL2V Fast</span>
             </button>
             <button
               className="drawer-item"
