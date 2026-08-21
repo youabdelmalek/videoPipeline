@@ -11,6 +11,12 @@ OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 
 _TEMPERATURE = 0.75
 _CONTEXT_TOKENS = 8192
+# Explicitly request full layer offload and a larger prompt batch. Ollama
+# still falls back to its normal placement if the available VRAM is too low.
+_GPU_OPTIONS = {
+    "num_gpu": -1,
+    "num_batch": 512,
+}
 
 
 def ollama_installed_models(timeout_seconds: int = 10) -> list[dict[str, object]]:
@@ -46,6 +52,7 @@ def ollama_generate(
             "options": {
                 "temperature": _TEMPERATURE,
                 "num_ctx": _CONTEXT_TOKENS,
+                **_GPU_OPTIONS,
             },
         },
         timeout=timeout_seconds,
@@ -77,6 +84,7 @@ def ollama_generate_with_images(
             "options": {
                 "temperature": _TEMPERATURE,
                 "num_ctx": _CONTEXT_TOKENS,
+                **_GPU_OPTIONS,
             },
         },
         timeout=timeout_seconds,

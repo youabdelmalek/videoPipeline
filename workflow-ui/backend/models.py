@@ -27,6 +27,18 @@ MODEL_CATALOG: tuple[ModelCatalogEntry, ...] = (
         vision=True,
         thinking_levels=("off", "on"),
     ),
+    ModelCatalogEntry(
+        "smtek/Qwen3.8-27B:Q3_K_XL",
+        "Qwen 3.8 27B Q3 K XL (GPU optimized)",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
+    ModelCatalogEntry(
+        "orcarouter/Qwen3.8-27B-Uncensored:q3_K_M",
+        "Qwen 3.8 27B Uncensored Q3 K M",
+        vision=True,
+        thinking_levels=("off", "on"),
+    ),
 )
 
 ALLOWED_MODELS: tuple[tuple[str, str], ...] = tuple(
